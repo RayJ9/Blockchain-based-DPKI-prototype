@@ -1,0 +1,14 @@
+[
+  {
+    "savedAs": "bounds_check.csv",
+    "description": "DPKI bound and PKI theory consistency check"
+  },
+  {
+    "savedAs": "tx_health.csv",
+    "description": "Per-sweep chain transaction health summary"
+  },
+  {
+    "savedAs": "run_sources.csv",
+    "description": "Raw experiment directories used for this figure"
+  }
+]

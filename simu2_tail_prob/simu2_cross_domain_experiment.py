@@ -6,6 +6,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+from typing import Optional
 
 import matplotlib
 
@@ -38,6 +39,9 @@ class ModelParams:
     service_cas: int = 6
     gamma_on_chain: float = 0.425
     lambda_block: float = 200.0
+    pki_mu: Optional[float] = None
+    pki_q_manage: Optional[float] = None
+    pki_cross_extra_mu: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -250,8 +254,9 @@ def pki_theory_value(params: ModelParams, epsilon: float) -> tuple[float, float]
 
     lambda_per_ca = params.lambda_total / params.service_cas
     p = params.p_manage
-    q = params.q_manage
-    mu = params.mu
+    q = params.pki_q_manage if params.pki_q_manage is not None else params.q_manage
+    mu = params.pki_mu if params.pki_mu is not None else params.mu
+    extra_mu = params.pki_cross_extra_mu if params.pki_cross_extra_mu is not None else mu
     denominator = 1.0 - (p * lambda_per_ca / (q * mu)) - ((1.0 - p) * lambda_per_ca / mu)
     rho = (lambda_per_ca / mu) * (p / q + (1.0 - p))
     if denominator <= 0.0 or rho >= 1.0:
@@ -262,7 +267,9 @@ def pki_theory_value(params: ModelParams, epsilon: float) -> tuple[float, float]
         * (p + (1.0 - p) * q * q)
         / denominator
     )
-    service = p / (q * mu) + (1.0 + PKI_CROSS_DOMAIN_CHAIN_STEPS * epsilon) * (1.0 - p) / mu
+    service = p / (q * mu) + (1.0 - p) * (
+        (1.0 / mu) + PKI_CROSS_DOMAIN_CHAIN_STEPS * epsilon * (1.0 / extra_mu)
+    )
     return waiting + service, rho
 
 
@@ -299,11 +306,14 @@ def run_pki_experiment(
             is_management = rng.random() < params.p_manage
             if is_management:
                 management_count += 1
-                service_rate = params.q_manage * params.mu
+                q = params.pki_q_manage if params.pki_q_manage is not None else params.q_manage
+                mu = params.pki_mu if params.pki_mu is not None else params.mu
+                service_rate = q * mu
                 chain_steps = 0
             else:
                 auth_count += 1
-                service_rate = params.mu
+                mu = params.pki_mu if params.pki_mu is not None else params.mu
+                service_rate = mu
                 is_cross_domain = rng.random() < epsilon
                 chain_steps = PKI_CROSS_DOMAIN_CHAIN_STEPS if is_cross_domain else 0
                 if is_cross_domain:
@@ -314,7 +324,10 @@ def run_pki_experiment(
             primary_service = exp_sample(rng, service_rate)
             finish_primary = start_time + primary_service
             server_available = finish_primary
-            chain_verify = sum(exp_sample(rng, params.mu) for _ in range(chain_steps))
+            extra_mu = params.pki_cross_extra_mu if params.pki_cross_extra_mu is not None else (
+                params.pki_mu if params.pki_mu is not None else params.mu
+            )
+            chain_verify = sum(exp_sample(rng, extra_mu) for _ in range(chain_steps))
             finish_time = finish_primary + chain_verify
 
             if now >= sim.warmup_time:

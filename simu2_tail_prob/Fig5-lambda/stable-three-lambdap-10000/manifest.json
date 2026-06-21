@@ -1,0 +1,164 @@
+{
+  "createdAt": "2026-06-21T07:20:03",
+  "scriptArgs": {
+    "lambda_values": [
+      2.0,
+      4.0,
+      6.0,
+      8.0,
+      10.0,
+      12.0,
+      14.0,
+      16.0
+    ],
+    "mean_block_ms_values": [
+      120.0,
+      100.0,
+      90.0
+    ],
+    "requests": 10000,
+    "epsilon": 0.1,
+    "p_manage": 0.1,
+    "gamma_on_chain": 0.2,
+    "q_manage": 0.3,
+    "service_cas": 4,
+    "service_shape_mode": "none",
+    "actual_execution_mode": "serial",
+    "dpki_root_read_mode": "chain",
+    "dpki_proof_read_mode": "http",
+    "dpki_proof_base_port": 20080,
+    "dpki_q_mode": "config",
+    "dpki_auth_shape_mean_ms": 0.0,
+    "dpki_management_shape_mean_ms": 0.0,
+    "pki_auth_shape_mean_ms": 0.0,
+    "pki_cross_shape_mean_ms": 0.0,
+    "pki_management_shape_mean_ms": 0.0,
+    "dpki_proof_http_mean_ms": 7.5,
+    "dpki_proof_http_tail_probability": 0.05,
+    "dpki_proof_http_tail_multiplier": 15.0,
+    "dpki_auth_transfer_http_mean_ms": 1.0,
+    "dpki_auth_transfer_http_tail_probability": 0.22,
+    "dpki_auth_transfer_http_tail_multiplier": 6.0,
+    "dpki_management_http_mean_ms": 10.0,
+    "dpki_management_http_tail_probability": 0.35,
+    "dpki_management_http_tail_multiplier": 10.0,
+    "dpki_management_transfer_http_mean_ms": 30.0,
+    "dpki_management_transfer_http_tail_probability": 0.35,
+    "dpki_management_transfer_http_tail_multiplier": 10.0,
+    "seed": 81001,
+    "tag": "stable_three_lambdap_lambda2_16_r10000",
+    "output_dir": "simu2_tail_prob/Fig5-lambda/stable-three-lambdap-10000",
+    "reuse_existing": false,
+    "restart_pow": true,
+    "stop_pow": false,
+    "ylim": [
+      0.08,
+      0.34
+    ]
+  },
+  "logsDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\simu2_tail_prob\\Fig5-lambda\\stable-three-lambdap-10000\\logs",
+  "runs": [
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_90_lambda_2_r10000",
+      "lambda": 2.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_90_lambda_4_r10000",
+      "lambda": 4.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_90_lambda_6_r10000",
+      "lambda": 6.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_90_lambda_8_r10000",
+      "lambda": 8.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_90_lambda_10_r10000",
+      "lambda": 10.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_90_lambda_12_r10000",
+      "lambda": 12.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_90_lambda_14_r10000",
+      "lambda": 14.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_90_lambda_16_r10000",
+      "lambda": 16.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_100_lambda_2_r10000",
+      "lambda": 2.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_100_lambda_4_r10000",
+      "lambda": 4.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_100_lambda_6_r10000",
+      "lambda": 6.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_100_lambda_8_r10000",
+      "lambda": 8.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_100_lambda_10_r10000",
+      "lambda": 10.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_100_lambda_12_r10000",
+      "lambda": 12.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_100_lambda_14_r10000",
+      "lambda": 14.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_100_lambda_16_r10000",
+      "lambda": 16.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_120_lambda_2_r10000",
+      "lambda": 2.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_120_lambda_4_r10000",
+      "lambda": 4.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_120_lambda_6_r10000",
+      "lambda": 6.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_120_lambda_8_r10000",
+      "lambda": 8.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_120_lambda_10_r10000",
+      "lambda": 10.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_120_lambda_12_r10000",
+      "lambda": 12.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_120_lambda_14_r10000",
+      "lambda": 14.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\stable_three_lambdap_lambda2_16_r10000_blockms_120_lambda_16_r10000",
+      "lambda": 16.0
+    }
+  ],
+  "checks": {
+    "allDpkiInBounds": false,
+    "maxPkiAbsError": NaN,
+    "maxTxTotalMs": 1240.1836000084877,
+    "slowTxOver1000ms": 9
+  }
+}

@@ -1,0 +1,230 @@
+node C:\Users\admin\Desktop\Blockchain_based DPKI platform\DPKI-and-DID-platform-Lenovo\chain33-dpki-real-experiment\run-real-dpki-experiment.js --consensus-backend pow --rpc http://127.0.0.1:8545 --pow-rpc http://127.0.0.1:8801 --pow-runtime C:\Users\admin\Desktop\Blockchain_based DPKI platform\DPKI-and-DID-platform-Lenovo\omnilink-pow-4nodes\runtime --pow-warmup-ms 10000 --epsilon-points 0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5 --requests-per-epsilon 100 --lambda-arrival 3.0 --p-manage 0.1 --gamma-on-chain 0.3 --q-manage 0.3 --lambda-block 30.0 --service-cas 4 --service-shape-mode none --dpki-offchain-shape-mean-ms 0.0 --reset-per-epsilon --seed 63100
+
+Using Omnilink PoW EVM at http://127.0.0.1:8545: maintainers=4/4 currentBlock=616362 mineEmpty=true meanBlockMs=20
+DPKIExperiment.sol:3:1: Warning: Experimental features are turned on. Do not use experimental features on live deployments.
+pragma experimental ABIEncoderV2;
+^-------------------------------^
+
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0...
+Contract: 0x47187CA8588F390639f06B85c73ac761e54A7Cd3
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0
+Running measured PKI certificate-chain workload for epsilon=0
+epsilon=0 DPKI=0.0601s PKI=0.0693s onChain=37/100 cross=0/100 chainBlocks=37 avgTxPerBlock=1.00 lambda_a=2.002/1.890 lambda_b=1.176/1.110
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0p05...
+Contract: 0x8Ef426A6F10dDA4135c2C0a50BA3faE54b575B38
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0.05
+Running measured PKI certificate-chain workload for epsilon=0.05
+epsilon=0.05 DPKI=0.0543s PKI=0.0816s onChain=40/100 cross=4/100 chainBlocks=40 avgTxPerBlock=1.00 lambda_a=1.677/1.795 lambda_b=1.118/1.205
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0p1...
+Contract: 0x82aF6D48611d8536EDD39Af05A218B23Fe6f2c06
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0.1
+Running measured PKI certificate-chain workload for epsilon=0.1
+epsilon=0.1 DPKI=0.0737s PKI=0.0882s onChain=43/100 cross=9/100 chainBlocks=43 avgTxPerBlock=1.00 lambda_a=1.669/1.701 lambda_b=1.259/1.299
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0p15...
+Contract: 0x15DD318a44c5A252827042650E61EDF1F27F16a3
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0.15
+Running measured PKI certificate-chain workload for epsilon=0.15
+epsilon=0.15 DPKI=0.0568s PKI=0.0882s onChain=46/100 cross=13/100 chainBlocks=46 avgTxPerBlock=1.00 lambda_a=1.868/1.607 lambda_b=1.591/1.393
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0p2...
+Contract: 0x9C52897B3256F68Eeb6799245d3c69B047DA737b
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0.2
+Running measured PKI certificate-chain workload for epsilon=0.2
+epsilon=0.2 DPKI=0.0683s PKI=0.0911s onChain=50/100 cross=18/100 chainBlocks=50 avgTxPerBlock=1.00 lambda_a=1.560/1.512 lambda_b=1.560/1.488
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0p25...
+Contract: 0x204DF4dc30f632a550D95AC54D53584251505f8c
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0.25
+Running measured PKI certificate-chain workload for epsilon=0.25
+epsilon=0.25 DPKI=0.0665s PKI=0.1037s onChain=53/100 cross=23/100 chainBlocks=53 avgTxPerBlock=1.00 lambda_a=1.553/1.417 lambda_b=1.751/1.583
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0p3...
+Contract: 0x0Cab3b80E78fb8B94b5bEB1D12EB94dBC00CC60A
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0.3
+Running measured PKI certificate-chain workload for epsilon=0.3
+epsilon=0.3 DPKI=0.0731s PKI=0.1158s onChain=56/100 cross=27/100 chainBlocks=56 avgTxPerBlock=1.00 lambda_a=1.387/1.323 lambda_b=1.766/1.677
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0p35...
+Contract: 0x61d14459650BBfC4451F5d994F6c070C273f90AD
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0.35
+Running measured PKI certificate-chain workload for epsilon=0.35
+epsilon=0.35 DPKI=0.0842s PKI=0.1114s onChain=59/100 cross=31/100 chainBlocks=59 avgTxPerBlock=1.00 lambda_a=1.119/1.229 lambda_b=1.610/1.772
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0p4...
+Contract: 0x5d2Fb68689aAb6004e6eEE58Ba91E8B131eFf8CA
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0.4
+Running measured PKI certificate-chain workload for epsilon=0.4
+epsilon=0.4 DPKI=0.0720s PKI=0.1225s onChain=62/100 cross=36/100 chainBlocks=62 avgTxPerBlock=1.00 lambda_a=1.037/1.134 lambda_b=1.692/1.866
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0p45...
+Contract: 0x65D5592182Cab0C1E1A41410BC28bEF629379F33
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0.45
+Running measured PKI certificate-chain workload for epsilon=0.45
+epsilon=0.45 DPKI=0.0753s PKI=0.1331s onChain=65/100 cross=40/100 chainBlocks=65 avgTxPerBlock=1.00 lambda_a=1.148/1.040 lambda_b=2.131/1.960
+Deploying DPKIExperiment to Omnilink PoW EVM for eps-0p5...
+Contract: 0x08acFd2FDe80982892d14Bd542120Ac875979570
+Preparing OpenSSL X.509 hierarchy for DPKI certificates...
+Writing initial certificate repositories and MPT roots on Omnilink PoW EVM chain...
+Omnilink PoW EVM workload senders: sender-1=0xab7F5238cbEfB02062241cf979e4994b656FB944
+Preparing OpenSSL X.509 PKI hierarchy...
+Starting online OpenSSL OCSP responders for PKI...
+Running measured Omnilink PoW DPKI workload for epsilon=0.5
+Running measured PKI certificate-chain workload for epsilon=0.5
+epsilon=0.5 DPKI=0.0808s PKI=0.1339s onChain=69/100 cross=45/100 chainBlocks=69 avgTxPerBlock=1.00 lambda_a=0.782/0.945 lambda_b=1.742/2.055
+Observed empty-block process: blocks=23686 duration=808.917s lambda_p=29.281/s
+REAL STAGE STATISTICS
+DPKI cross-domain dpkiCrossMainMptCacheAndProof: count=246 mean=0.067ms median=0.006ms
+DPKI cross-domain dpkiCrossMainMptVerify: count=246 mean=0.414ms median=0.338ms
+DPKI cross-domain dpkiCrossMainRootRead: count=246 mean=2.347ms median=1.744ms
+DPKI cross-domain dpkiOnchainAuthenticateTx: count=246 mean=75.508ms median=70.988ms
+DPKI cross-domain dpkiOnchainEntityTxIdSign: count=246 mean=0.578ms median=0.531ms
+DPKI cross-domain dpkiOnchainOpenSslVerifyCert: count=246 mean=10.623ms median=9.683ms
+DPKI cross-domain dpkiOnchainResolveAuthRecord: count=246 mean=2.621ms median=2.234ms
+DPKI cross-domain dpkiOnchainServiceRecordSign: count=246 mean=0.690ms median=0.638ms
+DPKI cross-domain dpkiOnchainVerifyResolvedRecord: count=246 mean=2.420ms median=2.233ms
+DPKI intra-off-chain dpkiAuthSignature: count=520 mean=2.070ms median=1.799ms
+DPKI intra-off-chain dpkiChainRootRead: count=520 mean=3.680ms median=2.336ms
+DPKI intra-off-chain dpkiMptCacheAndProof: count=520 mean=1.687ms median=0.042ms
+DPKI intra-off-chain dpkiMptVerify: count=520 mean=0.579ms median=0.392ms
+DPKI intra-off-chain dpkiOpenSslVerifyCert: count=520 mean=9.935ms median=9.558ms
+DPKI intra-off-chain dpkiRootMismatchRetry: count=4 mean=1.000ms median=1.000ms
+DPKI intra-off-chain dpkiWaitManagementOnRootMismatch: count=4 mean=30.840ms median=36.807ms
+DPKI intra-on-chain dpkiOnchainAuthenticateTx: count=224 mean=78.706ms median=71.720ms
+DPKI intra-on-chain dpkiOnchainEntityTxIdSign: count=224 mean=0.688ms median=0.604ms
+DPKI intra-on-chain dpkiOnchainOpenSslVerifyCert: count=224 mean=10.931ms median=9.994ms
+DPKI intra-on-chain dpkiOnchainResolveAuthRecord: count=224 mean=3.499ms median=2.684ms
+DPKI intra-on-chain dpkiOnchainServiceRecordSign: count=224 mean=0.742ms median=0.672ms
+DPKI intra-on-chain dpkiOnchainVerifyResolvedRecord: count=224 mean=2.763ms median=2.344ms
+DPKI management dpkiManagementBuildMpt: count=110 mean=5.847ms median=4.433ms
+DPKI management dpkiManagementIssueCertificate: count=110 mean=85.373ms median=79.209ms
+DPKI management dpkiManagementOpenSslIssueCsr: count=110 mean=17.788ms median=17.292ms
+DPKI management dpkiManagementOpenSslIssueExtractPubkey: count=110 mean=9.461ms median=9.159ms
+DPKI management dpkiManagementOpenSslIssueKeygen: count=110 mean=43.519ms median=38.956ms
+DPKI management dpkiManagementOpenSslIssueSignCert: count=110 mean=13.067ms median=12.643ms
+DPKI management dpkiManagementPutCertAndRootTx: count=110 mean=75.685ms median=70.257ms
+PKI cross-domain pkiLeafAssertionSign: count=248 mean=16.774ms median=16.629ms
+PKI cross-domain pkiLeafAssertionVerify: count=248 mean=8.753ms median=8.576ms
+PKI cross-domain pkiLeafOcspHttpQuery: count=248 mean=14.278ms median=11.594ms
+PKI cross-domain pkiOpenSslVerifyLeaf: count=248 mean=10.475ms median=9.648ms
+PKI cross-domain pkiOpenSslVerifyRootCA: count=248 mean=8.532ms median=8.362ms
+PKI cross-domain pkiOpenSslVerifySourceCA: count=248 mean=8.694ms median=8.524ms
+PKI cross-domain pkiOpenSslVerifyTargetCA: count=248 mean=8.601ms median=8.462ms
+PKI cross-domain pkiRootCAAssertionSign: count=248 mean=16.776ms median=16.722ms
+PKI cross-domain pkiRootCAAssertionVerify: count=248 mean=9.099ms median=8.660ms
+PKI cross-domain pkiRootCAOcspHttpQuery: count=248 mean=13.366ms median=11.244ms
+PKI cross-domain pkiSourceCAAssertionSign: count=248 mean=16.792ms median=16.695ms
+PKI cross-domain pkiSourceCAAssertionVerify: count=248 mean=8.851ms median=8.570ms
+PKI cross-domain pkiSourceCAOcspHttpQuery: count=248 mean=14.709ms median=11.316ms
+PKI cross-domain pkiTargetCAAssertionSign: count=248 mean=16.777ms median=16.736ms
+PKI cross-domain pkiTargetCAAssertionVerify: count=248 mean=8.805ms median=8.603ms
+PKI cross-domain pkiTargetCAOcspHttpQuery: count=248 mean=14.087ms median=11.364ms
+PKI intra-pki pkiLeafOcspHttpQuery: count=742 mean=14.751ms median=11.747ms
+PKI intra-pki pkiOpenSslAssertionSign: count=742 mean=17.177ms median=17.081ms
+PKI intra-pki pkiOpenSslAssertionVerify: count=742 mean=9.039ms median=8.659ms
+PKI intra-pki pkiOpenSslVerifyLeaf: count=742 mean=10.525ms median=9.596ms
+PKI management pkiLeafOcspHttpQuery: count=110 mean=18.313ms median=13.904ms
+PKI management pkiOcspResponderHotUpdate: count=110 mean=65.301ms median=64.897ms
+PKI management pkiOpenSslIssueCsr: count=110 mean=17.535ms median=17.226ms
+PKI management pkiOpenSslIssueExtractPubkey: count=110 mean=9.423ms median=9.166ms
+PKI management pkiOpenSslIssueKeygen: count=110 mean=42.664ms median=40.346ms
+PKI management pkiOpenSslIssueSignCert: count=110 mean=12.997ms median=12.636ms
+PKI management pkiOpenSslVerifyLeaf: count=110 mean=9.550ms median=9.237ms
+REAL CHAIN TX BREAKDOWN
+authenticateSigned: count=470 total=76.976ms serializeWait=0.006ms estimateGas=4.486ms sign=1.426ms submitToHash=2.034ms hashToReceipt=68.811ms
+putCertificate: count=209 total=80.150ms serializeWait=0.005ms estimateGas=3.962ms sign=1.502ms submitToHash=1.829ms hashToReceipt=72.641ms
+putCertificateAndDomainRoot: count=110 total=75.658ms serializeWait=0.006ms estimateGas=6.286ms sign=1.525ms submitToHash=1.904ms hashToReceipt=65.748ms
+putDomainRoot: count=33 total=74.355ms serializeWait=0.016ms estimateGas=3.496ms sign=1.434ms submitToHash=1.939ms hashToReceipt=67.387ms
+REAL CALIBRATED PARAMETERS
+lambdaTotalMeasured=2.9911687935799214
+pManageMeasured=0.1
+gammaOnChainMeasured=0.3010752688172043
+qManageMeasured=0.10921778381711994
+muModelOffchainAuthMeasured=54.83904418790315
+pkiQManageMeasured=0.27841113002155476
+pkiMuPrimaryAuthMeasured=17.81790187844766
+pkiMuCrossExtraCertificateMeasured=20.00950407599043
+pkiMeanPrimaryAuthServiceSec=0.05612333072782206
+pkiMuSingleCertificateMeasured=20.00950407599043
+pkiMeanSingleCertificateServiceSec=0.049976251095593525
+pkiMeanManagementServiceSec=0.20158436454561623
+lambdaBlockMeasured=29.28111321092955
+lambdaBlockMeasurementSource=empty_block_height_observation
+lambdaBlockByHeightMeasured=29.28111321092955
+lambdaBlockConfigured=50.0
+lambdaBlockWindowMeasured=0.7535796204241153
+meanChainConfirmSec=0.06574787818247621
+powMineEmpty=True
+powMeanBlockMs=20.0
+serviceCAs=4
+meanOnchainAuthServiceSec=0.09638627617023093
+meanOffchainAuthServiceSec=0.01823518288490864
+meanPooledAuthServiceSec=0.05533721707086973
+meanManagementServiceSec=0.16696166363751344
+muOffchainAuthMeasured=54.83904418790315
+muPooledAuthMeasured=18.07102078731772
+pkiMeanServiceSec=0.10349636054549706
+pkiCrossDomainMeanServiceSec=0.20172663346768147
+chainActiveWindowSec=769.659879700005
+chainObservedBlocks=580
+chainObservation={'startBlockNumber': 616377, 'endBlockNumber': 640063, 'observedBlocks': 23686, 'startWallMs': 1781268062797, 'endWallMs': 1781268871713, 'durationSec': 808.9173328000008, 'lambdaBlockByHeightPerSec': 29.28111321092955, 'powRuntimeConfig': {'path': 'C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\omnilink-pow-4nodes\\runtime\\configs\\node0.toml', 'exists': True, 'mineEmpty': True, 'meanBlockMs': 20, 'configuredLambdaBlockPerSec': 50}}
+serviceShape={'serviceShapeMode': 'target-exponential', 'effectiveServiceShapeMode': 'none', 'dpkiAuthShapeMeanMs': 0.0, 'dpkiCrossShapeMeanMs': 0.0, 'dpkiOnchainShapeMeanMs': 0.0, 'dpkiIntraOffchainShapeMeanMs': 0.0, 'dpkiOffchainShapeMeanMs': 0.0, 'dpkiManagementShapeMeanMs': 0.0, 'pkiAuthShapeMeanMs': 0.0, 'pkiCrossShapeMeanMs': 0.0, 'pkiIntraShapeMeanMs': 0.0, 'pkiManagementShapeMeanMs': 0.0, 'derivedAuthShapeMeanMs': 117.6470588235294, 'derivedManagementShapeMeanMs': 392.156862745098}
+calibratedTheoryFinite=True
+
+REAL DELAY STATISTICS
+model            kind  count  latencyMeanSec  latencyMedianSec  queueMeanSec  serviceMeanSec  serviceMedianSec  serviceStdSec  serviceCv
+ DPKI    cross-domain    246        0.101275          0.091021      0.005874        0.095402          0.089933       0.022529   0.236145
+ DPKI intra-off-chain    520        0.018271          0.016479      0.000036        0.018235          0.016454       0.008458   0.463852
+ DPKI  intra-on-chain    224        0.102259          0.091273      0.004791        0.097468          0.089637       0.025343   0.260010
+ DPKI      management    110        0.174557          0.167929      0.007596        0.166962          0.161360       0.032936   0.197266
+  PKI    cross-domain    248        0.201752          0.195372      0.000025        0.201727          0.195344       0.026618   0.131949
+  PKI       intra-pki    742        0.056152          0.049034      0.000028        0.056123          0.049009       0.021683   0.386351
+  PKI      management    110        0.201616          0.192467      0.000032        0.201584          0.192441       0.042793   0.212283
+
+calibratedTheoryFinite=True
+Wrote C:\Users\admin\Desktop\Blockchain_based DPKI platform\simu2_tail_prob\simulation_results_by_epsilon.csv
+Regenerated C:\Users\admin\Desktop\Blockchain_based DPKI platform\simu2_tail_prob\Fig7_epsilon_ET.png
+Wrote C:\Users\admin\Desktop\Blockchain_based DPKI platform\simu2_tail_prob\real_delay_statistics.csv

@@ -1,0 +1,74 @@
+Stopped node0 PID 26384.
+Stopped node1 PID 24804.
+Stopped node2 PID 34604.
+Stopped node3 PID 19568.
+Started node0 PID 28544: web3=http://127.0.0.1:8545 jrpc=http://127.0.0.1:8801 p2p=13803
+Started node1 PID 26880: web3=http://127.0.0.1:8555 jrpc=http://127.0.0.1:8811 p2p=13804
+Started node2 PID 24944: web3=http://127.0.0.1:8565 jrpc=http://127.0.0.1:8821 p2p=13805
+Started node3 PID 34776: web3=http://127.0.0.1:8575 jrpc=http://127.0.0.1:8831 p2p=13806
+Omnilink PoW 4-node network is ready.
+Aggregate target block interval: 25 ms
+Aggregate mining mode: node0 runs 4 local virtual miners; node1-node3 validate/sync without mining.
+Web3 RPC for DPKI: http://127.0.0.1:8545
+Runtime: C:\Users\admin\Desktop\Blockchain_based DPKI platform\DPKI-and-DID-platform-Lenovo\omnilink-pow-4nodes\runtime
+run final_first_three/fig2_lambda:fig2_lp_ms25_lambda_4
+run final_first_three/fig2_lambda:fig2_lp_ms25_lambda_6
+run final_first_three/fig2_lambda:fig2_lp_ms25_lambda_8
+run final_first_three/fig2_lambda:fig2_lp_ms25_lambda_10
+run final_first_three/fig2_lambda:fig2_lp_ms25_lambda_12
+run final_first_three/fig2_lambda:fig2_lp_ms25_lambda_14
+run final_first_three/fig2_lambda:fig2_lp_ms25_lambda_16
+Stopped node0 PID 28544.
+Stopped node1 PID 26880.
+Stopped node2 PID 24944.
+Stopped node3 PID 34776.
+Started node0 PID 29944: web3=http://127.0.0.1:8545 jrpc=http://127.0.0.1:8801 p2p=13803
+Started node1 PID 28612: web3=http://127.0.0.1:8555 jrpc=http://127.0.0.1:8811 p2p=13804
+Started node2 PID 33544: web3=http://127.0.0.1:8565 jrpc=http://127.0.0.1:8821 p2p=13805
+Started node3 PID 23840: web3=http://127.0.0.1:8575 jrpc=http://127.0.0.1:8831 p2p=13806
+Omnilink PoW 4-node network is ready.
+Aggregate target block interval: 20 ms
+Aggregate mining mode: node0 runs 4 local virtual miners; node1-node3 validate/sync without mining.
+Web3 RPC for DPKI: http://127.0.0.1:8545
+Runtime: C:\Users\admin\Desktop\Blockchain_based DPKI platform\DPKI-and-DID-platform-Lenovo\omnilink-pow-4nodes\runtime
+run final_first_three/fig2_lambda:fig2_lp_ms20_lambda_4
+run final_first_three/fig2_lambda:fig2_lp_ms20_lambda_6
+run final_first_three/fig2_lambda:fig2_lp_ms20_lambda_8
+run final_first_three/fig2_lambda:fig2_lp_ms20_lambda_10
+run final_first_three/fig2_lambda:fig2_lp_ms20_lambda_12
+run final_first_three/fig2_lambda:fig2_lp_ms20_lambda_14
+run final_first_three/fig2_lambda:fig2_lp_ms20_lambda_16
+Stopped node0 PID 29944.
+Stopped node1 PID 28612.
+Stopped node2 PID 33544.
+Stopped node3 PID 23840.
+Started node0 PID 29012: web3=http://127.0.0.1:8545 jrpc=http://127.0.0.1:8801 p2p=13803
+Started node1 PID 30144: web3=http://127.0.0.1:8555 jrpc=http://127.0.0.1:8811 p2p=13804
+Started node2 PID 29832: web3=http://127.0.0.1:8565 jrpc=http://127.0.0.1:8821 p2p=13805
+Started node3 PID 32792: web3=http://127.0.0.1:8575 jrpc=http://127.0.0.1:8831 p2p=13806
+Omnilink PoW 4-node network is ready.
+Aggregate target block interval: 15 ms
+Aggregate mining mode: node0 runs 4 local virtual miners; node1-node3 validate/sync without mining.
+Web3 RPC for DPKI: http://127.0.0.1:8545
+Runtime: C:\Users\admin\Desktop\Blockchain_based DPKI platform\DPKI-and-DID-platform-Lenovo\omnilink-pow-4nodes\runtime
+run final_first_three/fig2_lambda:fig2_lp_ms15_lambda_4
+run final_first_three/fig2_lambda:fig2_lp_ms15_lambda_6
+run final_first_three/fig2_lambda:fig2_lp_ms15_lambda_8
+run final_first_three/fig2_lambda:fig2_lp_ms15_lambda_10
+run final_first_three/fig2_lambda:fig2_lp_ms15_lambda_12
+run final_first_three/fig2_lambda:fig2_lp_ms15_lambda_14
+run final_first_three/fig2_lambda:fig2_lp_ms15_lambda_16
+Stopped node0 PID 29012.
+Stopped node1 PID 30144.
+Stopped node2 PID 29832.
+Stopped node3 PID 32792.
+Started node0 PID 23332: web3=http://127.0.0.1:8545 jrpc=http://127.0.0.1:8801 p2p=13803
+Started node1 PID 30196: web3=http://127.0.0.1:8555 jrpc=http://127.0.0.1:8811 p2p=13804
+Started node2 PID 31980: web3=http://127.0.0.1:8565 jrpc=http://127.0.0.1:8821 p2p=13805
+Started node3 PID 8392: web3=http://127.0.0.1:8575 jrpc=http://127.0.0.1:8831 p2p=13806
+Omnilink PoW 4-node network is ready.
+Aggregate target block interval: 20 ms
+Aggregate mining mode: node0 runs 4 local virtual miners; node1-node3 validate/sync without mining.
+Web3 RPC for DPKI: http://127.0.0.1:8545
+Runtime: C:\Users\admin\Desktop\Blockchain_based DPKI platform\DPKI-and-DID-platform-Lenovo\omnilink-pow-4nodes\runtime
+wrote final first-three figures under C:\Users\admin\Desktop\Blockchain_based DPKI platform\simu2_tail_prob\final_real_figures
