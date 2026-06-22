@@ -79,7 +79,7 @@ class RunSpec:
     estimate_gas: bool = False
     raw_tx_submit_timeout_ms: int = 250
     raw_tx_submit_retries: int = 4
-    raw_tx_receipt_timeout_ms: int = 15000
+    raw_tx_receipt_timeout_ms: int = 30000
     lambda_block: float = BASE["lambda_block"]
     offchain_shape_ms: float = BASE["offchain_shape_ms"]
     service_shape_mode: str = BASE["service_shape_mode"]
