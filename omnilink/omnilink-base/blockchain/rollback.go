@@ -1,0 +1,140 @@
+// Copyright Fuzamei Corp. 2018 All Rights Reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package blockchain
+
+import (
+	"fmt"
+	"syscall"
+
+	"code.corp.bcollie.net/omnilink/omnilink-base/common"
+	"code.corp.bcollie.net/omnilink/omnilink-base/common/db"
+	"code.corp.bcollie.net/omnilink/omnilink-base/types"
+)
+
+// Rollbackblock chain Rollbackblock
+func (chain *BlockChain) Rollbackblock() {
+	tipnode := chain.bestChain.Tip()
+	if chain.cfg.RollbackBlock > 0 {
+		if chain.NeedRollback(tipnode.height, chain.cfg.RollbackBlock) {
+			chainlog.Info("chain rollback start")
+			chain.Rollback()
+			chainlog.Info("chain rollback end")
+		}
+		syscall.Exit(0)
+	}
+}
+
+// NeedRollback need Rollback
+func (chain *BlockChain) NeedRollback(curHeight, rollHeight int64) bool {
+	if curHeight <= rollHeight {
+		chainlog.Info("curHeight is small than rollback height, no need rollback")
+		return false
+	}
+	cfg := chain.client.GetConfig()
+	kvmvccMavlFork := cfg.GetDappFork("store-kvmvccmavl", "ForkKvmvccmavl")
+	if curHeight >= kvmvccMavlFork+10000 && rollHeight <= kvmvccMavlFork {
+		chainlog.Info("because ForkKvmvccmavl", "current height", curHeight, "not support rollback to", rollHeight)
+		return false
+	}
+	return true
+}
+
+// Rollback chain Rollback
+func (chain *BlockChain) Rollback() {
+	cfg := chain.client.GetConfig()
+	//获取当前的tip节点
+	tipnode := chain.bestChain.Tip()
+	startHeight := tipnode.height
+	for i := startHeight; i > chain.cfg.RollbackBlock; i-- {
+		blockdetail, err := chain.blockStore.LoadBlock(i, nil)
+		if err != nil {
+			panic(fmt.Sprintln("rollback LoadBlock err :", err))
+		}
+		if chain.cfg.RollbackSave { //本地保存临时区块
+			lastHeightSave := false
+			if i == startHeight {
+				lastHeightSave = true
+			}
+			err = chain.WriteBlockToDbTemp(blockdetail.Block, lastHeightSave)
+			if err != nil {
+				panic(fmt.Sprintln("rollback WriteBlockToDbTemp fail", "height", blockdetail.Block.Height, "error ", err))
+			}
+		}
+		sequence := int64(-1)
+		if chain.isParaChain {
+			// 获取平行链的seq
+			sequence, err = chain.ProcGetMainSeqByHash(blockdetail.Block.Hash(cfg))
+			if err != nil {
+				chainlog.Error("chain rollback get main seq fail", "height: ", i, "err", err, "hash", common.ToHex(blockdetail.Block.Hash(cfg)))
+			}
+		}
+		err = chain.disBlock(blockdetail, sequence)
+		if err != nil {
+			panic(fmt.Sprintln("rollback block fail ", "height", blockdetail.Block.Height, "blockHash:", common.ToHex(blockdetail.Block.Hash(cfg))))
+		}
+		// 删除storedb中的状态高度
+		chain.sendDelStore(blockdetail.Block.StateHash, blockdetail.Block.Height)
+		chainlog.Info("chain rollback ", "height: ", i, "blockheight", blockdetail.Block.Height, "hash", common.ToHex(blockdetail.Block.Hash(cfg)), "state hash", common.ToHex(blockdetail.Block.StateHash))
+	}
+}
+
+// 删除blocks
+func (chain *BlockChain) disBlock(blockdetail *types.BlockDetail, sequence int64) error {
+	var lastSequence int64
+	cfg := chain.client.GetConfig()
+
+	//批量删除block的信息从磁盘中
+	newbatch := chain.blockStore.NewBatch(true)
+
+	//从db中删除tx相关的信息
+	err := chain.blockStore.DelTxs(newbatch, blockdetail)
+	if err != nil {
+		chainlog.Error("disBlock DelTxs:", "height", blockdetail.Block.Height, "err", err)
+		return err
+	}
+
+	//优先删除缓存中的block信息
+	chain.DelCacheBlock(blockdetail.Block.Height, blockdetail.Block.Hash(cfg))
+
+	//从db中删除block相关的信息
+	lastSequence, err = chain.blockStore.DelBlock(newbatch, blockdetail, sequence)
+	if err != nil {
+		chainlog.Error("disBlock DelBlock:", "height", blockdetail.Block.Height, "err", err)
+		return err
+	}
+	db.MustWrite(newbatch)
+
+	//更新最新的高度和header为上一个块
+	chain.blockStore.UpdateHeight()
+	chain.blockStore.UpdateLastBlock(blockdetail.Block.ParentHash)
+
+	//通知共识，mempool和钱包删除block
+	err = chain.SendDelBlockEvent(blockdetail)
+	if err != nil {
+		chainlog.Error("disBlock SendDelBlockEvent", "err", err)
+	}
+
+	//目前非平行链并开启isRecordBlockSequence功能和enablePushSubscribe
+	if chain.isRecordBlockSequence && chain.enablePushSubscribe {
+		chain.push.UpdateSeq(lastSequence)
+		chainlog.Debug("isRecordBlockSequence", "lastSequence", lastSequence, "height", blockdetail.Block.Height)
+	}
+
+	return nil
+}
+
+// 通知store删除区块，主要针对kvmvcc
+func (chain *BlockChain) sendDelStore(hash []byte, height int64) {
+	storeDel := &types.StoreDel{StateHash: hash, Height: height}
+	msg := chain.client.NewMessage("store", types.EventStoreDel, storeDel)
+	err := chain.client.Send(msg, true)
+	if err != nil {
+		chainlog.Debug("sendDelStoreEvent -->>store", "err", err)
+	}
+	_, err = chain.client.Wait(msg)
+	if err != nil {
+		panic(fmt.Sprintln("sendDelStore", err))
+	}
+}

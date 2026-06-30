@@ -1,0 +1,88 @@
+{
+  "22": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "Blockchain": {
+    "providerUrl": "http://121.248.50.149:8545",
+    "account": "0xab7F5238cbEfB02062241cf979e4994b656FB944",
+    "privateKey": "0x73e66f099144f820753aa3a5e131785b528081da572e16339fcd02de05de719e"
+  },
+  "contract": {
+    "abiPath": "authentication.abi",
+    "bytecodePath": "authentication.code",
+    "address": "0xfdE2376dc60281852f9DEE47988C8017EE3185Ce"
+  },
+  "Servernetwork": {
+    "serverHost": "121.248.50.149",
+    "serverPort": 12349
+  },
+  "UE2": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "UE3": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "sb1": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "UE1": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "UEZ": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "KSM": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "S": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "s": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "dsd": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "gg": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "ss": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "ssss": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "asghd": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "kksm": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "rew": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "qsb": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  },
+  "qsp": {
+    "ueHost": "121.248.50.149",
+    "uePort": 12348
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "rpc": "http://127.0.0.1:8545",
+  "durationSecRequested": 60.0,
+  "durationSecObserved": 60.00249690003693,
+  "warmupSec": 0.0,
+  "pollMs": 5.0,
+  "rpcTimeoutSec": 5.0,
+  "initialHeightBeforeWarmup": 4892964,
+  "startBlockNumber": 4892964,
+  "endBlockNumber": 4894661,
+  "observedBlocksByHeight": 1697,
+  "observedEventsRecorded": 1697,
+  "heightChangeObservations": 1617,
+  "interpolatedBlocks": 158,
+  "interpolatedBlockFraction": 0.09310548025928109,
+  "pollCount": 6923,
+  "rpcErrors": 0,
+  "lambdaByHeightPerSec": 28.28215637137853
+}

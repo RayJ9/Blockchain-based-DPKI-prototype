@@ -1,0 +1,143 @@
+{
+  "createdAt": "2026-06-18T22:45:18",
+  "scriptArgs": {
+    "p_values": [
+      0.0,
+      0.05,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.35,
+      0.4,
+      0.45,
+      0.5
+    ],
+    "requests": 2000,
+    "lambda_arrival": 4.0,
+    "epsilon": 0.1,
+    "gamma_on_chain": 0.3,
+    "q_manage": 0.45,
+    "service_cas": 4,
+    "dpki_offchain_workers": null,
+    "max_onchain_in_flight": 1,
+    "tx_senders": 1,
+    "service_shape_mode": "none",
+    "actual_execution_mode": "serial",
+    "dpki_root_read_mode": "chain",
+    "dpki_proof_read_mode": "http",
+    "dpki_proof_base_port": 20080,
+    "dpki_auth_shape_mean_ms": 0.0,
+    "dpki_cross_shape_mean_ms": 0.0,
+    "dpki_onchain_shape_mean_ms": 0.0,
+    "dpki_intra_offchain_shape_mean_ms": 0.0,
+    "dpki_management_shape_mean_ms": 0.0,
+    "pki_auth_shape_mean_ms": 0.0,
+    "pki_cross_shape_mean_ms": 0.0,
+    "pki_intra_shape_mean_ms": 0.0,
+    "pki_management_shape_mean_ms": 0.0,
+    "dpki_proof_http_mean_ms": 7.5,
+    "dpki_proof_http_tail_probability": 0.05,
+    "dpki_proof_http_tail_multiplier": 15.0,
+    "dpki_auth_transfer_http_mean_ms": 1.0,
+    "dpki_auth_transfer_http_tail_probability": 0.22,
+    "dpki_auth_transfer_http_tail_multiplier": 6.0,
+    "dpki_onchain_extra_http_mean_ms": 0.0,
+    "dpki_onchain_extra_http_tail_probability": 0.0,
+    "dpki_onchain_extra_http_tail_multiplier": 1.0,
+    "dpki_cross_extra_http_mean_ms": 0.0,
+    "dpki_cross_extra_http_tail_probability": 0.0,
+    "dpki_cross_extra_http_tail_multiplier": 1.0,
+    "dpki_management_http_mean_ms": 10.0,
+    "dpki_management_http_tail_probability": 0.35,
+    "dpki_management_http_tail_multiplier": 10.0,
+    "dpki_management_transfer_http_mean_ms": 30.0,
+    "dpki_management_transfer_http_tail_probability": 0.35,
+    "dpki_management_transfer_http_tail_multiplier": 10.0,
+    "dpki_management_extra_http_mean_ms": 0.0,
+    "dpki_management_extra_http_tail_probability": 0.0,
+    "dpki_management_extra_http_tail_multiplier": 1.0,
+    "pki_auth_http_mean_ms": 5.0,
+    "pki_auth_http_tail_probability": 0.2,
+    "pki_auth_http_tail_multiplier": 4.0,
+    "pki_auth_transfer_http_mean_ms": 8.0,
+    "pki_auth_transfer_http_tail_probability": 0.35,
+    "pki_auth_transfer_http_tail_multiplier": 7.0,
+    "pki_cross_extra_http_mean_ms": 0.0,
+    "pki_cross_extra_http_tail_probability": 0.0,
+    "pki_cross_extra_http_tail_multiplier": 1.0,
+    "pki_management_http_mean_ms": 6.0,
+    "pki_management_http_tail_probability": 0.15,
+    "pki_management_http_tail_multiplier": 3.0,
+    "pki_management_transfer_http_mean_ms": 8.0,
+    "pki_management_transfer_http_tail_probability": 0.2,
+    "pki_management_transfer_http_tail_multiplier": 4.0,
+    "pki_management_extra_http_mean_ms": 0.0,
+    "pki_management_extra_http_tail_probability": 0.0,
+    "pki_management_extra_http_tail_multiplier": 1.0,
+    "lambda_block": 22.0,
+    "mean_block_ms": 28,
+    "seed": 82001,
+    "tag": "final_r2000",
+    "output_dir": "simu2_tail_prob/Fig7-p/result",
+    "reuse_existing": false,
+    "restart_pow": true,
+    "stop_pow": false,
+    "ylim": null,
+    "pki_mu_scale": 1.0
+  },
+  "logsDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\simu2_tail_prob\\Fig7-p\\result\\logs",
+  "runs": [
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0_r2000",
+      "p": 0.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0p05_r2000",
+      "p": 0.05
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0p1_r2000",
+      "p": 0.1
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0p15_r2000",
+      "p": 0.15
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0p2_r2000",
+      "p": 0.2
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0p25_r2000",
+      "p": 0.25
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0p3_r2000",
+      "p": 0.3
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0p35_r2000",
+      "p": 0.35
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0p4_r2000",
+      "p": 0.4
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0p45_r2000",
+      "p": 0.45
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\p_experiment\\final_r2000_p_0p5_r2000",
+      "p": 0.5
+    }
+  ],
+  "checks": {
+    "allDpkiInBounds": true,
+    "maxPkiAbsError": 0.007144609960908696,
+    "maxTxTotalMs": 324.31569999456406,
+    "slowTxOver1000ms": 0
+  }
+}

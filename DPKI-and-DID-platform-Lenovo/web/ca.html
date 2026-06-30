@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CA管理 - DPKI平台</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="language-switch.css">
+    <script src="language.js"></script>
+    <style>
+        .list-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .list-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #fff;
+            text-align: center;
+        }
+        
+        .list-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .list-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .list-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .item-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        
+        .item-status {
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .status-active {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status-inactive {
+            background: #f44336;
+            color: white;
+        }
+        
+        .status-certified {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .status-pending {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .status-created {
+            background: #9E9E9E;
+            color: white;
+        }
+        
+        .item-path {
+            font-size: 0.9em;
+            color: #ccc;
+            word-break: break-all;
+        }
+        
+        .logs-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #fff;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-left: 3px solid #4CAF50;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+        
+        .log-timestamp {
+            color: #888;
+            font-size: 0.8em;
+        }
+        
+        .log-message {
+            margin-top: 3px;
+        }
+        
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-link {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        /* 时延统计样式 */
+        .function-title-with-timing {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .timing-display {
+            font-size: 0.8em;
+            color: #4CAF50;
+            font-weight: normal;
+            background: rgba(76, 175, 80, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .timing-display.timing-active {
+            color: #FF9800;
+            background: rgba(255, 152, 0, 0.1);
+            border-color: rgba(255, 152, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-header">
+            <h1 data-lang-key="dpki_platform_title">DPKI管理平台</h1>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link" data-lang-key="nav_home">首页</a>
+                <a href="ca.html" class="nav-link active" data-lang-key="nav_ca">CA管理</a>
+                <a href="ue.html" class="nav-link" data-lang-key="nav_ue">UE管理</a>
+                <a href="did.html" class="nav-link" data-lang-key="nav_did">DID平台</a>
+            </div>
+        </div>
+
+        <!-- CA列表 -->
+        <div class="list-section">
+            <div class="list-title" data-lang-key="ca_list_title">CA列表</div>
+            <div id="caList" class="list-container">
+                <div class="list-item">
+                    <div class="item-name" data-lang-key="loading">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UE列表 -->
+        <div class="list-section">
+            <div class="list-title" data-lang-key="ue_list_title">UE列表</div>
+            <div id="ueList" class="list-container">
+                <div class="list-item">
+                    <div class="item-name" data-lang-key="loading">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CA服务器控制 -->
+        <div class="panel" style="display: none;">
+            <h2 data-lang-key="ca_server_control">CA服务器控制</h2>
+            <div class="server-control">
+                <div class="server-status">
+                    <span data-lang-key="ca_server_status">CA服务器状态: </span>
+                    <span id="caStatus" class="status-indicator" data-lang-key="checking">检查中...</span>
+                </div>
+                <div class="server-buttons">
+                    <button id="startCaBtn" class="btn btn-success" data-lang-key="start_ca_server">启动CA服务器</button>
+                    <button id="stopCaBtn" class="btn btn-danger" data-lang-key="stop_ca_server">停止CA服务器</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CA功能 -->
+        <div class="panel">
+            <h2 data-lang-key="ca_functions">CA功能</h2>
+            
+            <!-- 左右分栏布局 -->
+            <div class="function-layout">
+                <!-- 左侧操作区 -->
+                <div class="function-left">
+                    <div class="function-group">
+                        <div class="function-title-with-timing">
+                            <h3 data-lang-key="init_root_cert">初始化根证书</h3>
+                            <span class="timing-display" id="initCaTiming" data-lang-key="waiting_operation">等待操作</span>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">CA-</span>
+                                <input type="text" id="caName" data-lang-placeholder="ca_name_placeholder" placeholder="CA名称/标签" class="form-input with-prefix">
+                            </div>
+                            <button id="initCaBtn" class="btn btn-primary" data-lang-key="init_ca">初始化CA</button>
+                        </div>
+                    </div>
+
+                    <div class="function-group">
+                        <div class="function-title-with-timing">
+                            <h3 data-lang-key="sign_ue_cert">签署UE证书</h3>
+                            <span class="timing-display" id="signCertTiming" data-lang-key="waiting_operation">等待操作</span>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">CA-</span>
+                                <input type="text" id="signCaName" data-lang-placeholder="ca_name_placeholder" placeholder="CA名称" class="form-input with-prefix">
+                            </div>
+                            <input type="text" id="signUeName" data-lang-placeholder="ue_name_placeholder" placeholder="UE名称" class="form-input">
+                            <button id="signCertBtn" class="btn btn-primary" data-lang-key="sign_cert">签署证书</button>
+                        </div>
+                    </div>
+
+                    <div class="function-group">
+                        <div class="function-title-with-timing">
+                            <h3 data-lang-key="update_cert">更新证书</h3>
+                            <span class="timing-display" id="updateCertTiming" data-lang-key="waiting_operation">等待操作</span>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">CA-</span>
+                                <input type="text" id="updateCaName" data-lang-placeholder="ca_name_placeholder" placeholder="CA名称" class="form-input with-prefix">
+                            </div>
+                            <input type="text" id="updateUeName" data-lang-placeholder="ue_name_placeholder" placeholder="UE名称" class="form-input">
+                            <button id="updateCertBtn" class="btn btn-warning" data-lang-key="update_cert_btn">更新证书</button>
+                        </div>
+                    </div>
+
+                    <div class="function-group">
+                        <div class="function-title-with-timing">
+                            <h3 data-lang-key="revoke_cert">撤销证书</h3>
+                            <span class="timing-display" id="revokeCertTiming" data-lang-key="waiting_operation">等待操作</span>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="revokeUeName" data-lang-placeholder="ue_name_placeholder" placeholder="UE名称" class="form-input">
+                            <button id="revokeCertBtn" class="btn btn-danger" data-lang-key="revoke_cert_btn">撤销证书</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧消息回执区 -->
+                <div class="function-right">
+                    <h3 data-lang-key="operation_receipt">操作回执</h3>
+                    <div id="caResponseArea" class="response-area">
+                        <div class="response-placeholder" data-lang-key="operation_result_placeholder">操作结果将在此显示...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CA系统日志 -->
+        <div class="panel">
+            <h2 data-lang-key="ca_system_logs">CA系统日志</h2>
+            <div id="caSystemLogs" class="logs-container">
+                <!-- CA日志内容将在这里动态加载 -->
+            </div>
+        </div>
+
+        <!-- 部署智能合约 -->
+        <div class="panel" style="margin-top: 60px;">
+            <div class="function-title-with-timing">
+                <h2 data-lang-key="deploy_smart_contract">部署智能合约</h2>
+                <span class="timing-display" id="deployContractTiming" data-lang-key="waiting_operation">等待操作</span>
+            </div>
+            <div class="setting-item">
+                <div class="warning-box">
+                    ⚠️ <strong data-lang-key="warning">警告：</strong><span data-lang-key="deploy_warning">部署智能合约后将清空所有证书库数据，包括CA和UE的所有证书文件！</span>
+                </div>
+                <button id="deployContractBtn" class="cleanup-btn" style="margin-top: 20px;" data-lang-key="deploy_contract_btn">
+                    📋 部署智能合约
+                </button>
+                <div class="setting-desc" data-lang-key="deploy_contract_desc">部署DPKI智能合约到区块链网络，并自动更新配置文件中的合约地址</div>
+                <div id="deployStatus" class="cleanup-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="ca.js"></script>
+</body>
+</html>

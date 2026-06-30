@@ -1,0 +1,10 @@
+tool
+datadir*
+*.log
+*.exe
+*.orig
+*.bak
+*.log.last
+.idea
+.vscode
+build/*

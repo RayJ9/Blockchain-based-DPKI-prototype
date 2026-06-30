@@ -3,7 +3,13 @@
 This folder is dedicated to the epsilon figure only. It does not change the
 other final figures.
 
-Replot the figure from the retained CSV data:
+Run the full epsilon experiment through the prototype and Omnilink PoW chain:
+
+```powershell
+python Fig6-epsilon\run_fig6_epsilon.py --requests 2000 --stop-pow
+```
+
+Replot the figure from the retained CSV data only:
 
 ```powershell
 python Fig6-epsilon\replot_figure.py

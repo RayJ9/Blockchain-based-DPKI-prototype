@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  main:
+    build:
+      context: .
+    environment:
+      ChainConfig: "omnilink.test.toml"
+#    expose:
+#      - "8802"
+
+  para1:
+    build:
+      context: .
+    environment:
+      ChainConfig: "omnilink.para1.toml"
+
+  para2:
+    build:
+      context: .
+    environment:
+      ChainConfig: "omnilink.para2.toml"

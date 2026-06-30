@@ -1,0 +1,107 @@
+// Copyright Fuzamei Corp. 2018 All Rights Reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package blockchain_test
+
+import (
+	"os"
+	"testing"
+	"time"
+
+	dbm "code.corp.bcollie.net/omnilink/omnilink-base/common/db"
+	_ "code.corp.bcollie.net/omnilink/omnilink-base/system"
+	"code.corp.bcollie.net/omnilink/omnilink-base/types"
+	"code.corp.bcollie.net/omnilink/omnilink-base/util/testnode"
+	"github.com/stretchr/testify/require"
+)
+
+func TestExportBlockProc(t *testing.T) {
+	mock33 := testnode.New("", nil)
+	blockchain := mock33.GetBlockChain()
+	chainlog.Debug("TestExportBlockProc begin --------------------")
+
+	//构造1030个区块
+	curheight := blockchain.GetBlockHeight()
+	addblockheight := curheight + 1030
+	var err error
+	cfg := mock33.GetClient().GetConfig()
+	for {
+		_, err = addMainTx(cfg, mock33.GetGenesisKey(), mock33.GetAPI())
+		require.NoError(t, err)
+
+		curheight = blockchain.GetBlockHeight()
+		_, err = blockchain.GetBlock(curheight)
+		require.NoError(t, err)
+		if curheight >= addblockheight {
+			break
+		}
+		time.Sleep(sendTxWait)
+	}
+
+	//导出block信息,startheight从1开始
+	title := mock33.GetCfg().Title
+	driver := mock33.GetCfg().BlockChain.Driver
+	dbPath := ""
+
+	//异常测试
+	err = blockchain.ExportBlock(title, dbPath, 10000)
+	require.Equal(t, err, types.ErrInvalidParam)
+
+	err = blockchain.ExportBlock(title, dbPath, 0)
+	require.NoError(t, err)
+	//读取文件头信息
+	db := dbm.NewDB(title, driver, dbPath, 4)
+	headertitle, err := db.Get([]byte("F:header:"))
+	require.NoError(t, err)
+
+	var fileHeader types.FileHeader
+	err = types.Decode(headertitle, &fileHeader)
+	require.NoError(t, err)
+	require.Equal(t, driver, fileHeader.Driver)
+	require.Equal(t, int64(0), fileHeader.GetStartHeight())
+	require.Equal(t, title, fileHeader.GetTitle())
+	db.Close()
+	mock33.Close()
+
+	testImportBlockProc(t)
+
+	//异常测试
+	err = blockchain.ExportBlock(title, dbPath, -1)
+	require.Equal(t, err, types.ErrInvalidParam)
+
+	err = blockchain.ExportBlock("test", dbPath, 0)
+	require.Equal(t, err, types.ErrInvalidParam)
+
+	chainlog.Debug("TestExportBlock end --------------------")
+}
+
+func testImportBlockProc(t *testing.T) {
+	mock33 := testnode.New("", nil)
+	defer mock33.Close()
+	blockchain := mock33.GetBlockChain()
+	chainlog.Debug("TestImportBlockProc begin --------------------")
+	title := mock33.GetCfg().Title
+	dbPath := ""
+	driver := mock33.GetCfg().BlockChain.Driver
+
+	//读取文件头信息
+	db := dbm.NewDB(title, driver, dbPath, 4)
+	var endBlock types.EndBlock
+	endHeight, err := db.Get([]byte("F:endblock:"))
+	require.NoError(t, err)
+	err = types.Decode(endHeight, &endBlock)
+	require.NoError(t, err)
+	db.Close()
+
+	err = blockchain.ImportBlock(title, dbPath)
+	require.NoError(t, err)
+	curHeader, err := blockchain.ProcGetLastHeaderMsg()
+	require.NoError(t, err)
+	require.Equal(t, curHeader.Height, endBlock.GetHeight())
+	require.Equal(t, curHeader.GetHash(), endBlock.GetHash())
+	file := title + ".db"
+	os.RemoveAll(file)
+
+	chainlog.Debug("TestImportBlockProc end --------------------")
+}

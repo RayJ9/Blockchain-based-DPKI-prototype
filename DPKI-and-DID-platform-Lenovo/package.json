@@ -1,0 +1,30 @@
+{
+  "dependencies": {
+    "cors": "^2.8.5",
+    "ethers": "^5.7.2",
+    "express": "^4.21.2",
+    "global": "^4.4.0",
+    "http-proxy-middleware": "^3.0.5",
+    "http-server": "^14.1.1",
+    "keccak": "^3.0.4",
+    "nedb": "^1.8.0",
+    "punycode": "^2.3.1",
+    "web3": "1.7.0"
+  },
+  "devDependencies": {
+    "@types/nedb": "^1.8.16"
+  },
+  "name": "chain33-dpki-lenovo",
+  "description": "9.6 jr\r first establish\r 简单实现了合约-分类-map存储的功能\r 使用online-map-demo可以试一下功能，生成带add、update、revoke标签的交易并丢给合约，合约进行分类后修改链上的map，和local-db的功能一样（local是本地的数据库，没有过合约）\r 合约是testcontract的三个文件，现在文件还很乱，后期会整理，先玩一玩试试",
+  "version": "1.0.0",
+  "main": "CertOperation.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "web": "node web-server.js",
+    "start": "node web-server.js",
+    "pow": "node chain33-pow-4nodes/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

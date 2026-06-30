@@ -2,14 +2,11 @@
 
 Availability figure for failure probability and the number of service CAs.
 
-The current source data are rebuilt from Fig7-style per-request service-time
-samples by running:
+The current source data are retained under `source_data/`. They were generated
+from Fig7-style service-time measurements using the same DPKI/PKI intra-domain
+service-time definition as Fig7.
 
-```powershell
-python ..\build_fig9_fig10_from_fig7_service.py
-```
-
-Run:
+Rebuild the figure data and redraw:
 
 ```powershell
 python generate_data_fig10.py

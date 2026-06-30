@@ -7,16 +7,17 @@ __pycache__/
 texput.log
 
 .vscode/
-.tools/
-node_modules/
-pow-4nodes-runtime/
-omnilink/
-dpki-experiment-prototype/
-paper-figure-pipeline/
-paper_revision_plan/
-section_vi_benchmark_suite/
-practical_microbenchmark/
+**/node_modules/
+**/logs/
+**/runtime/
+**/outputs/
+**/result/logs/
+**/.cache/
+**/dist/
+**/build/
+**/*.pid
+**/*.tmp
+**/*.bak
 repro_fig*/
 fig9_m6_live_*/
 _latest_*.txt
-_paper_text.txt

@@ -2,18 +2,15 @@
 
 Availability figure for failure probability and timeout threshold.
 
-The current source data are rebuilt from Fig7-style per-request service-time
-samples by running:
-
-```powershell
-python ..\build_fig9_fig10_from_fig7_service.py
-```
+The current source data are retained under `source_data/`. They were generated
+from Fig7-style service-time measurements using the same DPKI/PKI intra-domain
+service-time definition as Fig7.
 
 For Fig9, the PKI curve is plotted as a finite-sample conservative estimate
 over 10000 requests at each grid point. The source CSV keeps both `PKI_Exact`
 and `PKI_Observed` for checking.
 
-Run:
+Rebuild the figure data and redraw:
 
 ```powershell
 python generate_data_fig9.py

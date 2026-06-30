@@ -1,0 +1,55 @@
+
+[ ca ]
+default_ca = root_CA
+
+[ root_CA ]
+dir               = C:\Users\admin\Desktop\DPKI-and-DID-platform-Lenovo\nodes\CA\CA-a
+new_certs_dir     = $dir/certs
+certificate       = $dir/CA-a.crt
+database          = $dir/index_CA-a.txt
+serial            = $dir/serial
+crl               = $dir/crl/CA-a.crl
+crl_dir           = $dir/crl
+crlnumber         = $dir/crl/crlnumber
+private_key       = $dir/private_key/CA-a.key
+default_crl_days  = 30
+default_days      = 365
+default_md        = sha256
+policy            = root_policy
+name_opt          = ca_default
+cert_opt          = ca_default
+copy_extensions   = copy
+
+[ root_policy ]
+countryName             = optional
+stateOrProvinceName     = optional
+localityName            = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+
+[ req ]
+default_bits       = 4096
+prompt             = no
+default_md         = sha256
+distinguished_name = set_unique
+
+[ set_unique ]
+C=CN
+ST=JS
+L=NJ
+O=PLM
+OU=1216
+emailAddress = jiangrui1505@163.com
+CN = localhost
+CN = CA-a
+
+[ v3_ca ]
+basicConstraints = critical, CA:TRUE, pathlen:10
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+
+[ v3_intermediate_ca ]
+basicConstraints = critical, CA:TRUE, pathlen:10
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer

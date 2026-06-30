@@ -1,0 +1,262 @@
+[
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "certificates",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "certData",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "certaddress",
+				"type": "address"
+			},
+			{
+				"internalType": "bool",
+				"name": "valid",
+				"type": "bool"
+			},
+			{
+				"internalType": "uint256",
+				"name": "notBefore",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "notAfter",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "issuer",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_label",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "_certaddress",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "_certData",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_notBefore",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_notAfter",
+				"type": "uint256"
+			}
+		],
+		"name": "registerCertificate",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_label",
+				"type": "string"
+			}
+		],
+		"name": "revokeCertificate",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_label",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "_certaddress",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "_certData",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_notBefore",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_notAfter",
+				"type": "uint256"
+			}
+		],
+		"name": "updateCertificate",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "bytes",
+				"name": "_signedAssertion",
+				"type": "bytes"
+			},
+			{
+				"internalType": "string",
+				"name": "message",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_label",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "_certaddress",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "_inputCert",
+				"type": "string"
+			}
+		],
+		"name": "verifyAll",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_label",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_inputCert",
+				"type": "string"
+			}
+		],
+		"name": "verifyCertificate",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_label",
+				"type": "string"
+			}
+		],
+		"name": "verifyCertificateTimestamp",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"internalType": "bytes",
+				"name": "_signedAssertion",
+				"type": "bytes"
+			},
+			{
+				"internalType": "address",
+				"name": "_certaddress",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "message",
+				"type": "string"
+			}
+		],
+		"name": "verifySignedAssertion",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+]

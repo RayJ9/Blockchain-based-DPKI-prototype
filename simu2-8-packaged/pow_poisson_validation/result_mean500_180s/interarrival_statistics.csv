@@ -1,0 +1,2 @@
+intervalSource,intervalCount,meanIntervalSec,stdIntervalSec,cv,lambdaHatPerSec,ksDistanceToFittedExp,ksAsymptoticPValueApprox,lag1Autocorrelation,interpolatedBlockFraction,windowSec,windowCountSamples,windowMeanBlocks
+all,1630,0.11034699042944784,1.7075716080666217,15.47456438477482,9.062322371531884,0.25306508896404145,1.1977944010496957e-91,0.08099200241569746,0.05518087063151441,1.1034699042944784,163,10.0

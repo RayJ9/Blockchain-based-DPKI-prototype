@@ -1,0 +1,6 @@
+{
+  "conduit_uri": "https://code.corp.bcollie.net",
+  "phabricator.uri": "https://code.corp.bcollie.net",
+  "history.immutable": false,
+  "git.default-relative-commit": "origin/master"
+}

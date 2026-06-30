@@ -1,0 +1,286 @@
+syntax = "proto3";
+
+import "common.proto";
+import "transaction.proto";
+import "blockchain.proto";
+import "wallet.proto";
+import "p2p.proto";
+import "account.proto";
+import "executor.proto";
+import "push_tx_receipt.proto";
+
+package types;
+option go_package = "code.corp.bcollie.net/omnilink/omnilink-base/types";
+
+message serverTime {
+    int64 currentTimestamp = 1;
+}
+
+// 数字签名加密算法类型
+message crypto {
+    string name   = 1;
+    int32  typeID = 2;
+}
+
+message cryptoList {
+    repeated crypto cryptos = 1;
+}
+
+message addressDriver {
+    string name   = 1;
+    int32  typeID = 2;
+}
+
+message addressDrivers {
+    repeated addressDriver drivers = 1;
+}
+
+// 延时交易
+message delayTx {
+    Transaction tx           = 1;
+    int64       endDelayTime = 2;
+}
+
+// 获取钱包找回地址请求
+message ReqGetWalletRecoverAddr {
+    string   ctrPubKey                = 1;
+    repeated string recoverPubKeys    = 2;
+    int64           relativeDelayTime = 3;
+}
+
+// 获取钱包找回签名请求
+message ReqSignWalletRecoverTx {
+    ReqGetWalletRecoverAddr walletRecoverParam = 1;
+    string                  signAddr           = 2;
+    string                  privKey            = 3;
+    string                  rawTx              = 4;
+}
+
+message ChainConfigInfo {
+    string title            = 1;
+    string coinExec         = 2;
+    string coinSymbol       = 3;
+    int64  coinPrecision    = 4;
+    int64  tokenPrecision   = 5;
+    int32  chainID          = 6;
+    int64  maxTxFee         = 7;
+    int64  minTxFeeRate     = 8;
+    int64  maxTxFeeRate     = 9;
+    bool   isPara           = 10;
+    int32  defaultAddressID = 11;
+}
+
+// 批量发送交易返回结构
+message Replies {
+    repeated Reply replyList = 1;
+}
+
+service omnilink {
+    // omnilink 对外提供服务的接口
+    //区块链接口
+    rpc GetBlocks(ReqBlocks) returns (Reply) {}
+    //获取最新的区块头
+    rpc GetLastHeader(ReqNil) returns (Header) {}
+    //交易接口
+    rpc CreateRawTransaction(CreateTx) returns (UnsignTx) {}
+    rpc CreateRawTxGroup(CreateTransactionGroup) returns (UnsignTx) {}
+    // 根据哈希查询交易
+    rpc QueryTransaction(ReqHash) returns (TransactionDetail) {}
+    // 发送交易&&根据哈希查询交易
+    rpc SendTransactionSync(Transaction) returns (Reply) {}
+    // 发送交易
+    rpc SendTransaction(Transaction) returns (Reply) {}
+    // 批量发送交易
+    rpc SendTransactions(Transactions) returns (Replies) {}
+
+    //通过地址获取交易信息
+    rpc GetTransactionByAddr(ReqAddr) returns (ReplyTxInfos) {}
+
+    //通过哈希数组获取对应的交易
+    rpc GetTransactionByHashes(ReqHashes) returns (TransactionDetails) {}
+
+    //缓存接口
+    rpc GetMemPool(ReqGetMempool) returns (ReplyTxList) {}
+
+    //钱包接口
+    //获取钱包账户信息
+    rpc GetAccounts(ReqNil) returns (WalletAccounts) {}
+
+    //根据账户lable信息获取账户地址
+    rpc GetAccount(ReqGetAccount) returns (WalletAccount) {}
+
+    //创建钱包账户
+    rpc NewAccount(ReqNewAccount) returns (WalletAccount) {}
+
+    //获取钱包的交易列表
+    rpc WalletTransactionList(ReqWalletTransactionList) returns (WalletTxDetails) {}
+
+    //导入钱包私钥
+    rpc ImportPrivkey(ReqWalletImportPrivkey) returns (WalletAccount) {}
+
+    // 发送交易
+    rpc SendToAddress(ReqWalletSendToAddress) returns (ReplyHash) {}
+
+    //设置交易手续费
+    rpc SetTxFee(ReqWalletSetFee) returns (Reply) {}
+
+    //设置标签
+    rpc SetLabl(ReqWalletSetLabel) returns (WalletAccount) {}
+
+    //合并钱包余额
+    rpc MergeBalance(ReqWalletMergeBalance) returns (ReplyHashes) {}
+
+    //设置钱包密码
+    rpc SetPasswd(ReqWalletSetPasswd) returns (Reply) {}
+
+    //给钱包上锁
+    rpc Lock(ReqNil) returns (Reply) {}
+
+    //给钱包解锁
+    rpc UnLock(WalletUnLock) returns (Reply) {}
+
+    //获取最新的Mempool
+    rpc GetLastMemPool(ReqNil) returns (ReplyTxList) {}
+
+    //获取Mempool目前的Tx个数
+    rpc GetPendingSize(ReqNil) returns (ReplyPendingSize) {}
+
+    //获取最新的ProperFee
+    rpc GetProperFee(ReqProperFee) returns (ReplyProperFee) {}
+
+    // 获取钱包状态
+    rpc GetWalletStatus(ReqNil) returns (WalletStatus) {}
+    //区块浏览器接口
+    ///
+    rpc GetBlockOverview(ReqHash) returns (BlockOverview) {}
+    rpc GetAddrOverview(ReqAddr) returns (AddrOverview) {}
+    rpc GetBlockHash(ReqInt) returns (ReplyHash) {}
+    // seed
+    // 创建seed
+    rpc GenSeed(GenSeedLang) returns (ReplySeed) {}
+    //获取seed
+    rpc GetSeed(GetSeedByPw) returns (ReplySeed) {}
+
+    //保存seed
+    rpc SaveSeed(SaveSeedByPw) returns (Reply) {}
+    // Balance Query
+    //获取余额
+    rpc GetBalance(ReqBalance) returns (Accounts) {}
+
+    rpc QueryChain(ChainExecutor) returns (Reply) {}
+    rpc ExecWallet(ChainExecutor) returns (Reply) {}
+    rpc QueryConsensus(ChainExecutor) returns (Reply) {}
+
+    rpc CreateTransaction(CreateTxIn) returns (UnsignTx) {}
+    //获取交易的十六进制编码
+    rpc GetHexTxByHash(ReqHash) returns (HexTx) {}
+
+    // 导出私钥
+    rpc DumpPrivkey(ReqString) returns (ReplyString) {}
+
+    // 导出全部私钥到文件
+    rpc DumpPrivkeysFile(ReqPrivkeysFile) returns (Reply) {}
+    // 从文件中批量导入私钥
+    rpc ImportPrivkeysFile(ReqPrivkeysFile) returns (Reply) {}
+
+    //获取程序版本
+    rpc Version(ReqNil) returns (VersionInfo) {}
+
+    //是否同步
+    rpc IsSync(ReqNil) returns (Reply) {}
+
+    //获取当前节点连接的其他节点信息
+    rpc GetPeerInfo(P2PGetPeerReq) returns (PeerList) {}
+
+    //获取当前节点的网络信息
+    rpc NetInfo(P2PGetNetInfoReq) returns (NodeNetInfo) {}
+
+    // ntpclock是否同步
+    rpc IsNtpClockSync(ReqNil) returns (Reply) {}
+
+    //获取系统致命故障信息
+    rpc GetFatalFailure(types.ReqNil) returns (Int32) {}
+    rpc GetLastBlockSequence(ReqNil) returns (Int64) {}
+
+    // get add block's sequence by hash
+    rpc GetSequenceByHash(ReqHash) returns (Int64) {}
+
+    //通过block hash 获取对应的blocks信息
+    rpc GetBlockByHashes(ReqHashes) returns (BlockDetails) {}
+
+    //通过block seq 获取对应的blocks hash 信息
+    rpc GetBlockBySeq(Int64) returns (BlockSeq) {}
+
+    //关闭omnilink
+    rpc CloseQueue(ReqNil) returns (Reply) {}
+
+    //获取地址所以合约下的余额
+    rpc GetAllExecBalance(ReqAllExecBalance) returns (AllExecBalance) {}
+    //签名交易
+    rpc SignRawTx(ReqSignRawTx) returns (ReplySignRawTx) {}
+
+    rpc CreateNoBalanceTransaction(NoBalanceTx) returns (ReplySignRawTx) {}
+
+    // 获取随机HASH
+    rpc QueryRandNum(ReqRandHash) returns (ReplyHash) {}
+
+    // 获取是否达到fork高度
+    rpc GetFork(ReqKey) returns (Int64) {}
+
+    rpc CreateNoBalanceTxs(NoBalanceTxs) returns (ReplySignRawTx) {}
+
+    //通过seq以及title获取对应平行连的交易
+    rpc GetParaTxByTitle(ReqParaTxByTitle) returns (ParaTxDetails) {}
+
+    //获取拥有此title交易的区块高度
+    rpc LoadParaTxByTitle(ReqHeightByTitle) returns (ReplyHeightByTitle) {}
+
+    //通过区块高度列表+title获取平行链交易
+    rpc GetParaTxByHeight(ReqParaTxByHeight) returns (ParaTxDetails) {}
+
+    //获取区块头信息
+    rpc GetHeaders(ReqBlocks) returns (Headers) {}
+
+    // get server time
+    rpc GetServerTime(ReqNil) returns (serverTime) {}
+
+    // 获取加密算法列表，用于签名等
+    rpc GetCryptoList(ReqNil) returns (cryptoList) {}
+
+    // 获取地址格式插件列表
+    rpc GetAddressDrivers(ReqNil) returns (addressDrivers) {}
+
+    // 发送延时交易
+    rpc SendDelayTransaction(delayTx) returns (Reply) {}
+
+    // 获取钱包找回地址
+    rpc GetWalletRecoverAddress(ReqGetWalletRecoverAddr) returns (ReplyString) {}
+
+    // 钱包找回交易签名
+    rpc SignWalletRecoverTx(ReqSignWalletRecoverTx) returns (ReplySignRawTx) {}
+
+    // 获取节点配置信息
+    rpc GetChainConfig(ReqNil) returns (ChainConfigInfo) {}
+
+    //根据执行期名称创建对应的地址
+    rpc ConvertExectoAddr(ReqString) returns (ReplyString) {}
+
+    // get coin symbol
+    rpc GetCoinSymbol(ReqNil) returns (ReplyString) {}
+
+    // ReWriteRawTx
+    rpc ReWriteTx(ReWriteRawTx) returns (UnsignTx) {}
+    // GetBlockSequences
+    rpc GetBlockSequences(ReqBlocks) returns (BlockSequences) {}
+    //兼容jrpc订阅接口
+    rpc AddPushSubscribe(PushSubscribeReq) returns (ReplySubscribePush) {}
+
+    rpc ListPushes(ReqNil) returns (PushSubscribes) {}
+
+    rpc GetPushSeqLastNum(ReqString) returns (Int64) {}
+
+    //发送订阅的数据到客户端
+    rpc SubEvent(ReqSubscribe) returns (stream PushData) {}
+    //取消订阅
+    rpc UnSubEvent(ReqString) returns (Reply) {}
+}

@@ -1,0 +1,37 @@
+{
+  "@context" : [ "https://www.w3.org/2018/credentials/v1" ],
+  "type" : [ "VerifiablePresentation" ],
+  "holder" : "did:key:z6MkwBZ6oiJ71ovCohPfdsgBrQinMXnFn6wJxVZHpZEpSh8x",
+  "verifiableCredential" : {
+    "@context" : [ "https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1" ],
+    "type" : [ "VerifiableCredential", "UniversityDegreeCredential" ],
+    "id" : "http://example.edu/credentials/3732",
+    "issuer" : "did:example:76e12ec712ebc6f1c221ebfeb1f",
+    "issuanceDate" : "2019-06-16T18:56:59Z",
+    "expirationDate" : "2019-06-17T18:56:59Z",
+    "credentialSubject" : {
+      "id" : "did:example:ebfeb1f712ebc6f1c276e12ec21",
+      "organization" : "Test University",
+      "User Attribute VC" : {
+        "name" : "Bachelor of Science and Arts",
+        "type" : "BachelorDegree"
+      }
+    },
+    "proof" : {
+      "type" : "Ed25519Signature2018",
+      "created" : "2025-01-02T08:57:57Z",
+      "proofPurpose" : "assertionMethod",
+      "verificationMethod" : "did:example:76e12ec712ebc6f1c221ebfeb1f#keys-1",
+      "jws" : "eyJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJhbGciOiJFZERTQSJ9..aDa4pw_A8QmHyyqlmDKtURyCrqwB2BZtIwtW1zu7sWZf5DQYRDWT5qQU-FopHA4wb_-lGgBgIoiwa9uZ_2ZjBg"
+    }
+  },
+  "proof" : {
+    "type" : "Ed25519Signature2018",
+    "created" : "2025-01-02T08:57:57Z",
+    "domain" : "example.com",
+    "nonce" : "343s$FSFDa-",
+    "proofPurpose" : "authentication",
+    "verificationMethod" : "did:key:z6MkwBZ6oiJ71ovCohPfdsgBrQinMXnFn6wJxVZHpZEpSh8x#z6MkwBZ6oiJ71ovCohPfdsgBrQinMXnFn6wJxVZHpZEpSh8x",
+    "jws" : "eyJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJhbGciOiJFZERTQSJ9..KXJ4LRh1INZa8-utw9B9Xj6gqRMmlxVO7TnAGh_juGwkOJq15MD6FihocPEwvHyyxSBqutvJnhHxAXEj0dcrBw"
+  }
+}
