@@ -1,1 +1,0 @@
-The PostScript backend does not support transparency; partially transparent artists will be rendered opaque.

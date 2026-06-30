@@ -1,52 +1,140 @@
 # Blockchain-Based DPKI Experiment Package
 
-This repository keeps the prototype, experiment scripts, retained outputs, and
-final paper figures for "Blockchain-Based Decentralized Public Key
-Infrastructure Modeling and Analysis".
+This repository contains the prototype, retained experiment data, figure
+scripts, and final figures for the revised experimental section of
+"Blockchain-Based Decentralized Public Key Infrastructure Modeling and
+Analysis".
 
-Final figure folders:
+The Git package is organized so that a fresh clone can regenerate the paper
+figures. Runtime databases, logs, local Node dependencies, recovered backups,
+private paper drafts, and temporary analysis folders are ignored by Git.
 
-- `fig3`
-- `fig4`
-- `Fig5-lambda`
-- `Fig6-epsilon`
-- `Fig7-p`
-- `Fig8-M`
-- `fig9`
-- `fig10`
+## Figure Folders
 
-Each folder contains the final `figure.*` outputs, retained data, and the
-figure-generation scripts. Fig5-Fig8 also contain root-level `run_*.py` scripts
-that rerun the corresponding prototype experiment through the restored Omnilink
-PoW chain. `replot_figure.py` only redraws a figure from retained CSV data.
+Each paper figure has one top-level folder:
 
-Main experiment components:
+| Figure | Folder | Reproduction mode |
+| --- | --- | --- |
+| Fig3 | `Fig3` | Regenerate from retained prototype-calibration data |
+| Fig4 | `Fig4` | Regenerate from retained baseline-summary data |
+| Fig5 | `Fig5-lambda` | Replot from retained CSV, or rerun prototype experiment |
+| Fig6 | `Fig6-epsilon` | Replot from retained CSV, or rerun prototype experiment |
+| Fig7 | `Fig7-p` | Replot from retained CSV, or rerun prototype experiment |
+| Fig8 | `Fig8-M` | Replot from retained CSV, or rerun prototype experiment |
+| Fig9 | `Fig9` | Regenerate from retained Fig7-style availability data |
+| Fig10 | `Fig10` | Regenerate from retained Fig7-style availability data |
 
-- `DPKI-and-DID-platform-Lenovo/chain33-dpki-real-experiment`: prototype
-  experiment runner and smart contract.
-- `DPKI-and-DID-platform-Lenovo/omnilink-pow-4nodes`: PoW four-node runtime
+Every folder keeps the final `figure.*` files and the scripts/data needed to
+recreate them. Fig5-Fig8 additionally keep `run_*.py` entry points for a
+prototype rerun through Omnilink PoW.
+
+## Required Components Kept in Git
+
+Do not remove these folders from the reproducible package:
+
+- `omnilink`: Omnilink source tree.
+- `DPKI-and-DID-platform-Lenovo/chain33-dpki-real-experiment`: DPKI prototype
+  runner and contracts.
+- `DPKI-and-DID-platform-Lenovo/omnilink-pow-4nodes`: four-node PoW runtime
   scripts.
-- `dpki-experiment-prototype`: compatibility copy of the prototype experiment
-  directory used by older scripts.
-- `pow-4nodes-runtime`: compatibility copy of the PoW runtime scripts used by
-  older scripts.
-- `omnilink`: restored Omnilink source tree.
-- `simu2-8-packaged`: packaged queueing/availability experiment scripts.
-- `simu2_tail_prob`: original simulation workspace retained for compatibility.
+- `dpki-experiment-prototype`: compatibility prototype path used by older
+  runners.
+- `pow-4nodes-runtime`: compatibility PoW runtime path.
+- `simu2-8-packaged`: common queueing and real-sweep helpers used by Fig5-Fig8.
+- `simu2_tail_prob`: compatibility simulation/module path still referenced by
+  the prototype runner.
 
-Typical full-experiment flow:
+`JIoT/` and `response_letter/` are local manuscript/rebuttal folders and are
+intentionally ignored.
+
+## Dependencies
+
+Install Python dependencies:
+
+```powershell
+pip install -r requirements.txt
+```
+
+The retained-data figure path also needs MATLAB. Fig9 converts PNG to PDF/EPS
+through `pdftops`, so Poppler must be available in `PATH` when redrawing Fig9.
+
+For a full prototype rerun, install the Node dependencies used by the prototype:
+
+```powershell
+cd DPKI-and-DID-platform-Lenovo
+npm install
+cd ..
+```
+
+Omnilink PoW runners may also need Go/PowerShell tooling depending on whether
+the local Omnilink binaries already exist.
+
+## Quick Integrity Check
+
+Run this first after cloning:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\Check-Reproduction.ps1
+```
+
+The script checks required source folders, compiles the Python entry points,
+and verifies the Fig5-Fig8 experiment runners expose their command-line help.
+
+## Recreate Final Figures from Retained Data
+
+This is the fastest way to reproduce the paper figures without rerunning the
+chain sweeps:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\Replot-Retained-Figures.ps1
+```
+
+It regenerates Fig3/Fig4/Fig9/Fig10 data files, redraws Fig3/Fig4/Fig9/Fig10
+with MATLAB, and replots Fig5-Fig8 from retained CSV outputs.
+
+## Rerun Prototype Experiments for Fig5-Fig8
+
+The Fig5-Fig8 `run_*.py` scripts can rerun the real prototype sweeps. They use
+the Omnilink PoW runtime by default and write new run outputs under ignored
+runtime/output directories, then mirror the final figure files into the figure
+folder.
+
+Example smoke run:
 
 ```powershell
 python Fig5-lambda\run_fig5_lambda.py --requests 1000 --stop-pow
 ```
 
-The Fig5-Fig8 `run_*.py` scripts restart the PoW chain by default. To manage the
-chain manually, use `DPKI-and-DID-platform-Lenovo/omnilink-pow-4nodes/scripts`
-and pass `--no-restart-pow` to the figure runner. The individual Fig5-Fig8
-README files give the paper-scale commands and the retained-data replot
-commands.
+Paper-scale commands are documented in each figure folder README.
 
-Private paper/editing folders are intentionally ignored by Git:
+The runners restart PoW by default. To manage PoW manually, start it through:
 
-- `JIoT/`
-- `response_letter/`
+```powershell
+DPKI-and-DID-platform-Lenovo\omnilink-pow-4nodes\scripts\start-omnilink-pow-4nodes.ps1
+```
+
+and pass `--no-restart-pow` to the figure runner.
+
+## Notes on Fig3, Fig4, Fig9, and Fig10
+
+Fig3/Fig4 are Section VI.2 prototype/baseline figures. Their retained source
+CSV files are kept under `Fig3/source_data` and `Fig4/source_data`. The older
+temporary baseline-suite runner was not recovered, so these two figures are
+reproducible from the retained measured summaries rather than from a full fresh
+baseline execution.
+
+Fig9/Fig10 are availability figures. Their retained source data are kept under
+`Fig9/source_data` and `Fig10/source_data`. They use the same Fig7-style
+service-time definition for DPKI and PKI.
+
+## Git Hygiene
+
+The `.gitignore` keeps the repository focused on reproducible sources and final
+artifacts. It ignores:
+
+- runtime logs, node databases, caches, output directories, and `node_modules`;
+- recovered backups such as `oldver_simulation/` and `paper-figure-pipeline/`;
+- local manuscript/rebuttal folders such as `JIoT/` and `response_letter/`.
+
+Do not add ignored runtime directories back to Git unless they become required
+inputs for a reproducible figure.

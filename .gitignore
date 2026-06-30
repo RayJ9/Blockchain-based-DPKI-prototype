@@ -7,17 +7,41 @@ __pycache__/
 texput.log
 
 .vscode/
+.idea/
 **/node_modules/
 **/logs/
 **/runtime/
 **/outputs/
+**/outputs_recovered_*/
 **/result/logs/
 **/.cache/
 **/dist/
 **/build/
+**/target/
+**/wallet/
+**/datadir/
 **/*.pid
 **/*.tmp
 **/*.bak
+**/*.db/
 repro_fig*/
 fig9_m6_live_*/
 _latest_*.txt
+
+# Restored or local-only process archives. They are not needed for the
+# reproducible figure package and should not be pushed.
+oldver_simulation/
+paper-figure-pipeline/
+paper-figure-pipeline(1).zip
+paper_revision_plan/
+practical_microbenchmark/
+
+# Superseded local simulation workspaces. Current reproducible scripts use the
+# top-level Fig* folders plus simu2-8-packaged and simu2_tail_prob.
+simu1_boundaries/
+simu2_tail_prob_archive_pre_final_20260613_230901/
+simu3_Compare_episilon/
+simu4_lambdp/
+simu5/
+simu6/
+simu78/
