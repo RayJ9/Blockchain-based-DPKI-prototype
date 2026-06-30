@@ -1,0 +1,13 @@
+{
+  "name": "dpki-experiment-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prototype runner for the blockchain-based DPKI experiments.",
+  "scripts": {
+    "experiment": "node run-real-dpki-experiment.js"
+  },
+  "dependencies": {
+    "solc": "0.5.17",
+    "web3": "1.7.0"
+  }
+}

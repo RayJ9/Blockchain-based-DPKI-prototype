@@ -21,10 +21,10 @@ import pandas as pd
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = SCRIPT_DIR.parent
-EXPERIMENT_DIR = WORKSPACE_ROOT / "DPKI-and-DID-platform-Lenovo" / "chain33-dpki-real-experiment"
+EXPERIMENT_DIR = WORKSPACE_ROOT / "dpki-experiment-prototype"
 RUN_REAL = EXPERIMENT_DIR / "run-real-dpki-experiment.js"
 REAL_OUT = EXPERIMENT_DIR / "outputs"
-POW_RUNTIME = WORKSPACE_ROOT / "DPKI-and-DID-platform-Lenovo" / "omnilink-pow-4nodes" / "runtime"
+POW_RUNTIME = WORKSPACE_ROOT / "pow-4nodes-runtime" / "runtime"
 SWEEP_ROOT = REAL_OUT / "real_sweeps"
 
 if str(SCRIPT_DIR) not in sys.path:

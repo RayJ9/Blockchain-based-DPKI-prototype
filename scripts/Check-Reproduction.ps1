@@ -10,10 +10,14 @@ Set-Location $Root
 
 $RequiredPaths = @(
     "omnilink",
-    "DPKI-and-DID-platform-Lenovo\chain33-dpki-real-experiment",
-    "DPKI-and-DID-platform-Lenovo\omnilink-pow-4nodes",
     "dpki-experiment-prototype",
+    "dpki-experiment-prototype\package.json",
+    "dpki-experiment-prototype\package-lock.json",
+    "dpki-experiment-prototype\run-real-dpki-experiment.js",
+    "dpki-experiment-prototype\contracts\DPKIExperiment.sol",
     "pow-4nodes-runtime",
+    "pow-4nodes-runtime\scripts\start-omnilink-pow-4nodes.ps1",
+    "pow-4nodes-runtime\scripts\stop-omnilink-pow-4nodes.ps1",
     "simu2-8-packaged\real_figure_sweep_common.py",
     "Fig3\generate_data_fig3.py",
     "Fig3\plot_fig3.m",

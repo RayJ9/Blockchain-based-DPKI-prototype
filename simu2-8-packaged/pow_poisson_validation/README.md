@@ -11,7 +11,7 @@ Start the PoW prototype with empty-block mining. Use a moderate mean block
 interval so the observer can resolve individual blocks through RPC polling.
 
 ```powershell
-.\DPKI-and-DID-platform-Lenovo\chain33-dpki-real-experiment\scripts\start-chain33-evm.ps1 -Clean -MeanBlockMs 500 -MineEmpty
+.\pow-4nodes-runtime\scripts\start-omnilink-pow-4nodes.ps1 -Clean -MeanBlockMs 500 -MineEmpty
 ```
 
 Collect a block-height trace:
@@ -35,7 +35,7 @@ python .\simu2_tail_prob\pow_poisson_validation\analyze_pow_block_trace.py `
 Stop the prototype when finished:
 
 ```powershell
-.\DPKI-and-DID-platform-Lenovo\chain33-dpki-real-experiment\scripts\stop-chain33-evm.ps1
+.\pow-4nodes-runtime\scripts\stop-omnilink-pow-4nodes.ps1
 ```
 
 ## Outputs

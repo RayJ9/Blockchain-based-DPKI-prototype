@@ -5,9 +5,9 @@ PoW maintainer/miner, and the aggregate target mining interval is controlled by
 `-MeanBlockMs`.
 
 ```powershell
-.\omnilink-pow-4nodes\scripts\start-omnilink-pow-4nodes.ps1 -Build -Clean -MeanBlockMs 200
-.\chain33-dpki-real-experiment\run-real-dpki-experiment.js --consensus-backend pow --rpc http://127.0.0.1:8545
-.\omnilink-pow-4nodes\scripts\stop-omnilink-pow-4nodes.ps1
+.\pow-4nodes-runtime\scripts\start-omnilink-pow-4nodes.ps1 -Build -Clean -MeanBlockMs 200
+node .\dpki-experiment-prototype\run-real-dpki-experiment.js --consensus-backend pow --rpc http://127.0.0.1:8545
+.\pow-4nodes-runtime\scripts\stop-omnilink-pow-4nodes.ps1
 ```
 
 By default the network does not mine empty blocks. This is the recommended DPKI

@@ -45,7 +45,7 @@ FIG3_P_VALUES = [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]
 
 
 def pow_script(name: str) -> Path:
-    return WORKSPACE_ROOT / "DPKI-and-DID-platform-Lenovo" / "omnilink-pow-4nodes" / "scripts" / name
+    return WORKSPACE_ROOT / "pow-4nodes-runtime" / "scripts" / name
 
 
 def run_powershell(script: Path, args: list[str]) -> None:

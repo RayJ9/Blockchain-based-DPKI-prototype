@@ -28,7 +28,7 @@ if str(EPSILON_DIR) not in sys.path:
 from real_sweep_figures import POW_RUNTIME, SWEEP_ROOT, RunSpec, run_real_experiment  # noqa: E402
 import run_fig6_epsilon as epsilon_common  # noqa: E402
 
-POW_SCRIPTS = WORKSPACE_ROOT / "DPKI-and-DID-platform-Lenovo" / "omnilink-pow-4nodes" / "scripts"
+POW_SCRIPTS = WORKSPACE_ROOT / "pow-4nodes-runtime" / "scripts"
 FINAL_OUTPUT_FILES = [
     "figure.png",
     "figure.eps",

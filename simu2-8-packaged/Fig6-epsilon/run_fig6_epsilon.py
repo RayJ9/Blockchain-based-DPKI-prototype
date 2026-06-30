@@ -39,7 +39,7 @@ from simu3_compare_cross import (  # noqa: E402
     theoretical_values_dpki_upper_bound,
 )
 
-POW_SCRIPTS = WORKSPACE_ROOT / "DPKI-and-DID-platform-Lenovo" / "omnilink-pow-4nodes" / "scripts"
+POW_SCRIPTS = WORKSPACE_ROOT / "pow-4nodes-runtime" / "scripts"
 DEFAULT_EPSILON_POINTS = [round(float(x), 2) for x in np.arange(0.0, 0.6001, 0.05)]
 FINAL_OUTPUT_FILES = [
     "figure.png",

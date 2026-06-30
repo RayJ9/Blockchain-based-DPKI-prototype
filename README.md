@@ -33,13 +33,9 @@ prototype rerun through Omnilink PoW.
 Do not remove these folders from the reproducible package:
 
 - `omnilink`: Omnilink source tree.
-- `DPKI-and-DID-platform-Lenovo/chain33-dpki-real-experiment`: DPKI prototype
-  runner and contracts.
-- `DPKI-and-DID-platform-Lenovo/omnilink-pow-4nodes`: four-node PoW runtime
-  scripts.
-- `dpki-experiment-prototype`: compatibility prototype path used by older
-  runners.
-- `pow-4nodes-runtime`: compatibility PoW runtime path.
+- `dpki-experiment-prototype`: DPKI prototype runner, contract, and Node
+  dependency manifest.
+- `pow-4nodes-runtime`: four-node Omnilink PoW runtime scripts.
 - `simu2-8-packaged`: common queueing and real-sweep helpers used by Fig5-Fig8.
 - `simu2_tail_prob`: compatibility simulation/module path still referenced by
   the prototype runner.
@@ -61,7 +57,7 @@ through `pdftops`, so Poppler must be available in `PATH` when redrawing Fig9.
 For a full prototype rerun, install the Node dependencies used by the prototype:
 
 ```powershell
-cd DPKI-and-DID-platform-Lenovo
+cd dpki-experiment-prototype
 npm install
 cd ..
 ```
@@ -110,7 +106,7 @@ Paper-scale commands are documented in each figure folder README.
 The runners restart PoW by default. To manage PoW manually, start it through:
 
 ```powershell
-DPKI-and-DID-platform-Lenovo\omnilink-pow-4nodes\scripts\start-omnilink-pow-4nodes.ps1
+pow-4nodes-runtime\scripts\start-omnilink-pow-4nodes.ps1
 ```
 
 and pass `--no-restart-pow` to the figure runner.
@@ -135,6 +131,9 @@ artifacts. It ignores:
 - runtime logs, node databases, caches, output directories, and `node_modules`;
 - recovered backups such as `oldver_simulation/` and `paper-figure-pipeline/`;
 - local manuscript/rebuttal folders such as `JIoT/` and `response_letter/`.
+- the legacy all-in-one `DPKI-and-DID-platform-Lenovo/` workspace, because the
+  reproducible files have been consolidated into `dpki-experiment-prototype/`
+  and `pow-4nodes-runtime/`.
 
 Do not add ignored runtime directories back to Git unless they become required
 inputs for a reproducible figure.

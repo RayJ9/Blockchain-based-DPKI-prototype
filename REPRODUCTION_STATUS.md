@@ -6,8 +6,6 @@ level figure folders.
 ## Restored Prototype Components
 
 - `omnilink`
-- `DPKI-and-DID-platform-Lenovo/chain33-dpki-real-experiment`
-- `DPKI-and-DID-platform-Lenovo/omnilink-pow-4nodes`
 - `dpki-experiment-prototype`
 - `pow-4nodes-runtime`
 - `simu2-8-packaged`
@@ -42,8 +40,8 @@ powershell -ExecutionPolicy Bypass -File scripts\Replot-Retained-Figures.ps1
 
 ## Notes
 
-- Fig5-Fig8 runners import common modules from `simu2-8-packaged` and use the
-  restored Omnilink PoW runtime under `DPKI-and-DID-platform-Lenovo`.
+- Fig5-Fig8 runners import common modules from `simu2-8-packaged` and use
+  `dpki-experiment-prototype` together with `pow-4nodes-runtime`.
 - Fig3/Fig4/Fig9/Fig10 can regenerate their `.mat` data and final figures from
   retained source data.
 - Runtime data, logs, outputs, local Node dependencies, recovered backups, and

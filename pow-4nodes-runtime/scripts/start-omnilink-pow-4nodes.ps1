@@ -21,7 +21,7 @@ $WorkspaceRoot = Resolve-Path (Join-Path $DpkiRoot "..")
 $PluginRoot = Join-Path $WorkspaceRoot "omnilink\omnilink-plugin"
 $TemplateConfig = Join-Path $PluginRoot "omnilink.pow.toml"
 $Exe = Join-Path $PluginRoot "build\omni.exe"
-$RuntimeRoot = Join-Path $DpkiRoot "omnilink-pow-4nodes\runtime"
+$RuntimeRoot = Join-Path $DpkiRoot "runtime"
 $ConfigDir = Join-Path $RuntimeRoot "configs"
 $LogDir = Join-Path $RuntimeRoot "logs"
 $ReadyFile = Join-Path $RuntimeRoot "ready.txt"
@@ -105,7 +105,7 @@ if (-not (Test-Path $Exe)) {
 
 if ($Clean -and (Test-Path $RuntimeRoot)) {
   & (Join-Path $PSScriptRoot "stop-omnilink-pow-4nodes.ps1")
-  Assert-UnderPath $RuntimeRoot (Join-Path $DpkiRoot "omnilink-pow-4nodes")
+  Assert-UnderPath $RuntimeRoot $DpkiRoot
   $removed = $false
   for ($attempt = 1; $attempt -le 10; $attempt += 1) {
     try {
