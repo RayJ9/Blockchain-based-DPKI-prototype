@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $DpkiRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
-$WorkspaceRoot = Resolve-Path (Join-Path $DpkiRoot "..")
+$WorkspaceRoot = $DpkiRoot
 $PluginRoot = Join-Path $WorkspaceRoot "omnilink\omnilink-plugin"
 $BuildDir = Join-Path $PluginRoot "build"
 $Exe = Join-Path $BuildDir "omni.exe"

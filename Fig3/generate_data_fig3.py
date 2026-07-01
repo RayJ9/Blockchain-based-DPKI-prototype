@@ -7,7 +7,9 @@ from scipy.io import loadmat, savemat
 
 FIG_NAME = "fig3"
 ROOT = Path(__file__).resolve().parent
-SUMMARY_CSV = ROOT / "source_data" / "summary_by_request_class_no_authsig.csv"
+SUMMARY_CSV = ROOT / "source_data" / "summary_by_request_class_fig7_aligned.csv"
+if not SUMMARY_CSV.exists():
+    SUMMARY_CSV = ROOT / "source_data" / "summary_by_request_class_no_authsig.csv"
 POW_MAT = ROOT / "source_data" / "data_pow_exponential.mat"
 DATA_FILE = ROOT / f"data_{FIG_NAME}.mat"
 

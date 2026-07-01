@@ -7,7 +7,10 @@ from scipy.io import savemat
 
 FIG_NAME = "fig4"
 ROOT = Path(__file__).resolve().parent
-SUMMARY_CSV = ROOT / "source_data" / "summary_by_request_class_no_authsig.csv"
+SUMMARY_CSV = ROOT / "source_data" / "summary_by_request_class_fig7_aligned.csv"
+if not SUMMARY_CSV.exists():
+    SUMMARY_CSV = ROOT / "source_data" / "summary_by_request_class_no_authsig.csv"
+THRESHOLD_SUMMARY_CSV = ROOT.parent / "Fig3" / "threshold_baseline" / "threshold_summary_by_request_class.csv"
 DATA_FILE = ROOT / f"data_{FIG_NAME}.mat"
 
 STAGE_COLUMNS = [
@@ -23,6 +26,14 @@ def get_row(df: pd.DataFrame, mechanism: str, request_class: str) -> pd.Series:
     if len(rows) != 1:
         raise ValueError(f"Expected one row for {mechanism}/{request_class}, got {len(rows)}")
     return rows.iloc[0]
+
+
+def load_summary() -> pd.DataFrame:
+    df = pd.read_csv(SUMMARY_CSV)
+    if THRESHOLD_SUMMARY_CSV.exists():
+        threshold = pd.read_csv(THRESHOLD_SUMMARY_CSV)
+        df = pd.concat([df[df["mechanism"] != "threshold-validation-dpki"], threshold], ignore_index=True)
+    return df
 
 
 def panel(df: pd.DataFrame, specs: list[tuple[str, str, str]]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -43,24 +54,38 @@ def cost_panel(df: pd.DataFrame, column: str) -> np.ndarray:
         ("intra-on-chain", "intra-on-chain", "intra-on-chain"),
         ("cross-on-chain", "cross-on-chain", "cross-on-chain"),
     ]
-    mechanisms = ["proposed-dpki", "ocsp-onchain-baseline", "full-contract-onchain"]
+    mechanisms = ["proposed-dpki", "threshold-validation-dpki", "ocsp-onchain-baseline", "full-contract-onchain"]
     values = np.zeros((len(specs), len(mechanisms)), dtype=float)
     for r, (_, dpki_class, other_class) in enumerate(specs):
         for c, mechanism in enumerate(mechanisms):
-            request_class = dpki_class if mechanism == "proposed-dpki" else other_class
+            request_class = dpki_class if mechanism in {"proposed-dpki", "threshold-validation-dpki"} else other_class
             values[r, c] = float(get_row(df, mechanism, request_class)[column])
     return values
+
+
+def status_complexity_panel() -> np.ndarray:
+    # Comparable status-validation evidence counts:
+    # MPT: one proof query; PKI: OCSP checks; Threshold: accepted endorsements;
+    # OCSP-On: OCSP checks executed before/inside the on-chain authentication flow.
+    return np.array(
+        [
+            [1.0, 1.0, 4.0, 1.0],
+            [1.0, 4.0, 4.0, 2.0],
+        ],
+        dtype=float,
+    )
 
 
 def main() -> None:
     if not SUMMARY_CSV.exists():
         raise FileNotFoundError(f"Missing source CSV: {SUMMARY_CSV}")
-    df = pd.read_csv(SUMMARY_CSV)
+    df = load_summary()
 
     mgmt_labels, mgmt_stages, mgmt_totals = panel(
         df,
         [
             ("DPKI", "proposed-dpki", "management"),
+            ("Thresh", "threshold-validation-dpki", "management"),
             ("PKI", "traditional-pki", "management"),
             ("OCSP-On", "ocsp-onchain-baseline", "management"),
             ("Contract", "full-contract-onchain", "management"),
@@ -70,8 +95,10 @@ def main() -> None:
         df,
         [
             ("DPKI-Off", "proposed-dpki", "intra-off-chain"),
+            ("Thr-Off", "threshold-validation-dpki", "intra-off-chain"),
             ("PKI", "traditional-pki", "intra-auth"),
             ("DPKI-On", "proposed-dpki", "intra-on-chain"),
+            ("Thr-On", "threshold-validation-dpki", "intra-on-chain"),
             ("OCSP-On", "ocsp-onchain-baseline", "intra-on-chain"),
             ("Contract", "full-contract-onchain", "intra-on-chain"),
         ],
@@ -81,6 +108,7 @@ def main() -> None:
         [
             ("PKI", "traditional-pki", "cross-auth"),
             ("DPKI-On", "proposed-dpki", "cross-on-chain"),
+            ("Thresh", "threshold-validation-dpki", "cross-on-chain"),
             ("OCSP-On", "ocsp-onchain-baseline", "cross-on-chain"),
             ("Contract", "full-contract-onchain", "cross-on-chain"),
         ],
@@ -94,11 +122,13 @@ def main() -> None:
             [
                 get_row(df, "proposed-dpki", "intra-on-chain")["meanStatusValidationMs"],
                 get_row(df, "traditional-pki", "intra-auth")["meanStatusValidationMs"],
+                get_row(df, "threshold-validation-dpki", "intra-on-chain")["meanStatusValidationMs"],
                 get_row(df, "ocsp-onchain-baseline", "intra-on-chain")["meanStatusValidationMs"],
             ],
             [
                 get_row(df, "proposed-dpki", "cross-on-chain")["meanStatusValidationMs"],
                 get_row(df, "traditional-pki", "cross-auth")["meanStatusValidationMs"],
+                get_row(df, "threshold-validation-dpki", "cross-on-chain")["meanStatusValidationMs"],
                 get_row(df, "ocsp-onchain-baseline", "cross-on-chain")["meanStatusValidationMs"],
             ],
         ],
@@ -122,8 +152,19 @@ def main() -> None:
             "mechanismColors": np.array(
                 [
                     [158, 170, 209],
+                    [167, 204, 159],
                     [245, 219, 182],
                     [245, 151, 144],
+                ],
+                dtype=float,
+            )
+            / 255.0,
+            "statusColors": np.array(
+                [
+                    [158, 170, 209],
+                    [245, 151, 144],
+                    [167, 204, 159],
+                    [245, 219, 182],
                 ],
                 dtype=float,
             )
@@ -138,12 +179,15 @@ def main() -> None:
             "crossStages": cross_stages,
             "crossTotals": cross_totals,
             "costRequestLabels": np.array(["Mgmt", "Intra", "Cross"], dtype=object).reshape(-1, 1),
-            "costMechanismLabels": np.array(["DPKI-On", "OCSP-On", "Contract"], dtype=object).reshape(-1, 1),
+            "costMechanismLabels": np.array(["DPKI-On", "Threshold", "OCSP-On", "Contract"], dtype=object).reshape(-1, 1),
             "gasValues": gas_values,
             "storageValues": storage_values,
             "statusRequestLabels": np.array(["Intra", "Cross"], dtype=object).reshape(-1, 1),
-            "statusMechanismLabels": np.array(["MPT", "PKI-OCSP", "OCSP-On"], dtype=object).reshape(-1, 1),
+            "statusMechanismLabels": np.array(["MPT", "PKI-OCSP", "Threshold", "OCSP-On"], dtype=object).reshape(-1, 1),
             "statusValues": status_values,
+            "complexityRequestLabels": np.array(["Intra", "Cross"], dtype=object).reshape(-1, 1),
+            "complexityMechanismLabels": np.array(["MPT", "PKI-OCSP", "Threshold", "OCSP-On"], dtype=object).reshape(-1, 1),
+            "complexityValues": status_complexity_panel(),
         },
     )
     print(f"Saved {DATA_FILE}")

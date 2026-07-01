@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
-$DpkiRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
-$RuntimeRoot = Join-Path $DpkiRoot "runtime"
+$PowRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$RuntimeRoot = Join-Path $PowRoot "runtime"
 
 if (-not (Test-Path $RuntimeRoot)) {
   Write-Host "No Omnilink PoW runtime directory found."

@@ -16,7 +16,7 @@ const ROOT = path.resolve(__dirname, "..");
 const EXPERIMENT_DIR = __dirname;
 const OUT_DIR = path.join(EXPERIMENT_DIR, "outputs");
 const CONTRACT_PATH = path.join(EXPERIMENT_DIR, "contracts", "DPKIExperiment.sol");
-const SIMU2_DIR = path.resolve(ROOT, "..", "simu2_tail_prob");
+const SIMU2_DIR = path.join(ROOT, "simu2_tail_prob");
 const OPENSSL_RUNTIME_ROOT = path.join(os.tmpdir(), "chain33-dpki-http-runtime");
 
 const DEFAULTS = {
@@ -4734,7 +4734,7 @@ for directory in (out, experiment_out):
 plt.close(fig)
 `;
   const child = require("child_process").spawnSync("python", ["-c", plotScript], {
-    cwd: path.resolve(ROOT, ".."),
+    cwd: ROOT,
     encoding: "utf8",
   });
   if (child.status !== 0) {
@@ -4756,7 +4756,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from simu2_tail_prob.simu2_cross_domain_experiment import ModelParams, plot_results, save_bounds_check, theory_rows
 
-root = Path(r'${path.resolve(ROOT, "..").replace(/\\/g, "\\\\")}').resolve()
+root = Path(r'${ROOT.replace(/\\/g, "\\\\")}').resolve()
 simu2 = root / 'simu2_tail_prob'
 exp = root / 'DPKI-and-DID-platform-Lenovo' / 'chain33-dpki-real-experiment' / 'outputs'
 pow_runtime = Path(r'${path.resolve(args.powRuntime).replace(/\\/g, "\\\\")}').resolve()
@@ -5102,7 +5102,7 @@ print('')
 print(f'calibratedTheoryFinite={all_finite}')
 `;
   const child = require("child_process").spawnSync("python", ["-c", calibrationScript], {
-    cwd: path.resolve(ROOT, ".."),
+    cwd: ROOT,
     encoding: "utf8",
   });
   if (child.stdout) console.log(child.stdout.trim());
