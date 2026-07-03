@@ -25,6 +25,7 @@ OUT_DIR = Path(__file__).resolve().parent
 ANCHOR_CSV = ROOT / "source_data" / "summary_by_request_class_fig7_aligned.csv"
 if not ANCHOR_CSV.exists():
     ANCHOR_CSV = ROOT / "source_data" / "summary_by_request_class_no_authsig.csv"
+SERVICE_PROBE_ROOT = ROOT.parent / "simu2-8-packaged" / "service_probe"
 
 SUMMARY_COLUMNS = [
     "mechanism",
@@ -208,7 +209,22 @@ def validator_http_cluster(
             thread.join(timeout=2.0)
 
 
-def load_anchor(path: Path) -> Anchor:
+def real_management_issue_ms(service_probe_root: Path) -> float | None:
+    path = service_probe_root / "management" / "stage_statistics.csv"
+    if not path.exists():
+        return None
+    df = pd.read_csv(path)
+    rows = df[
+        (df["model"] == "DPKI")
+        & (df["kind"] == "management")
+        & (df["stage"] == "dpkiManagementIssueCertificate")
+    ]
+    if len(rows) != 1:
+        return None
+    return float(rows.iloc[0]["meanMs"])
+
+
+def load_anchor(path: Path, service_probe_root: Path = SERVICE_PROBE_ROOT) -> Anchor:
     df = pd.read_csv(path)
 
     def row(mechanism: str, request_class: str) -> pd.Series:
@@ -222,8 +238,12 @@ def load_anchor(path: Path) -> Anchor:
     dpki_cross = row("proposed-dpki", "cross-on-chain")
     dpki_off = row("proposed-dpki", "intra-off-chain")
 
+    issue_update_ms = real_management_issue_ms(service_probe_root)
+    if issue_update_ms is None:
+        issue_update_ms = float(dpki_mgmt["meanIssueUpdateMs"])
+
     return Anchor(
-        issue_update_ms=float(dpki_mgmt["meanIssueUpdateMs"]),
+        issue_update_ms=issue_update_ms,
         cert_management_ms=float(dpki_mgmt["meanCertVerificationMs"]),
         cert_intra_ms=float(dpki_off["meanCertVerificationMs"]),
         cert_intra_onchain_ms=float(dpki_intra["meanCertVerificationMs"]),
@@ -418,7 +438,7 @@ def simulate(args: argparse.Namespace) -> tuple[pd.DataFrame, pd.DataFrame]:
     if args.threshold > args.validators:
         raise ValueError("--threshold must be <= --validators")
     rng = np.random.default_rng(args.seed)
-    anchor = load_anchor(Path(args.anchor_csv))
+    anchor = load_anchor(Path(args.anchor_csv), Path(args.service_probe_root))
     validators = make_validator_keys(args.validators)
 
     request_classes = [
@@ -549,6 +569,7 @@ def write_outputs(metrics: pd.DataFrame, summary: pd.DataFrame, args: argparse.N
         "mechanism": "threshold-validation-dpki",
         "description": "k-of-n validator endorsement baseline; assertion is included in certificate verification stage.",
         "anchorCsv": str(Path(args.anchor_csv).resolve()),
+        "serviceProbeRoot": str(Path(args.service_probe_root).resolve()),
         "roundsPerRequestClass": args.rounds,
         "validators": args.validators,
         "threshold": args.threshold,
@@ -593,6 +614,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--contract-cv", type=float, default=0.28)
     parser.add_argument("--seed", type=int, default=73001)
     parser.add_argument("--anchor-csv", default=str(ANCHOR_CSV))
+    parser.add_argument("--service-probe-root", default=str(SERVICE_PROBE_ROOT))
     return parser.parse_args()
 
 

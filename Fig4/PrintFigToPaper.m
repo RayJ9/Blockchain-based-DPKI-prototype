@@ -50,8 +50,7 @@ end
 set(figHandle, 'PaperPosition', [0 0 FigWidth FigHeight]);
 set(figHandle, 'Position', [screenPosition(1:2) / 2, FigWidth, FigHeight]);
 
-set([ax.XLabel, ax.YLabel, ax.Title], ...
-    'FontSize', FigFontSize, 'FontName', FigFontName);
+set([ax.XLabel, ax.YLabel, ax.Title], 'FontName', FigFontName);
 set(findobj(ax, 'FontName', 'Helvetica'), 'FontName', FigFontName);
 
 fontTargets = [10, 12, 14, 16];
