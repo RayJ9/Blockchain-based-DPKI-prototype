@@ -1,0 +1,28 @@
+\begin{table*}[t]
+\centering
+\caption{Measured communication, storage, and gas overhead of different authentication mechanisms.}
+\label{tab:overhead-cost}
+\scriptsize
+\setlength{\tabcolsep}{4.2pt}
+\begin{tabular}{llrrr}
+\hline
+Request & Scheme & Communication payload (byte) & Storage (byte) & Receipt gas used \\
+\hline
+Management & Our proposed DPKI & 2289 & 612 & 615606 \\
+ & Centralized PKI & 1258 & 632 & - \\
+ & Multi-CA based DPKI & 2730 & 894 & 910357 \\
+ & full-contract DPKI & 2934 & 1042 & 967937 \\
+Intra-domain & Our proposed DPKI (off-chain) & 1586 & - & - \\
+ & Our proposed DPKI (on-chain) & 2341 & 288 & 216515 \\
+ & Centralized PKI & 383 & - & - \\
+ & Multi-CA based DPKI & 2501 & - & - \\
+ & full-contract DPKI & 925 & 352 & 274798 \\
+Cross-domain & Our proposed DPKI & 3925 & 288 & 216527 \\
+ & Centralized PKI & 1569 & - & - \\
+ & Multi-CA based DPKI & 2954 & - & - \\
+ & full-contract DPKI & 1299 & 352 & 279479 \\
+\hline
+\multicolumn{5}{l}{\footnotesize Communication payload and storage are reported in byte.}\\
+\multicolumn{5}{l}{\footnotesize Storage refers only to the persistent scheme state kept after the operation completes.}
+\end{tabular}
+\end{table*}

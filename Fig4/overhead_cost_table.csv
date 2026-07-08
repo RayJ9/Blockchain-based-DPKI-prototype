@@ -1,0 +1,14 @@
+Request,Scheme,Communication payload (byte),Storage (byte),Receipt gas used
+Management,Our proposed DPKI,2289,612,615606
+Management,Centralized PKI,1258,632,
+Management,Multi-CA based DPKI,2730,894,910357
+Management,full-contract DPKI,2934,1042,967937
+Intra-domain,Our proposed DPKI (off-chain),1586,,
+Intra-domain,Our proposed DPKI (on-chain),2341,288,216515
+Intra-domain,Centralized PKI,383,,
+Intra-domain,Multi-CA based DPKI,2501,,
+Intra-domain,full-contract DPKI,925,352,274798
+Cross-domain,Our proposed DPKI,3925,288,216527
+Cross-domain,Centralized PKI,1569,,
+Cross-domain,Multi-CA based DPKI,2954,,
+Cross-domain,full-contract DPKI,1299,352,279479

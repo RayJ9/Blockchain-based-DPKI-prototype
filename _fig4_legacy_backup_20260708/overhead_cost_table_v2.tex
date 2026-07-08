@@ -1,0 +1,28 @@
+\begin{table*}[t]
+\centering
+\caption{Measured non-latency overhead of different authentication mechanisms.}
+\label{tab:resource-overhead-v2}
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{llrrrr}
+\hline
+Mechanism & Request & External payload (B) & On-chain storage (B) & Gas ($10^3$) & Internal coordination (B) \\
+\hline
+Our proposed DPKI & Mgmt. & 1615 & 654 & 235.7 & - \\
+ & Intra-off & 1585 & - & - & - \\
+ & Intra-on & 2342 & 590 & 281.5 & - \\
+ & Cross & 3925 & 590 & 281.5 & - \\
+Centralized PKI & Mgmt. & 1262 & - & - & - \\
+ & Intra & 384 & - & - & - \\
+ & Cross & 1570 & - & - & - \\
+Multi-CA based DPKI & Mgmt. & 1674 & 654 & 235.7 & 62092 \\
+ & Intra & 3286 & - & - & - \\
+ & Cross & 3740 & - & - & - \\
+full-contract DPKI & Mgmt. & 644 & 654 & 235.7 & - \\
+ & Intra-on & 925 & 942 & 357.2 & - \\
+ & Cross & 1298 & 1006 & 363.3 & - \\
+\hline
+\multicolumn{6}{l}{\footnotesize External payload counts only externally transmitted protocol bytes.}\\
+\multicolumn{6}{l}{\footnotesize Internal coordination is separated from the main user-facing columns and is only applicable to Multi-CA based DPKI.}
+\end{tabular}
+\end{table*}

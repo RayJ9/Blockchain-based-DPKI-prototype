@@ -6,6 +6,8 @@ contract DPKIExperiment {
     uint8 public constant STATE_NONE = 0;
     uint8 public constant STATE_VALID = 1;
     uint8 public constant STATE_REVOKED = 2;
+    uint256 public constant MAX_ASSERTION_AGE = 600;
+    uint256 public constant MAX_ASSERTION_CLOCK_SKEW = 60;
 
     struct Certificate {
         bytes32 domainId;
@@ -138,30 +140,87 @@ contract DPKIExperiment {
     }
 
     function authenticateSigned(
-        bytes32[8] memory data,
+        bytes32[6] memory data,
         address sourceAddress,
         uint256 timestamp,
         bool crossDomain,
+        bytes32[] memory certKeys,
+        bytes32[] memory certHashes,
         address serviceSigner,
-        bytes32 serviceSignatureHash
+        bytes memory serviceSignature
     ) public {
         require(serviceSigner != address(0), "missing service signer");
-        require(serviceSignatureHash != bytes32(0), "missing service signature");
-        require(_isCertificateValid(data[6], data[7]), "certificate is not valid");
+        require(serviceSignature.length == 65, "bad service signature length");
+        require(certKeys.length > 0, "missing certificate checks");
+        require(certKeys.length == certHashes.length, "bad certificate checks length");
+        require(timestamp <= now + MAX_ASSERTION_CLOCK_SKEW, "assertion timestamp from future");
+        require(timestamp + MAX_ASSERTION_AGE >= now, "assertion expired");
+        for (uint256 i = 0; i < certKeys.length; i++) {
+            require(_isCertificateValid(certKeys[i], certHashes[i]), "certificate is not valid");
+        }
+        require(
+            _recoverAssertionSigner(
+                authAssertionDigest(data, sourceAddress, timestamp, crossDomain, certKeys, certHashes),
+                serviceSignature
+            ) == serviceSigner,
+            "bad assertion signature"
+        );
         _putAuthRecord(
             data[0],
             data[1],
             data[2],
             data[3],
             data[4],
-            data[7],
+            certHashes[0],
             data[5],
             sourceAddress,
             timestamp,
             crossDomain
         );
         authRecordSigners[data[0]] = serviceSigner;
-        authRecordSignatureHashes[data[0]] = serviceSignatureHash;
+        authRecordSignatureHashes[data[0]] = keccak256(serviceSignature);
+    }
+
+    function authAssertionDigest(
+        bytes32[6] memory data,
+        address sourceAddress,
+        uint256 timestamp,
+        bool crossDomain,
+        bytes32[] memory certKeys,
+        bytes32[] memory certHashes
+    ) public view returns (bytes32) {
+        return keccak256(
+            abi.encodePacked(
+                address(this),
+                data[0],
+                data[1],
+                data[2],
+                data[3],
+                data[4],
+                data[5],
+                sourceAddress,
+                timestamp,
+                crossDomain,
+                keccak256(abi.encode(certKeys, certHashes))
+            )
+        );
+    }
+
+    function _recoverAssertionSigner(bytes32 assertionDigest, bytes memory serviceSignature) internal pure returns (address) {
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(serviceSignature, 32))
+            s := mload(add(serviceSignature, 64))
+            v := byte(0, mload(add(serviceSignature, 96)))
+        }
+        if (v < 27) {
+            v += 27;
+        }
+        require(v == 27 || v == 28, "bad signature v");
+        bytes32 ethDigest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", assertionDigest));
+        return ecrecover(ethDigest, v, r, s);
     }
 
     function _isCertificateValid(bytes32 certKey, bytes32 certHash) internal view returns (bool) {
@@ -210,6 +269,7 @@ contract DPKIExperiment {
         uint256 timestamp,
         bool crossDomain
     ) internal {
+        require(!authRecords[requestId].exists, "auth record already exists");
         authRecords[requestId] = AuthRecord(
             sourceDomainId,
             targetDomainId,

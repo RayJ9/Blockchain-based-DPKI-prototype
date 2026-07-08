@@ -1,70 +1,76 @@
 # Fig4
 
-Section VI.2 baseline comparison figures.
+This directory now keeps only the final Section VI.2 artifacts and the scripts
+needed to reproduce them:
 
-This figure is generated from the Fig7-aligned baseline summary:
+- `figure_latency.*`: final latency comparison figure.
+- `figure_overhead_table.*`: final overhead table figure.
+- `overhead_cost_table.{csv,md,tex}`: exact overhead values used by the table
+  figure.
+
+## 1. Latency figure
+
+The latency figure is built from the retained baseline summaries:
 
 - `source_data/summary_by_request_class_fig7_aligned.csv`
+- `source_data/threshold_summary_by_request_class.csv`
+- `full_contract_baseline/full_contract_summary_by_request_class.csv`
 
-The summary covers the proposed DPKI, traditional PKI, threshold-validation
-DPKI, and full-contract on-chain baseline. The intermediate OCSP-on-chain
-variant is intentionally excluded from the paper figure because it mixes the
-OCSP status-query path with the on-chain authentication path and makes the stage
-comparison harder to interpret. The certificate-verification stage includes
-assertion signing/verification, so the total latency matches the Fig7 accounting
-style.
+`generate_data_fig4.py` merges these summaries, writes `data_fig4.mat`, and
+exports `latency_distribution_summary.csv`. `plot_fig4.m` then draws only the
+final `figure_latency.*` assets.
 
-If `../Fig3/threshold_baseline/threshold_summary_by_request_class.csv` exists,
-the threshold-validation DPKI baseline is appended to Fig4 before plotting. This
-baseline must be generated from the same Fig7-aligned anchor table.
-
-`source_data/summary_by_request_class_no_authsig.csv` is retained only as the
-old intermediate microbenchmark table. Do not use it directly for the paper
-figure unless intentionally reproducing that old accounting style.
-
-Rebuild the figure data and redraw:
+Reproduce:
 
 ```powershell
-python generate_data_fig4.py
+.\reproduce_latency.ps1
+```
+
+or run the two steps manually:
+
+```powershell
+python .\generate_data_fig4.py
 & 'C:\Program Files\MATLAB\R2024a\bin\matlab.exe' -batch "cd('Fig4'); plot_fig4"
 ```
 
-Current paper outputs:
+## 2. Overhead figure
 
-- `figure_latency.png`
-- `figure_latency.pdf`
-- `figure_latency.eps`
-- `figure_overhead.png`
-- `figure_overhead.pdf`
-- `figure_overhead.eps`
+The overhead table figure is rebuilt from the Fig4-specific prototype benchmark:
 
-`figure_latency.*` contains the three latency panels for management,
-intra-domain authentication, and cross-domain authentication. `figure_overhead.*`
-contains the two on-chain authentication cost panels: gas overhead and complete
-on-chain record overhead. The record overhead is computed as raw transaction
-bytes, or transaction input bytes when the raw transaction size is unavailable,
-plus receipt-log bytes and estimated state-write bytes. The management cost is
-not included in the overhead figure because issuance and update/revocation
-should be measured as separate management operations.
+- benchmark: `prototype_baseline_benchmark/run_prototype_baseline_benchmark.js`
+- contract: `prototype_baseline_benchmark/contracts/Fig4OverheadBenchmark.sol`
+- latest retained run: `prototype_baseline_benchmark/outputs/actual_overhead_stagebreakdown_receiptgas_onegroup_rich_20260708_3`
 
-For the latency figure, `Assertion` covers the signed request/response message
-and timestamp/nonce validity checking. For authentication requests, OCSP/MPT or
-threshold checking and certificate/record checking are merged into `Service
-processing`. For management requests, the status and certificate-validation
-sub-stages are omitted because issuance/update and response assertion are the
-meaningful comparable stages in this figure. Management issuance uses the
-original service-probe measurement rather than the Fig7-aligned stage
-allocation.
+`generate_overhead_cost_table.py` reads the latest retained overhead run and
+exports:
 
-Legacy combined output retained for reference:
+- `overhead_cost_table.csv`
+- `overhead_cost_table.md`
+- `overhead_cost_table.tex`
 
-- `figure.png`
-- `figure.pdf`
-- `figure.eps`
+`plot_overhead_cost_table.py` renders `figure_overhead_table.*`.
 
-Kept data:
+Reproduce:
+
+```powershell
+.\reproduce_overhead.ps1
+```
+
+or run the three steps manually:
+
+```powershell
+node .\prototype_baseline_benchmark\run_prototype_baseline_benchmark.js --requests 1 --actual-overhead
+python .\generate_overhead_cost_table.py
+python .\plot_overhead_cost_table.py
+```
+
+## 3. Retained experiment data
 
 - `data_fig4.mat`
-- `source_data/summary_by_request_class_fig7_aligned.csv`
-- `source_data/summary_by_request_class_no_authsig.csv`
-- `../Fig3/threshold_baseline/threshold_summary_by_request_class.csv`
+- `latency_distribution_summary.csv`
+- `full_contract_baseline/full_contract_request_metrics.csv`
+- `full_contract_baseline/full_contract_summary_by_request_class.csv`
+- `prototype_baseline_benchmark/outputs/actual_overhead_stagebreakdown_receiptgas_onegroup_rich_20260708_3`
+
+Anything else previously used during intermediate drafts has been removed from
+`Fig4` so the folder matches the final paper workflow.

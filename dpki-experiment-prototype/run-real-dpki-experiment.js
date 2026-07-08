@@ -2681,6 +2681,64 @@ function signServiceAuthRecord(web3, serviceCa, recordBody) {
   };
 }
 
+function splitEthereumSignature(signature) {
+  const clean = String(signature || "").replace(/^0x/i, "");
+  if (clean.length !== 130) {
+    throw new Error("expected 65-byte Ethereum signature");
+  }
+  let v = Number.parseInt(clean.slice(128, 130), 16);
+  if (v < 27) v += 27;
+  return {
+    r: `0x${clean.slice(0, 64)}`,
+    s: `0x${clean.slice(64, 128)}`,
+    v,
+  };
+}
+
+function certificateCheckHash(web3, certificateChecks) {
+  return web3.utils.keccak256(
+    web3.eth.abi.encodeParameters(
+      ["bytes32[]", "bytes32[]"],
+      [
+        certificateChecks.map((record) => record.key),
+        certificateChecks.map((record) => record.certHash),
+      ]
+    )
+  );
+}
+
+function authAssertionDigest(web3, contract, hash, request, source, certificateChecks, timestamp) {
+  const contractAddress =
+    contract && contract.options && contract.options.address
+      ? contract.options.address
+      : "0x0000000000000000000000000000000000000000";
+  return web3.utils.soliditySha3(
+    { type: "address", value: contractAddress },
+    { type: "bytes32", value: request.requestId },
+    { type: "bytes32", value: web3.utils.keccak256(request.sourceDomain) },
+    { type: "bytes32", value: web3.utils.keccak256(request.targetDomain) },
+    { type: "bytes32", value: web3.utils.keccak256(request.sourceSubject) },
+    { type: "bytes32", value: web3.utils.keccak256(request.targetSubject) },
+    { type: "bytes32", value: hash.text(request.nonce) },
+    { type: "address", value: source.account.address },
+    { type: "uint256", value: String(timestamp) },
+    { type: "bool", value: Boolean(request.crossDomain) },
+    { type: "bytes32", value: certificateCheckHash(web3, certificateChecks) }
+  );
+}
+
+function signContractAuthAssertion(web3, contract, hash, request, source, certificateChecks, timestamp, serviceCa) {
+  const digest = authAssertionDigest(web3, contract, hash, request, source, certificateChecks, timestamp);
+  const signature = serviceCa.account.sign(digest).signature;
+  return {
+    digest,
+    signer: serviceCa.account.address,
+    signature,
+    signatureHash: web3.utils.keccak256(signature),
+    ...splitEthereumSignature(signature),
+  };
+}
+
 function signEntityTxId(source, txId) {
   return source.account.sign(String(txId)).signature;
 }
@@ -2726,6 +2784,7 @@ function verifyResolvedAuthRecord(
   const record = resolved.record;
   const expected = authRecordBody(web3, hash, request, source, timestamp, true);
   const serviceMessage = stableStringify(expected);
+  const serviceSignatureHash = web3.utils.keccak256(serviceSignature);
   return (
     String(record.sourceDomainId).toLowerCase() === expected.sourceDomainId.toLowerCase() &&
     String(record.targetDomainId).toLowerCase() === expected.targetDomainId.toLowerCase() &&
@@ -2737,7 +2796,7 @@ function verifyResolvedAuthRecord(
     Number(record.timestamp) === timestamp &&
     Boolean(record.crossDomain) === Boolean(request.crossDomain) &&
     String(resolved.serviceSigner).toLowerCase() === serviceCa.account.address.toLowerCase() &&
-    String(resolved.serviceSignatureHash).toLowerCase() === hash.text(serviceSignature).toLowerCase() &&
+    String(resolved.serviceSignatureHash).toLowerCase() === serviceSignatureHash.toLowerCase() &&
     verifySignatureAddress(web3, serviceMessage, serviceSignature, serviceCa.account.address) &&
     verifySignatureAddress(web3, String(txId), entityTxIdSignature, source.account.address)
   );
@@ -2774,10 +2833,9 @@ async function authenticateOnChain(
   source,
   certificateChecks,
   timestamp,
-  serviceSigner,
-  serviceSignatureHash
+  serviceAssertion
 ) {
-  const hasSignedService = Boolean(serviceSigner && serviceSignatureHash);
+  const hasSignedService = Boolean(serviceAssertion && serviceAssertion.signer && serviceAssertion.signature);
   if (contract && contract.isPow) {
     const payload = {
       requestId: request.requestId,
@@ -2793,8 +2851,9 @@ async function authenticateOnChain(
       certHashes: certificateChecks.map((record) => record.certHash),
     };
     if (hasSignedService) {
-      payload.serviceSigner = serviceSigner;
-      payload.serviceSignatureHash = serviceSignatureHash;
+      payload.serviceSigner = serviceAssertion.signer;
+      payload.serviceSignatureHash = serviceAssertion.signatureHash;
+      payload.serviceSignature = serviceAssertion.signature;
     }
     return contract.authenticate(payload);
   }
@@ -2809,14 +2868,14 @@ async function authenticateOnChain(
           web3.utils.keccak256(request.sourceSubject),
           web3.utils.keccak256(request.targetSubject),
           hash.text(request.nonce),
-          certificateChecks[0].key,
-          certificateChecks[0].certHash,
         ],
         source.account.address,
         timestamp,
         request.crossDomain,
-        serviceSigner,
-        serviceSignatureHash
+        certificateChecks.map((record) => record.key),
+        certificateChecks.map((record) => record.certHash),
+        serviceAssertion.signer,
+        serviceAssertion.signature
       ),
       account,
       privateKey,
@@ -2847,7 +2906,18 @@ async function authenticateOnChain(
 async function onchainAuth(web3, contract, account, privateKey, nonceManager, platform, hash, request) {
   const stageTimings = {};
   const source = findCert(platform, request.sourceDomain, request.sourceSubject);
+  const certificateChecks = [source];
   const timestamp = Math.floor(Date.now() / 1000);
+  const serviceAssertion = signContractAuthAssertion(
+    web3,
+    contract,
+    hash,
+    request,
+    source,
+    certificateChecks,
+    timestamp,
+    sourceServiceCa(platform, request)
+  );
   const txStage = contract && contract.isPow ? "dpkiPowOnchainAuthenticateTx" : "dpkiOnchainAuthenticateTx";
   const receipt = await timeStage(stageTimings, txStage, () =>
     authenticateOnChain(
@@ -2859,10 +2929,9 @@ async function onchainAuth(web3, contract, account, privateKey, nonceManager, pl
       hash,
       request,
       source,
-      [source],
+      certificateChecks,
       timestamp,
-      null,
-      null
+      serviceAssertion
     )
   );
   const onchainStageNames = {
@@ -2881,7 +2950,7 @@ async function onchainAuth(web3, contract, account, privateKey, nonceManager, pl
   };
   let proofNodes = 0;
   let chainReads = 1;
-  let verifiedCertificateSteps = 1;
+  let verifiedCertificateSteps = certificateChecks.length;
   if (platform.dpkiProofResponder && platform.dpkiProofResponder.baseUrl) {
     await requestHttpWindowStage(
       stageTimings,

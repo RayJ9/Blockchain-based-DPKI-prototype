@@ -1,0 +1,19 @@
+\begin{table*}[t]
+\centering
+\caption{On-chain storage and final receipt gas used by the chain-side primitives in the prototype baselines.}
+\label{tab:onchain-cost-v1}
+\scriptsize
+\setlength{\tabcolsep}{3.8pt}
+\begin{tabular}{lllrr}
+\hline
+Primitive & Applied request & Used by & On-chain storage (B) & Receipt gas used ($10^3$) \\
+\hline
+Cert/root write & Management & Proposed Mgmt.; Multi-CA Mgmt.; full-contract Mgmt. & 654 & 181.3 \\
+Auth record write + read & Intra-domain & Proposed DPKI (on-chain) & 590 & 216.5 \\
+Auth record write + read & Cross-domain & Proposed DPKI (cross-domain) & 590 & 216.5 \\
+Full-contract auth & Intra-domain & full-contract DPKI & 942 & 274.8 \\
+Full-contract auth & Cross-domain & full-contract DPKI & 1006 & 279.5 \\
+\hline
+\multicolumn{5}{l}{\footnotesize Multi-CA internal committee coordination is excluded because it is not reflected as a chain-side primitive in the current prototype baseline.}
+\end{tabular}
+\end{table*}

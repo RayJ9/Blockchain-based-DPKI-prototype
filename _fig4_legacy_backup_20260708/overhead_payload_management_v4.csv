@@ -1,0 +1,5 @@
+Scheme,External payload B,On-chain storage B,Gas (10^3)
+Our proposed DPKI,1616.0,654.0,181.306
+Centralized PKI,1258.0,,
+Multi-CA based DPKI,1676.0,654.0,181.306
+full-contract DPKI,645.0,654.0,181.306
