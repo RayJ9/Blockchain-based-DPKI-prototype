@@ -88,26 +88,29 @@ ax.TickLabelInterpreter = 'latex';
 ax.FontSize = 8;
 
 for ii = 1:numel(mValues)
+    x = pfValues;
     y = mValues(ii) * ones(size(pfValues));
-    fill3(ax, [pfValues, fliplr(pfValues)], [y, fliplr(y)], ...
+    fill3(ax, [x, fliplr(x)], [y, fliplr(y)], ...
         [Lower(ii, :), fliplr(Upper(ii, :))], colors.band, ...
         'FaceAlpha', 0.28, 'EdgeColor', 'none');
-    hLower = plot3(ax, pfValues, y, Lower(ii, :), '-', ...
+    hLower = plot3(ax, x, y, Lower(ii, :), '-', ...
         'Color', colors.lower, 'LineWidth', 0.95);
-    hUpper = plot3(ax, pfValues, y, Upper(ii, :), '-', ...
+    hUpper = plot3(ax, x, y, Upper(ii, :), '-', ...
         'Color', colors.upper, 'LineWidth', 0.95);
-    hCenter = plot3(ax, pfValues, y, Center(ii, :), '--', ...
+    hCenter = plot3(ax, x, y, Center(ii, :), '--', ...
         'Color', colors.center, 'LineWidth', 1.05);
-    hPki = plot3(ax, pfValues, y, PKI(ii, :), '-', ...
+    hPki = plot3(ax, x, y, PKI(ii, :), '-', ...
         'Color', colors.pki, 'LineWidth', 0.95);
 end
 
 hX = xlabel(ax, '$p_f$', 'Interpreter', 'latex', 'FontWeight', 'bold');
-hY = ylabel(ax, '$M$', 'Interpreter', 'latex', 'FontWeight', 'bold');
+hY = ylabel(ax, '$m$', 'Interpreter', 'latex', 'FontWeight', 'bold');
 zlabel(ax, '$A$', 'Interpreter', 'latex', 'FontWeight', 'bold');
 xlim(ax, [min(pfValues), max(pfValues)]);
 ylim(ax, [min(mValues), max(mValues)]);
 zlim(ax, [0, 1]);
+xticks(ax, [0, 0.5, 1.0]);
+xlim(ax, [0, 1]);
 yticks(ax, mValues);
 view(ax, 43, 26);
 set(hX, 'Rotation', -13, 'VerticalAlignment', 'middle', 'HorizontalAlignment', 'center');
@@ -137,7 +140,7 @@ for ii = 1:size(positions, 1)
         rowIdx = arrayfun(@(target) nearestIndex(mValues, target), mPairTargets(ii, :));
         xlim(ax, [min(pfValues), max(pfValues)]);
         xlabel(ax, '$p_f$', 'Interpreter', 'latex');
-        titleText = sprintf('$M=%d,%d$', round(mValues(rowIdx(1))), round(mValues(rowIdx(2))));
+        titleText = sprintf('$m=%d,%d$', round(mValues(rowIdx(1))), round(mValues(rowIdx(2))));
         markerStyle = {'d', 'd'};
         for jj = 1:numel(rowIdx)
             plotMechanismLines(ax, pfValues, Upper(rowIdx(jj), :), Lower(rowIdx(jj), :), ...
@@ -152,7 +155,7 @@ for ii = 1:size(positions, 1)
         yPki = interp1(pfValues(:), PKI', pfTarget, 'linear');
         xlim(ax, [min(mValues), max(mValues)]);
         xticks(ax, [min(mValues), round(mean(mValues)), max(mValues)]);
-        xlabel(ax, '$M$', 'Interpreter', 'latex');
+        xlabel(ax, '$m$', 'Interpreter', 'latex');
         titleText = sprintf('$p_f=%.1f$', pfTarget);
         plotMechanismLines(ax, xValues, yUpper, yLower, yCenter, yPki, colors, 'd');
     end

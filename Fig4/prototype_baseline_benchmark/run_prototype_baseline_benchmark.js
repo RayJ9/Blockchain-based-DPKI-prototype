@@ -9,6 +9,13 @@ const ROOT = path.resolve(__dirname, "..", "..");
 const PROTOTYPE_NODE_MODULES = path.join(ROOT, "dpki-experiment-prototype", "node_modules");
 const CONTRACT_PATH = path.join(__dirname, "contracts", "Fig4OverheadBenchmark.sol");
 const CONTRACT_NAME = "Fig4OverheadBenchmark";
+const PLATFORM_REGISTRY = require(path.join(ROOT, "platform_registry"));
+const VERBOSE_TRACE = /^(1|true|yes|on)$/i.test(process.env.DPKI_VERBOSE_TRACE || "");
+
+function traceEvent(kind, payload) {
+  if (!VERBOSE_TRACE) return;
+  console.log(`[TRACE][${kind}] ${JSON.stringify(payload)}`);
+}
 
 const solc = require(path.join(PROTOTYPE_NODE_MODULES, "solc"));
 const Web3 = require(path.join(PROTOTYPE_NODE_MODULES, "web3"));
@@ -399,6 +406,16 @@ function opensslIssue(ctx, label, options = {}) {
   const certBuffer = fs.readFileSync(leafCert);
   const statusLine = `${id},valid,${Math.floor(Date.now() / 1000)}\n`;
   const statusBuffer = Buffer.from(statusLine, "utf8");
+  traceEvent("CERTIFICATE", {
+    label,
+    subject: `Fig4-Issued-${id}`,
+    issuer: "Fig4-CA",
+    keyBytes: keyBuffer.length,
+    csrBytes: csrBuffer.length,
+    certificateBytes: certBuffer.length,
+    statusBytes: statusBuffer.length,
+    certificateSha256: sha256Hex(certBuffer),
+  });
   if (persistStatus) {
     fs.appendFileSync(ctx.statusDb, statusLine);
   }
@@ -922,6 +939,18 @@ async function prepareChain(args) {
       status: rpcHexToNumber(receipt.status) !== 0,
     };
     if (!receiptOk(normalizedReceipt)) throw new Error(`tx failed ${hash}`);
+    traceEvent("RECEIPT", {
+      transactionHash: hash,
+      blockNumber: rpcHexToNumber(receipt.blockNumber),
+      transactionIndex: rpcHexToNumber(receipt.transactionIndex),
+      gasUsed: normalizedReceipt.gasUsed,
+      status: normalizedReceipt.status,
+      inputBytes: bytesOfHex(data),
+      rawTransactionBytes: bytesOfHex(signed.rawTransaction),
+      receiptLogBytes: receiptLogBytes(normalizedReceipt),
+      serviceMs,
+      receiptWaitMs,
+    });
     return {
       hash,
       nonce: thisNonce,
@@ -1241,200 +1270,50 @@ function newRow(mechanism, requestClass, index) {
   };
 }
 
+function buildBaselineHelpers() {
+  return {
+    measure,
+    postJson,
+    issue,
+    assertion,
+    certificateVerification,
+    ocspVerify,
+    mptVerify,
+    thresholdValidate,
+    thresholdManagementCeremony,
+    chainRecord,
+    chainStateRead,
+    signThresholdCertificateBundle,
+    signContractAssertion,
+    proposedCertificateStorageBytes,
+    thresholdCertificateStorageBytes,
+    fullCertificateStorageBytes,
+    authRecordStorageBytes,
+    signedAuthRecordStorageBytes,
+    keccakBytes32,
+    addCertStatusChecks,
+  };
+}
+
 async function runWorkflow(row, ctx) {
   const { mechanism, requestClass } = row;
   const label = `${mechanism}:${requestClass}:${row.index}`;
   const chain = ctx.chain;
   const requestId = chain ? keccakBytes32(chain.web3, label) : null;
-
-  if (mechanism === "traditional-pki") {
-    if (requestClass === "management") {
-      await issue(row, ctx.openssl, 1);
-      await assertion(row, ctx.openssl, 2);
-    } else if (requestClass === "intra-auth") {
-      await certificateVerification(row, ctx.openssl, 1);
-      await ocspVerify(row, ctx.services, 1, label);
-      await assertion(row, ctx.openssl, 1);
-    } else if (requestClass === "cross-auth") {
-      for (let i = 0; i < 4; i += 1) {
-        await certificateVerification(row, ctx.openssl, 1);
-        await ocspVerify(row, ctx.services, 1, `${label}:hop${i}`);
-        await assertion(row, ctx.openssl, 1);
-      }
-    }
-    return;
+  const platform = PLATFORM_REGISTRY[mechanism];
+  if (!platform) {
+    throw new Error(`Unsupported mechanism: ${mechanism}`);
   }
-
-  if (mechanism === "threshold-validation-dpki") {
-    if (requestClass === "management") {
-      const thresholdCertKey = keccakBytes32(chain.web3, `threshold-cert:${row.index}`);
-      const thresholdSubjectId = keccakBytes32(chain.web3, `threshold-subject:${row.index}`);
-      const thresholdCertHash = keccakBytes32(chain.web3, `threshold-cert-hash:${row.index}`);
-      const thresholdRoot = keccakBytes32(chain.web3, `threshold-root:${row.index}`);
-      const issueArtifact = await issue(row, ctx.openssl, 1, {
-        persistMode: "none",
-        persistStatus: false,
-        countOffchainStorage: false,
-      });
-      if (ctx.args.actualOverhead) {
-        await thresholdManagementCeremony(row, ctx.services, ctx.args, label);
-      } else {
-        await measure(row, "thresholdIssue", async () => {
-          await Promise.all(Array.from({ length: ctx.args.thresholdN }, (_, i) =>
-            postJson(18343, "/threshold", {
-              nodeId: i,
-              cert: `${label}:issue`,
-              nonce: `${label}:issue:${i}`,
-            }).catch(() => null),
-          ));
-        });
-      }
-      const committee = signThresholdCertificateBundle(
-        chain,
-        thresholdCertKey,
-        chain.source.domainId,
-        thresholdSubjectId,
-        chain.source.subjectAddress,
-        thresholdCertHash,
-        0,
-        chain.notAfter,
-        thresholdRoot,
-        ctx.args.thresholdK,
-      );
-      await chainRecord(row, chain, "chainRecord", chain
-        ? chain.contract.methods.putThresholdCertificateBundleAndDomainRoot(
-          thresholdCertKey,
-          chain.source.domainId,
-          thresholdSubjectId,
-          chain.source.subjectAddress,
-          thresholdCertHash,
-          0,
-          chain.notAfter,
-          thresholdRoot,
-          `0x${issueArtifact.certBuffer.toString("hex")}`,
-          committee.blobHex,
-          committee.quorumK,
-        )
-        : null,
-      {
-        onChainStorageBytes: thresholdCertificateStorageBytes(issueArtifact.certBytes, committee.blob.length),
-        onChainSigVerifyOps: committee.signerCount,
-      });
-      await assertion(row, ctx.openssl, 2);
-    } else if (requestClass === "intra-auth") {
-      await thresholdValidate(row, ctx.services, ctx.args, label);
-      await assertion(row, ctx.openssl, 1);
-    } else if (requestClass === "cross-auth") {
-      await thresholdValidate(row, ctx.services, ctx.args, label);
-      await ocspVerify(row, ctx.services, 1, `${label}:counterparty-ca`);
-      await assertion(row, ctx.openssl, 2);
-    }
-    return;
+  if (platform.requestClasses && !platform.requestClasses.includes(requestClass)) {
+    throw new Error(`Unsupported request class ${requestClass} for ${mechanism}`);
   }
-
-  if (mechanism === "full-contract-onchain") {
-    await assertion(row, ctx.openssl, requestClass === "management" ? 2 : 1);
-    if (requestClass === "management") {
-      const issueArtifact = await issue(row, ctx.openssl, 1, {
-        persistMode: "none",
-        persistStatus: false,
-        countOffchainStorage: false,
-      });
-      await chainRecord(row, chain, "contractExecution", chain
-        ? chain.contract.methods.putFullCertificateBundleAndDomainRoot(
-          keccakBytes32(chain.web3, `full-cert:${row.index}`),
-          chain.source.domainId,
-          keccakBytes32(chain.web3, `full-subject:${row.index}`),
-          chain.source.subjectAddress,
-          keccakBytes32(chain.web3, `full-cert-hash:${row.index}`),
-          0,
-          chain.notAfter,
-          keccakBytes32(chain.web3, `full-root:${row.index}`),
-          `0x${issueArtifact.csrBuffer.toString("hex")}`,
-          `0x${issueArtifact.certBuffer.toString("hex")}`,
-          `0x${issueArtifact.statusBuffer.toString("hex")}`,
-        )
-        : null,
-      {
-        onChainStorageBytes: fullCertificateStorageBytes(
-          issueArtifact.csrBytes,
-          issueArtifact.certBytes,
-          issueArtifact.statusBytes,
-        ),
-      });
-    } else {
-      const crossDomain = requestClass === "cross-on-chain";
-      addCertStatusChecks(row, crossDomain ? 2 : 1);
-      if (crossDomain) await ocspVerify(row, ctx.services, 1, `${label}:counterparty-ca`);
-      const certs = crossDomain ? [chain.source, chain.service] : [chain.source];
-      const timestamp = Math.floor(Date.now() / 1000);
-      const signed = signContractAssertion(chain, requestId, crossDomain, certs, timestamp);
-      await chainRecord(row, chain, "contractExecution", chain.contract.methods.authenticateSigned(
-        signed.data,
-        chain.source.subjectAddress,
-        timestamp,
-        crossDomain,
-        signed.certKeys,
-        signed.certHashes,
-        chain.service.subjectAddress,
-        signed.signature,
-      ), {
-        onChainStorageBytes: signedAuthRecordStorageBytes(),
-        onChainSigVerifyOps: 1,
-      });
-    }
-    return;
-  }
-
-  if (mechanism === "proposed-dpki") {
-    if (requestClass === "management") {
-      const issueArtifact = await issue(row, ctx.openssl, 1, {
-        persistMode: "none",
-        persistStatus: false,
-        countOffchainStorage: false,
-      });
-      await chainRecord(row, chain, "chainRecord", chain
-        ? chain.contract.methods.putProposedCertificateBundleAndDomainRoot(
-          keccakBytes32(chain.web3, `dpki-cert:${row.index}`),
-          chain.source.domainId,
-          keccakBytes32(chain.web3, `dpki-subject:${row.index}`),
-          chain.source.subjectAddress,
-          keccakBytes32(chain.web3, `dpki-cert-hash:${row.index}`),
-          0,
-          chain.notAfter,
-          keccakBytes32(chain.web3, `dpki-root:${row.index}`),
-          `0x${issueArtifact.certBuffer.toString("hex")}`,
-        )
-        : null,
-      {
-        onChainStorageBytes: proposedCertificateStorageBytes(issueArtifact.certBytes),
-      });
-      await assertion(row, ctx.openssl, 2);
-    } else if (requestClass === "intra-off-chain") {
-      await certificateVerification(row, ctx.openssl, 1);
-      await mptVerify(row, ctx.services, 1, label);
-      await assertion(row, ctx.openssl, 1);
-    } else if (requestClass === "intra-on-chain" || requestClass === "cross-on-chain") {
-      await certificateVerification(row, ctx.openssl, 1);
-      await mptVerify(row, ctx.services, requestClass === "cross-on-chain" ? 2 : 1, label);
-      await chainRecord(row, chain, "chainRecord", chain.contract.methods.putAuthRecord(
-        requestId,
-        chain.source.domainId,
-        chain.target.domainId,
-        chain.source.subjectId,
-        chain.target.subjectId,
-        chain.source.certHash,
-        keccakBytes32(chain.web3, `nonce:${label}`),
-        chain.source.subjectAddress,
-        Math.floor(Date.now() / 1000),
-        requestClass === "cross-on-chain",
-      ), {
-        onChainStorageBytes: authRecordStorageBytes(),
-      });
-      await chainStateRead(row, chain, requestId);
-      await assertion(row, ctx.openssl, requestClass === "cross-on-chain" ? 2 : 1);
-    }
-  }
+  await platform.execute({
+    row,
+    ctx,
+    label,
+    requestId,
+    helpers: buildBaselineHelpers(),
+  });
 }
 
 function flattenRow(row) {
@@ -1588,7 +1467,9 @@ async function main() {
       for (const [mechanism, requestClass] of roundOrder) {
         const row = newRow(mechanism, requestClass, i);
         await runWorkflow(row, ctx);
-        flattenedRows.push(flattenRow(row));
+        const flattened = flattenRow(row);
+        flattenedRows.push(flattened);
+        traceEvent("REQUEST", flattened);
       }
     }
   } finally {

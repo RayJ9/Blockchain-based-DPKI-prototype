@@ -1,0 +1,5 @@
+,Cert. checks,OCSP checks,MPT checks,On-chain writes,CA replies
+Our,1.0,0.0,2.0,1.0,0.0
+PKI,4.0,4.0,0.0,0.0,0.0
+Multi,0.0,0.0,0.0,0.0,4.0
+Full,0.0,0.0,0.0,1.0,0.0

@@ -9,6 +9,7 @@ texput.log
 
 .vscode/
 .idea/
+.tools/
 **/node_modules/
 **/logs/
 **/runtime/
@@ -27,7 +28,11 @@ texput.log
 **/*.db/
 repro_fig*/
 fig9_m6_live_*/
+smoke_test_*/
+figure_dpki_pki_runtime/
 _latest_*.txt
+experiment_artifacts/
+experiment_archives/
 
 # Restored or local-only process archives. They are not needed for the
 # reproducible figure package and should not be pushed.

@@ -1,0 +1,8 @@
+{
+  "id": "traditional-pki",
+  "name": "Centralized PKI",
+  "requestClasses": ["management", "intra-auth", "cross-auth"],
+  "contract": null,
+  "certificateBackend": "OpenSSL X.509",
+  "statusBackend": "OCSP"
+}

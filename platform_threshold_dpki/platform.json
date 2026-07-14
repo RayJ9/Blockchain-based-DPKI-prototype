@@ -1,0 +1,7 @@
+{
+  "id": "threshold-validation-dpki",
+  "name": "Multi-CA based DPKI",
+  "requestClasses": ["management", "intra-auth", "cross-auth"],
+  "threshold": "4-of-6",
+  "contract": "contracts/ThresholdValidationDPKI.sol"
+}

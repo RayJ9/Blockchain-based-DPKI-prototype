@@ -1,2 +1,18 @@
-# Auto detect text files and perform LF normalization
 * text=auto
+
+*.ps1 text eol=crlf
+*.py text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.sol text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+*.eps binary
+*.pdf binary
+*.png binary
+*.mat binary
+*.zip binary
+*.exe binary

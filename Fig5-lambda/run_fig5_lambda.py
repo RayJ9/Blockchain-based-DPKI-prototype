@@ -17,14 +17,12 @@ from scipy.interpolate import PchipInterpolator
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = SCRIPT_DIR.parent
-SIMU_DIR = WORKSPACE_ROOT / "simu2-8-packaged"
-for module_dir in (SIMU_DIR, WORKSPACE_ROOT):
-    if str(module_dir) not in sys.path:
-        sys.path.insert(0, str(module_dir))
+if str(WORKSPACE_ROOT) not in sys.path:
+    sys.path.insert(0, str(WORKSPACE_ROOT))
 
-from real_figure_sweep_common import (  # noqa: E402
+from figure_dpki_pki_runtime.backend import RunSpec  # noqa: E402
+from figure_dpki_pki_runtime.sweep_common import (  # noqa: E402
     SWEEP_ROOT,
-    RunSpec,
     collect_sweep,
     fmt_value,
     mirror_final_outputs,

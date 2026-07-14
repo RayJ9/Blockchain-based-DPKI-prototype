@@ -1,5 +1,16 @@
 # Fig4
 
+Run a new isolated real-chain comparison of all four platforms:
+
+```powershell
+Fig4\run_experiment.ps1 -Requests 50
+```
+
+Use `-PaperScale` for the paper request count. New results, certificates,
+receipts, node logs, and the console transcript are written under
+`experiment_artifacts/Fig4`; the retained figure files in this folder are not
+overwritten.
+
 This directory now keeps only the final Section VI.2 artifacts and the scripts
 needed to reproduce them:
 
@@ -16,9 +27,12 @@ The latency figure is built from the retained baseline summaries:
 - `source_data/threshold_summary_by_request_class.csv`
 - `full_contract_baseline/full_contract_summary_by_request_class.csv`
 
-`generate_data_fig4.py` merges these summaries, writes `data_fig4.mat`, and
-exports `latency_distribution_summary.csv`. `plot_fig4.m` then draws only the
-final `figure_latency.*` assets.
+`generate_data_fig4.py` now reads the retained fastblock latency run under
+`final_latency_candidate_fastblock/prototype_baseline_benchmark/outputs/`,
+rewrites the latency stages into a paper-facing split
+`Packaging delay -> On-chain execution -> remaining workflow stages`, writes
+`data_fig4.mat`, and exports `latency_distribution_summary.csv`. `plot_fig4.m`
+then draws the final `figure_latency.*` assets in the main `Fig4/` directory.
 
 Reproduce:
 
@@ -74,3 +88,13 @@ python .\plot_overhead_cost_table.py
 
 Anything else previously used during intermediate drafts has been removed from
 `Fig4` so the folder matches the final paper workflow.
+
+## 4. Fastblock latency snapshot
+
+The retained fastblock latency source run and its historical intermediate
+artifacts are still kept under:
+
+- `final_latency_candidate_fastblock/`
+
+The main `Fig4/figure_latency.*` files now use this fastblock-based latency
+workflow, while the subfolder is preserved as a traceable source snapshot.

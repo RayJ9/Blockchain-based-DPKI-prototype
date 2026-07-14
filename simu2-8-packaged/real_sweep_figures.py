@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import shutil
 import subprocess
 import sys
@@ -26,6 +27,8 @@ RUN_REAL = EXPERIMENT_DIR / "run-real-dpki-experiment.js"
 REAL_OUT = EXPERIMENT_DIR / "outputs"
 POW_RUNTIME = WORKSPACE_ROOT / "pow-4nodes-runtime" / "runtime"
 SWEEP_ROOT = REAL_OUT / "real_sweeps"
+RETAINED_COMPAT_ROOT = WORKSPACE_ROOT / "simu2_tail_prob"
+RETAINED_COMPAT_SUFFIXES = {".csv", ".json", ".png", ".eps", ".pdf"}
 
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -181,6 +184,27 @@ def fmt_value(value: float) -> str:
     if float(value).is_integer():
         return str(int(value))
     return str(value).replace(".", "p").replace("-", "m")
+
+
+def snapshot_retained_compat_outputs() -> tuple[dict[Path, bytes], set[Path]]:
+    files = {
+        path
+        for path in RETAINED_COMPAT_ROOT.iterdir()
+        if path.is_file() and path.suffix.lower() in RETAINED_COMPAT_SUFFIXES
+    }
+    return ({path: path.read_bytes() for path in files}, files)
+
+
+def restore_retained_compat_outputs(snapshot: dict[Path, bytes], original_files: set[Path]) -> None:
+    current_files = {
+        path
+        for path in RETAINED_COMPAT_ROOT.iterdir()
+        if path.is_file() and path.suffix.lower() in RETAINED_COMPAT_SUFFIXES
+    }
+    for path in current_files - original_files:
+        path.unlink()
+    for path, content in snapshot.items():
+        path.write_bytes(content)
 
 
 def run_real_experiment(spec: RunSpec) -> Path:
@@ -426,11 +450,45 @@ def run_real_experiment(spec: RunSpec) -> Path:
         json.dumps({"cmd": cmd, "spec": spec.__dict__, "startedAt": time.strftime("%Y-%m-%dT%H:%M:%S")}, indent=2),
         encoding="utf8",
     )
-    with log_path.open("w", encoding="utf8") as log:
-        log.write(" ".join(cmd) + "\n\n")
-        log.flush()
-        subprocess.run(cmd, cwd=EXPERIMENT_DIR, stdout=log, stderr=subprocess.STDOUT, check=True)
-    archive_outputs(dest)
+    retained_snapshot, retained_files = snapshot_retained_compat_outputs()
+    child_env = os.environ.copy()
+    child_env["DPKI_COMPAT_OUTPUT_DIR"] = str(dest / "compat_outputs")
+    try:
+        with log_path.open("w", encoding="utf8") as log:
+            log.write(" ".join(cmd) + "\n\n")
+            log.flush()
+            if os.environ.get("DPKI_LIVE_TRACE", "").lower() in {"1", "true", "yes", "on"}:
+                child = subprocess.Popen(
+                    cmd,
+                    cwd=EXPERIMENT_DIR,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    encoding="utf8",
+                    errors="replace",
+                    bufsize=1,
+                    env=child_env,
+                )
+                assert child.stdout is not None
+                for line in child.stdout:
+                    log.write(line)
+                    log.flush()
+                    print(line, end="", flush=True)
+                return_code = child.wait()
+                if return_code != 0:
+                    raise subprocess.CalledProcessError(return_code, cmd)
+            else:
+                subprocess.run(
+                    cmd,
+                    cwd=EXPERIMENT_DIR,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    check=True,
+                    env=child_env,
+                )
+        archive_outputs(dest)
+    finally:
+        restore_retained_compat_outputs(retained_snapshot, retained_files)
     return dest
 
 

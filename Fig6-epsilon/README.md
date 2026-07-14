@@ -6,8 +6,11 @@ other final figures.
 Run the full epsilon experiment through the prototype and Omnilink PoW chain:
 
 ```powershell
-python Fig6-epsilon\run_fig6_epsilon.py --requests 2000 --stop-pow
+Fig6-epsilon\run_experiment.ps1 -PaperScale
 ```
+
+For a custom isolated run, use `run_fig6_epsilon.py` with an explicit
+`--output-dir`; omitting it targets the figure-owned result path.
 
 Replot the figure from the retained CSV data only:
 

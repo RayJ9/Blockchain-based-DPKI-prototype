@@ -5,8 +5,11 @@ This folder is dedicated to the service-node count sweep figure only.
 Run the full service-node count experiment through the prototype and Omnilink PoW chain:
 
 ```powershell
-python Fig8-M\run_fig8_m.py --m-values 2,3,4,5,6,7,8,9 --requests 10000 --stop-pow
+Fig8-M\run_experiment.ps1 -PaperScale
 ```
+
+For a custom isolated run, use `run_fig8_m.py` with an explicit
+`--output-dir`; omitting it targets the figure-owned result path.
 
 Replot the figure from the retained CSV data only:
 

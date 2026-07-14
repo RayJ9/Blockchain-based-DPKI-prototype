@@ -5,8 +5,11 @@ This folder is dedicated to the lambda sweep figure only.
 Run the full lambda experiment through the prototype and Omnilink PoW chain:
 
 ```powershell
-python Fig5-lambda\run_fig5_lambda.py --lambda-values 2,3,4,5,6,7,8,10,12,14 --mean-block-ms-values 80,90,100 --requests 10000 --stop-pow
+Fig5-lambda\run_experiment.ps1 -PaperScale
 ```
+
+For a custom isolated run, use `run_fig5_lambda.py` with an explicit
+`--output-dir`; omitting it targets the figure-owned result path.
 
 Replot the figure from the retained CSV data only:
 

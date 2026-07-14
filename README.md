@@ -1,139 +1,141 @@
-# Blockchain-Based DPKI Experiment Package
+# Blockchain-Based DPKI Reproducible Experiment Package
 
-This repository contains the prototype, retained experiment data, figure
-scripts, and final figures for the revised experimental section of
-"Blockchain-Based Decentralized Public Key Infrastructure Modeling and
-Analysis".
+This repository contains the Omnilink PoW blockchain, OpenSSL/X.509 services,
+four authentication platforms, experiment runners, retained measurements, and
+paper-figure scripts for *Blockchain-Based Decentralized Public Key
+Infrastructure Modeling and Analysis*.
 
-The Git package is organized so that a fresh clone can regenerate the paper
-figures. Runtime databases, logs, local Node dependencies, recovered backups,
-private paper drafts, and temporary analysis folders are ignored by Git.
+The current `figure.*`, retained CSV, MAT, and plotting inputs are versioned
+paper artifacts. New experiments are isolated under `experiment_artifacts/`
+and never overwrite those files.
 
-## Figure Folders
+## Implemented platforms
 
-Each paper figure has one top-level folder:
-
-| Figure | Folder | Reproduction mode |
+| Platform | Module | Authentication mechanism |
 | --- | --- | --- |
-| Fig3 | `Fig3` | Regenerate from retained prototype-calibration data |
-| Fig4 | `Fig4` | Regenerate from retained baseline-summary data |
-| Fig5 | `Fig5-lambda` | Replot from retained CSV, or rerun prototype experiment |
-| Fig6 | `Fig6-epsilon` | Replot from retained CSV, or rerun prototype experiment |
-| Fig7 | `Fig7-p` | Replot from retained CSV, or rerun prototype experiment |
-| Fig8 | `Fig8-M` | Replot from retained CSV, or rerun prototype experiment |
-| Fig9 | `Fig9` | Regenerate from retained Fig7-style availability data |
-| Fig10 | `Fig10` | Regenerate from retained Fig7-style availability data |
+| Centralized PKI | `platform_traditional_pki/` | X.509 verification, OCSP, signed assertion |
+| Our proposed DPKI | `platform_proposed_dpki/` | X.509, MPT proof, optional on-chain authentication record |
+| Multi-CA based DPKI | `platform_threshold_dpki/` | 4-of-6 CA responses and threshold evidence |
+| Full contract DPKI | `platform_full_contract_dpki/` | certificate/status/assertion checks and result storage in a contract |
 
-Every folder keeps the final `figure.*` files and the scripts/data needed to
-recreate them. Fig5-Fig8 additionally keep `run_*.py` entry points for a
-prototype rerun through Omnilink PoW.
+Each module contains its executable workflow, a machine-readable
+`platform.json`, documentation, and its contract entrypoint or an explicit
+explanation of why no contract is used.
 
-## Required Components Kept in Git
+## Prerequisites
 
-Do not remove these folders from the reproducible package:
+The tested host is Windows with PowerShell 5.1 or newer. Install:
 
-- `omnilink`: Omnilink source tree.
-- `dpki-experiment-prototype`: DPKI prototype runner, contract, and Node
-  dependency manifest.
-- `pow-4nodes-runtime`: four-node Omnilink PoW runtime scripts.
-- `simu2-8-packaged`: common queueing and real-sweep helpers used by Fig5-Fig8.
-- `simu2_tail_prob`: compatibility simulation/module path still referenced by
-  the prototype runner.
+- Python 3.10+
+- Node.js 18+ and npm
+- Go
+- OpenSSL 3.x
+- MATLAB for the final MATLAB paper exports
+- Poppler (`pdftops`) for the retained Fig9 conversion path
 
-`JIoT/` and `response_letter/` are local manuscript/rebuttal folders and are
-intentionally ignored.
-
-## Dependencies
-
-Install Python dependencies:
+Install dependencies and build Omnilink:
 
 ```powershell
-pip install -r requirements.txt
+powershell -ExecutionPolicy Bypass -File scripts\Setup-Environment.ps1
 ```
 
-The retained-data figure path also needs MATLAB. Fig9 converts PNG to PDF/EPS
-through `pdftops`, so Poppler must be available in `PATH` when redrawing Fig9.
+The command installs `requirements.txt`, runs `npm ci` in
+`dpki-experiment-prototype`, builds the four-node Omnilink runtime, and checks
+all public entrypoints. Use `-SkipOmnilinkBuild` when a compatible binary is
+already present.
 
-For a full prototype rerun, install the Node dependencies used by the prototype:
+## Run an experiment
+
+Every figure has a `run_experiment.ps1` entrypoint. A short real-chain run is:
 
 ```powershell
-cd dpki-experiment-prototype
-npm install
-cd ..
+Fig4\run_experiment.ps1 -Requests 50
+Fig5-lambda\run_experiment.ps1 -Requests 50
+Fig6-epsilon\run_experiment.ps1 -Requests 50
+Fig7-p\run_experiment.ps1 -Requests 50
+Fig8-M\run_experiment.ps1 -Requests 50
+Fig9\run_experiment.ps1 -Requests 50
+Fig10\run_experiment.ps1 -Requests 50
 ```
 
-Omnilink PoW runners may also need Go/PowerShell tooling depending on whether
-the local Omnilink binaries already exist.
+Add `-PaperScale` to use the paper sweep grid and request count for that
+figure. Fig4-Fig8 execute the actual OpenSSL, MPT, HTTP/OCSP, smart-contract,
+and Omnilink PoW paths. Fig9 and Fig10 execute a lightweight real-chain probe
+and extract observed p90/p95/p99 and timeout-tail data; the retained 3D/2D
+surface inputs remain unchanged.
 
-## Quick Integrity Check
+During a run, the console prints certificate records, transaction hashes,
+block numbers, receipt status, gas usage, stage statistics, and per-request
+details. Set by the launcher, `DPKI_VERBOSE_TRACE=1` controls the detailed Node
+trace and `DPKI_LIVE_TRACE=1` tees the prototype log to the console.
 
-Run this first after cloning:
+## Results and logs
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\Check-Reproduction.ps1
+Each run creates an isolated session:
+
+```text
+experiment_artifacts/
+  FigX/
+    FigX_YYYYMMDD_HHMMSS/
+      console.log
+      results/
+      blockchain_logs/
+      prototype_run_logs/
+      artifact_manifest.json
 ```
 
-The script checks required source folders, compiles the Python entry points,
-and verifies the Fig5-Fig8 experiment runners expose their command-line help.
+The complete session is also written to one archive:
 
-## Recreate Final Figures from Retained Data
+```text
+experiment_archives/FigX_YYYYMMDD_HHMMSS.zip
+```
 
-This is the fastest way to reproduce the paper figures without rerunning the
-chain sweeps:
+The archive contains the console transcript, Omnilink node logs/configuration,
+receipt and transaction breakdowns, detailed request samples, certificate
+artifacts where produced, and the experiment manifest. Runtime databases are
+excluded because they are large and are reconstructed by the launcher.
+
+## Figure-specific reproduction
+
+| Figure | Folder | Real experiment path |
+| --- | --- | --- |
+| Fig4 | `Fig4/` | mixed execution of all four platforms |
+| Fig5 | `Fig5-lambda/` | arrival-rate and block-rate sweep |
+| Fig6 | `Fig6-epsilon/` | queueing-threshold sweep |
+| Fig7 | `Fig7-p/` | management-request-ratio sweep |
+| Fig8 | `Fig8-M/` | service-node-count sweep |
+| Fig9 | `Fig9/` | real Fig7-style probe plus latency-tail extraction |
+| Fig10 | `Fig10/` | real Fig8-style probe plus latency-tail extraction |
+
+The original Python entrypoints remain available for custom grids. Replotting
+the retained final artifacts is separate:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\Replot-Retained-Figures.ps1
 ```
 
-It regenerates Fig3/Fig4/Fig9/Fig10 data files, redraws Fig3/Fig4/Fig9/Fig10
-with MATLAB, and replots Fig5-Fig8 from retained CSV outputs.
-
-## Rerun Prototype Experiments for Fig5-Fig8
-
-The Fig5-Fig8 `run_*.py` scripts can rerun the real prototype sweeps. They use
-the Omnilink PoW runtime by default and write new run outputs under ignored
-runtime/output directories, then mirror the final figure files into the figure
-folder.
-
-Example smoke run:
+Run the source and dependency integrity check at any time:
 
 ```powershell
-python Fig5-lambda\run_fig5_lambda.py --requests 1000 --stop-pow
+powershell -ExecutionPolicy Bypass -File scripts\Check-Reproduction.ps1
 ```
 
-Paper-scale commands are documented in each figure folder README.
-
-The runners restart PoW by default. To manage PoW manually, start it through:
+Run a minimal real-chain session for every figure:
 
 ```powershell
-pow-4nodes-runtime\scripts\start-omnilink-pow-4nodes.ps1
+powershell -ExecutionPolicy Bypass -File scripts\Run-All-Smoke.ps1 -Requests 10
 ```
 
-and pass `--no-restart-pow` to the figure runner.
+## Repository layout
 
-## Notes on Fig3, Fig4, Fig9, and Fig10
+- `omnilink/`: Omnilink source.
+- `pow-4nodes-runtime/`: four-node PoW build/start/stop scripts.
+- `dpki-experiment-prototype/`: canonical DPKI contract and real experiment.
+- `figure_dpki_pki_runtime/`: shared Fig5-Fig10 measurement/statistics code.
+- `simu2-8-packaged/`: queueing-model and real-sweep bridge.
+- `Fig4/`-`Fig10/`: figure-owned launch, retained result, and plotting files.
+- `platform_*/`: four platform implementations and contract assets.
+- `scripts/`: setup, checking, orchestration, tail extraction, and archiving.
 
-Fig3/Fig4 are Section VI.2 prototype/baseline figures. Their retained source
-CSV files are kept under `Fig3/source_data` and `Fig4/source_data`. The older
-temporary baseline-suite runner was not recovered, so these two figures are
-reproducible from the retained measured summaries rather than from a full fresh
-baseline execution.
-
-Fig9/Fig10 are availability figures. Their retained source data are kept under
-`Fig9/source_data` and `Fig10/source_data`. They use the same Fig7-style
-service-time definition for DPKI and PKI.
-
-## Git Hygiene
-
-The `.gitignore` keeps the repository focused on reproducible sources and final
-artifacts. It ignores:
-
-- runtime logs, node databases, caches, output directories, and `node_modules`;
-- recovered backups such as `oldver_simulation/` and `paper-figure-pipeline/`;
-- local manuscript/rebuttal folders such as `JIoT/` and `response_letter/`.
-- the legacy all-in-one `DPKI-and-DID-platform-Lenovo/` workspace, because the
-  reproducible files have been consolidated into `dpki-experiment-prototype/`
-  and `pow-4nodes-runtime/`.
-
-Do not add ignored runtime directories back to Git unless they become required
-inputs for a reproducible figure.
+`JIoT/` and `response_letter/` are intentionally ignored and are not part of
+the GitHub package.

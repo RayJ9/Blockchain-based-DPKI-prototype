@@ -1,0 +1,6 @@
+{
+  "id": "full-contract-onchain",
+  "name": "Full contract DPKI",
+  "requestClasses": ["management", "intra-on-chain", "cross-on-chain"],
+  "contract": "contracts/FullContractDPKI.sol"
+}

@@ -1,5 +1,15 @@
 # Fig10
 
+Run the lightweight real-chain service-node/tail probe:
+
+```powershell
+Fig10\run_experiment.ps1 -Requests 200
+```
+
+This executes a real Fig8-style run at `m=6` and extracts observed tail
+statistics. It does not overwrite the retained Fig10 surface data or final
+figure.
+
 Availability figure for failure probability and the number of service CAs.
 
 The current source data are retained under `source_data/`. They were generated

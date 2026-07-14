@@ -1,2 +1,2 @@
 epsilon,DPKI_sim,PKI_sim,PKI_sim_raw,pkiNetworkCompensationSec,pkiNetworkCompensationMs,pkiAuthNetworkSetupMs,pkiOcspNetworkRttMs,pkiAuthCount,pkiOcspCount
-0.1,0.2185859613989048,,,,,,,,
+0,0.3601074119997024,0.2816990340000391,0.2816990340000391,0,0,1.48386291,1.40121465,0,0

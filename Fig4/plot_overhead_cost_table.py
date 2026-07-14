@@ -1,5 +1,8 @@
 from pathlib import Path
 
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -46,7 +49,7 @@ def main() -> None:
     ax.axis("off")
     ax.text(
         0.0,
-        1.03,
+        0.975,
         "Communication, storage, and gas overhead",
         transform=ax.transAxes,
         ha="left",
@@ -93,7 +96,7 @@ def main() -> None:
     )
 
     for suffix in ("png", "pdf", "eps"):
-        fig.savefig(ROOT / f"figure_overhead_table.{suffix}", bbox_inches="tight", pad_inches=0.02)
+        fig.savefig(ROOT / f"figure_overhead_table.{suffix}", bbox_inches="tight", pad_inches=0)
     plt.close(fig)
 
 

@@ -1,0 +1,35 @@
+name: reproduction-check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  static-reproduction-check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: npm
+          cache-dependency-path: dpki-experiment-prototype/package-lock.json
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Install Node dependencies
+        working-directory: dpki-experiment-prototype
+        run: npm ci
+      - name: Check repository entrypoints
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File scripts\Check-Reproduction.ps1
+      - name: Check module contracts
+        run: node scripts\Check-ModuleContracts.js
+      - name: Check JavaScript syntax
+        run: |
+          node --check dpki-experiment-prototype/run-real-dpki-experiment.js
+          node --check Fig4/prototype_baseline_benchmark/run_prototype_baseline_benchmark.js
+

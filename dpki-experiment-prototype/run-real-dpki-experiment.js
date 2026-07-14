@@ -16,8 +16,16 @@ const ROOT = path.resolve(__dirname, "..");
 const EXPERIMENT_DIR = __dirname;
 const OUT_DIR = path.join(EXPERIMENT_DIR, "outputs");
 const CONTRACT_PATH = path.join(EXPERIMENT_DIR, "contracts", "DPKIExperiment.sol");
-const SIMU2_DIR = path.join(ROOT, "simu2_tail_prob");
+const SIMU2_DIR = process.env.DPKI_COMPAT_OUTPUT_DIR
+  ? path.resolve(process.env.DPKI_COMPAT_OUTPUT_DIR)
+  : path.join(ROOT, "simu2_tail_prob");
 const OPENSSL_RUNTIME_ROOT = path.join(os.tmpdir(), "chain33-dpki-http-runtime");
+const VERBOSE_TRACE = /^(1|true|yes|on)$/i.test(process.env.DPKI_VERBOSE_TRACE || "");
+
+function traceEvent(kind, payload) {
+  if (!VERBOSE_TRACE) return;
+  console.log(`[TRACE][${kind}] ${JSON.stringify(payload)}`);
+}
 
 const DEFAULTS = {
   rpc: "http://127.0.0.1:8545",
@@ -1526,6 +1534,18 @@ function sendSignedTransactionWithBreakdown(web3, signedTransaction, row) {
     row.transactionIndex = receipt.transactionIndex;
     row.gasUsed = receipt.gasUsed;
     row.status = receipt.status;
+    traceEvent("RECEIPT", {
+      sequence: row.sequence,
+      method: row.method,
+      transactionHash: receipt.transactionHash || hash,
+      blockNumber: receipt.blockNumber,
+      transactionIndex: receipt.transactionIndex,
+      gasUsed: receipt.gasUsed,
+      status: receipt.status,
+      submitToHashMs: row.submitToHashMs,
+      hashToReceiptMs: row.hashToReceiptMs,
+      receiptPolls: row.receiptPolls,
+    });
     return receipt;
   });
 
@@ -1633,7 +1653,7 @@ function makeCertificate(web3, hash, domain, subject, issuer, role, x509Record =
     notBefore: now - 60,
     notAfter: now + 86400,
   };
-  return {
+  const record = {
     domain,
     subject,
     issuer,
@@ -1644,6 +1664,19 @@ function makeCertificate(web3, hash, domain, subject, issuer, role, x509Record =
     key: certKey(hash, domain, subject),
     certHash: hash.object(cert),
   };
+  traceEvent("CERTIFICATE", {
+    domain,
+    subject,
+    issuer,
+    role,
+    address: account.address,
+    certKey: record.key,
+    certHash: record.certHash,
+    x509PemHash: cert.x509PemHash,
+    notBefore: cert.notBefore,
+    notAfter: cert.notAfter,
+  });
+  return record;
 }
 
 function certificateBody(record) {
@@ -4751,7 +4784,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from simu2_tail_prob.simu2_cross_domain_experiment import ModelParams, plot_results, save_bounds_check, theory_rows
-out = Path('simu2_tail_prob').resolve()
+out = Path(r'${SIMU2_DIR.replace(/\\/g, "\\\\")}').resolve()
 experiment_out = Path(r'${OUT_DIR.replace(/\\/g, "\\\\")}').resolve()
 calibration = json.loads(Path(r'${path.join(OUT_DIR, "theory-calibration.json").replace(/\\/g, "\\\\")}').read_text())
 params = ModelParams(
@@ -4826,8 +4859,8 @@ import matplotlib.pyplot as plt
 from simu2_tail_prob.simu2_cross_domain_experiment import ModelParams, plot_results, save_bounds_check, theory_rows
 
 root = Path(r'${ROOT.replace(/\\/g, "\\\\")}').resolve()
-simu2 = root / 'simu2_tail_prob'
-exp = root / 'DPKI-and-DID-platform-Lenovo' / 'chain33-dpki-real-experiment' / 'outputs'
+simu2 = Path(r'${SIMU2_DIR.replace(/\\/g, "\\\\")}').resolve()
+exp = root / 'dpki-experiment-prototype' / 'outputs'
 pow_runtime = Path(r'${path.resolve(args.powRuntime).replace(/\\/g, "\\\\")}').resolve()
 req = pd.read_csv(exp / 'real_simulation_results_by_epsilon_detailed.csv')
 summary = pd.read_csv(exp / 'real_summary_by_epsilon_detailed.csv')

@@ -1,5 +1,16 @@
 # Fig9
 
+Run the lightweight real-chain availability-tail probe:
+
+```powershell
+Fig9\run_experiment.ps1 -Requests 200
+```
+
+This executes a Fig7-style DPKI/PKI workload and stores p90/p95/p99, timeout
+availability, the largest observed samples, receipts, certificates, and chain
+logs in the central experiment archive. It does not overwrite the retained
+Fig9 surface data or final figure.
+
 Availability figure for failure probability and timeout threshold.
 
 The current source data are retained under `source_data/`. They were generated
