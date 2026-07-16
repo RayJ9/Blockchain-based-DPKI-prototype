@@ -1,0 +1,7 @@
+{
+  "id": "proposed-dpki",
+  "name": "Our proposed DPKI",
+  "requestClasses": ["management", "intra-off-chain", "intra-on-chain", "cross-on-chain"],
+  "contract": "contracts/ProposedDPKI.sol",
+  "canonicalContract": "../../dpki-experiment-prototype/contracts/DPKIExperiment.sol"
+}

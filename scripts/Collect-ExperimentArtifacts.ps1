@@ -1,5 +1,6 @@
 param(
     [Parameter(Mandatory = $true)][int]$Figure,
+    [Parameter(Mandatory = $true)][string]$Experiment,
     [Parameter(Mandatory = $true)][string]$SessionDir,
     [Parameter(Mandatory = $true)][string]$ResultsDir
 )
@@ -51,7 +52,8 @@ if (Test-Path -LiteralPath $RunSources) {
 
 $Files = Get-ChildItem -LiteralPath $SessionPath -Recurse -File
 $Manifest = [ordered]@{
-    figure = $Figure
+    experiment = $Experiment
+    paperFigure = $Figure
     createdAt = (Get-Date).ToString("o")
     resultsDir = $ResultsPath
     fileCount = $Files.Count
@@ -65,4 +67,3 @@ $ArchivePath = Join-Path $ArchiveRoot ((Split-Path -Leaf $SessionPath) + ".zip")
 if (Test-Path -LiteralPath $ArchivePath) { Remove-Item -LiteralPath $ArchivePath -Force }
 Compress-Archive -Path (Join-Path $SessionPath "*") -DestinationPath $ArchivePath -CompressionLevel Optimal
 Write-Host "Experiment archive: $ArchivePath"
-

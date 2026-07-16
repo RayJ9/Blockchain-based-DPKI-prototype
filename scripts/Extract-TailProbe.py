@@ -9,7 +9,7 @@ import pandas as pd
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Extract real latency tail samples from a lightweight Fig9/Fig10 probe.")
+    parser = argparse.ArgumentParser(description="Extract real latency tail samples from a lightweight availability probe.")
     parser.add_argument("--figure", type=int, choices=[9, 10], required=True)
     parser.add_argument("--result-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -85,7 +85,7 @@ def main() -> None:
         "latencyColumn": latency_col,
         "sampleCount": int(len(samples)),
         "timeoutSeconds": timeout_values,
-        "scope": "lightweight real-chain tail probe; retained Fig9/Fig10 surfaces are not overwritten",
+        "scope": "lightweight real-chain tail probe; retained availability surfaces are not overwritten",
     }
     (output_dir / "tail_probe_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf8")
     print(pd.DataFrame(rows).to_string(index=False))
@@ -94,4 +94,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

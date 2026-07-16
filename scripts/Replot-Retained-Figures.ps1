@@ -32,18 +32,18 @@ if ([string]::IsNullOrWhiteSpace($MatlabCommand)) {
 
 $MatlabRoot = ($Root -replace "\\", "/")
 
-Invoke-Step "Generate Fig3 retained data" { python Fig3\generate_data_fig3.py }
-Invoke-Step "Generate Fig4 retained data" { python Fig4\generate_data_fig4.py }
-Invoke-Step "Replot Fig5 from retained CSV" { python Fig5-lambda\replot_figure.py }
-Invoke-Step "Replot Fig6 from retained CSV" { python Fig6-epsilon\replot_figure.py }
-Invoke-Step "Replot Fig7 from retained CSV" { python Fig7-p\replot_figure.py }
-Invoke-Step "Replot Fig8 from retained CSV" { python Fig8-M\replot_figure.py }
-Invoke-Step "Generate Fig9 retained data" { python Fig9\generate_data_fig9.py }
-Invoke-Step "Generate Fig10 retained data" { python Fig10\generate_data_fig10.py }
+Invoke-Step "Generate PoW interval validation data" { python experiments\pow-interval-validation\generate_data_fig3.py }
+Invoke-Step "Generate baseline comparison data" { python experiments\baseline-comparison\generate_data_fig4.py }
+Invoke-Step "Replot arrival-rate experiment" { python experiments\arrival-rate\replot_figure.py }
+Invoke-Step "Replot cross-domain-ratio experiment" { python experiments\cross-domain-ratio\replot_figure.py }
+Invoke-Step "Replot management-ratio experiment" { python experiments\management-ratio\replot_figure.py }
+Invoke-Step "Replot service-CA-number experiment" { python experiments\service-ca-number\replot_figure.py }
+Invoke-Step "Generate availability-timeout data" { python experiments\availability-timeout\generate_data_fig9.py }
+Invoke-Step "Generate availability-service-CA-number data" { python experiments\availability-service-ca-number\generate_data_fig10.py }
 
-Invoke-Step "Draw Fig3 with MATLAB" { & $MatlabCommand -batch "cd('$MatlabRoot/Fig3'); plot_fig3" }
-Invoke-Step "Draw Fig4 with MATLAB" { & $MatlabCommand -batch "cd('$MatlabRoot/Fig4'); plot_fig4" }
-Invoke-Step "Draw Fig9 with MATLAB" { & $MatlabCommand -batch "cd('$MatlabRoot/Fig9'); plot_fig9" }
-Invoke-Step "Draw Fig10 with MATLAB" { & $MatlabCommand -batch "cd('$MatlabRoot/Fig10'); plot_fig10" }
+Invoke-Step "Draw PoW interval validation with MATLAB" { & $MatlabCommand -batch "cd('$MatlabRoot/experiments/pow-interval-validation'); plot_fig3" }
+Invoke-Step "Draw baseline comparison with MATLAB" { & $MatlabCommand -batch "cd('$MatlabRoot/experiments/baseline-comparison'); plot_fig4" }
+Invoke-Step "Draw availability-timeout with MATLAB" { & $MatlabCommand -batch "cd('$MatlabRoot/experiments/availability-timeout'); plot_fig9" }
+Invoke-Step "Draw availability-service-CA-number with MATLAB" { & $MatlabCommand -batch "cd('$MatlabRoot/experiments/availability-service-ca-number'); plot_fig10" }
 
-Write-Host "Retained-data figure reproduction completed for Fig3-Fig10."
+Write-Host "Retained-data reproduction completed for all experiments."

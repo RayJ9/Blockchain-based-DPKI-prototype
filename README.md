@@ -13,10 +13,10 @@ and never overwrite those files.
 
 | Platform | Module | Authentication mechanism |
 | --- | --- | --- |
-| Centralized PKI | `platform_traditional_pki/` | X.509 verification, OCSP, signed assertion |
-| Our proposed DPKI | `platform_proposed_dpki/` | X.509, MPT proof, optional on-chain authentication record |
-| Multi-CA based DPKI | `platform_threshold_dpki/` | 4-of-6 CA responses and threshold evidence |
-| Full contract DPKI | `platform_full_contract_dpki/` | certificate/status/assertion checks and result storage in a contract |
+| Centralized PKI | `platforms/centralized-pki/` | X.509 verification, OCSP, signed assertion |
+| Our proposed DPKI | `platforms/proposed-dpki/` | X.509, MPT proof, optional on-chain authentication record |
+| Multi-CA based DPKI | `platforms/multi-ca-dpki/` | 4-of-6 CA responses and threshold evidence |
+| Full contract DPKI | `platforms/full-contract-dpki/` | certificate/status/assertion checks and result storage in a contract |
 
 Each module contains its executable workflow, a machine-readable
 `platform.json`, documentation, and its contract entrypoint or an explicit
@@ -31,7 +31,7 @@ The tested host is Windows with PowerShell 5.1 or newer. Install:
 - Go
 - OpenSSL 3.x
 - MATLAB for the final MATLAB paper exports
-- Poppler (`pdftops`) for the retained Fig9 conversion path
+- Poppler (`pdftops`) for the retained availability-timeout conversion path
 
 Install dependencies and build Omnilink:
 
@@ -46,21 +46,22 @@ already present.
 
 ## Run an experiment
 
-Every figure has a `run_experiment.ps1` entrypoint. A short real-chain run is:
+Every runnable experiment has a `run_experiment.ps1` entrypoint. A short real-chain run is:
 
 ```powershell
-Fig4\run_experiment.ps1 -Requests 50
-Fig5-lambda\run_experiment.ps1 -Requests 50
-Fig6-epsilon\run_experiment.ps1 -Requests 50
-Fig7-p\run_experiment.ps1 -Requests 50
-Fig8-M\run_experiment.ps1 -Requests 50
-Fig9\run_experiment.ps1 -Requests 50
-Fig10\run_experiment.ps1 -Requests 50
+experiments\baseline-comparison\run_experiment.ps1 -Requests 50
+experiments\arrival-rate\run_experiment.ps1 -Requests 50
+experiments\cross-domain-ratio\run_experiment.ps1 -Requests 50
+experiments\management-ratio\run_experiment.ps1 -Requests 50
+experiments\service-ca-number\run_experiment.ps1 -Requests 50
+experiments\availability-timeout\run_experiment.ps1 -Requests 50
+experiments\availability-service-ca-number\run_experiment.ps1 -Requests 50
 ```
 
 Add `-PaperScale` to use the paper sweep grid and request count for that
-figure. Fig4-Fig8 execute the actual OpenSSL, MPT, HTTP/OCSP, smart-contract,
-and Omnilink PoW paths. Fig9 and Fig10 execute a lightweight real-chain probe
+experiment. The baseline and parameter-sweep experiments execute the actual OpenSSL,
+MPT, HTTP/OCSP, smart-contract, and Omnilink PoW paths. The two availability
+experiments execute a lightweight real-chain probe
 and extract observed p90/p95/p99 and timeout-tail data; the retained 3D/2D
 surface inputs remain unchanged.
 
@@ -75,8 +76,8 @@ Each run creates an isolated session:
 
 ```text
 experiment_artifacts/
-  FigX/
-    FigX_YYYYMMDD_HHMMSS/
+  experiment-name/
+    experiment-name_YYYYMMDD_HHMMSS/
       console.log
       results/
       blockchain_logs/
@@ -87,7 +88,7 @@ experiment_artifacts/
 The complete session is also written to one archive:
 
 ```text
-experiment_archives/FigX_YYYYMMDD_HHMMSS.zip
+experiment_archives/experiment-name_YYYYMMDD_HHMMSS.zip
 ```
 
 The archive contains the console transcript, Omnilink node logs/configuration,
@@ -99,13 +100,14 @@ excluded because they are large and are reconstructed by the launcher.
 
 | Figure | Folder | Real experiment path |
 | --- | --- | --- |
-| Fig4 | `Fig4/` | mixed execution of all four platforms |
-| Fig5 | `Fig5-lambda/` | arrival-rate and block-rate sweep |
-| Fig6 | `Fig6-epsilon/` | queueing-threshold sweep |
-| Fig7 | `Fig7-p/` | management-request-ratio sweep |
-| Fig8 | `Fig8-M/` | service-node-count sweep |
-| Fig9 | `Fig9/` | real Fig7-style probe plus latency-tail extraction |
-| Fig10 | `Fig10/` | real Fig8-style probe plus latency-tail extraction |
+| Fig. 3 | `experiments/pow-interval-validation/` | PoW interval-distribution validation |
+| Fig. 4 | `experiments/baseline-comparison/` | mixed execution of all four platforms |
+| Fig. 5 | `experiments/arrival-rate/` | arrival-rate and block-rate sweep |
+| Fig. 6 | `experiments/cross-domain-ratio/` | cross-domain-request-ratio sweep |
+| Fig. 7 | `experiments/management-ratio/` | management-request-ratio sweep |
+| Fig. 8 | `experiments/service-ca-number/` | service-CA-number sweep |
+| Fig. 9 | `experiments/availability-timeout/` | availability over failure probability and timeout threshold |
+| Fig. 10 | `experiments/availability-service-ca-number/` | availability over failure probability and service-CA number |
 
 The original Python entrypoints remain available for custom grids. Replotting
 the retained final artifacts is separate:
@@ -126,15 +128,34 @@ Run a minimal real-chain session for every figure:
 powershell -ExecutionPolicy Bypass -File scripts\Run-All-Smoke.ps1 -Requests 10
 ```
 
+## Optional three-chain sidechain prototype
+
+An isolated multi-ledger prototype is available under
+`sidechain-three-chain-prototype/`. It starts one main chain and two domain
+sidechains with separate EVM chain IDs, ports, databases, contracts, and logs.
+The main chain stores CA records and relayed sidechain checkpoints; each
+sidechain stores its own certificate state and authentication records.
+
+```powershell
+.\sidechain-three-chain-prototype\run_experiment.ps1
+```
+
+The smoke test generates real X.509 certificates, deploys all three contracts,
+relays both sidechain roots, and records a verified Sidechain-A to Sidechain-B
+authentication. This is an application-level checkpoint prototype rather than
+a trustless production bridge; the distinction and security limitations are
+documented in the module README.
+
 ## Repository layout
 
 - `omnilink/`: Omnilink source.
 - `pow-4nodes-runtime/`: four-node PoW build/start/stop scripts.
 - `dpki-experiment-prototype/`: canonical DPKI contract and real experiment.
-- `figure_dpki_pki_runtime/`: shared Fig5-Fig10 measurement/statistics code.
+- `figure_dpki_pki_runtime/`: shared parameter-sweep and availability measurement/statistics code.
 - `simu2-8-packaged/`: queueing-model and real-sweep bridge.
-- `Fig4/`-`Fig10/`: figure-owned launch, retained result, and plotting files.
-- `platform_*/`: four platform implementations and contract assets.
+- `experiments/`: semantically named launch, retained result, and plotting folders.
+- `platforms/`: four platform implementations and contract assets.
+- `sidechain-three-chain-prototype/`: isolated main-chain/two-sidechain prototype.
 - `scripts/`: setup, checking, orchestration, tail extraction, and archiving.
 
 `JIoT/` and `response_letter/` are intentionally ignored and are not part of

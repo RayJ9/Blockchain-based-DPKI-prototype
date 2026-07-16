@@ -31,5 +31,4 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check dpki-experiment-prototype/run-real-dpki-experiment.js
-          node --check Fig4/prototype_baseline_benchmark/run_prototype_baseline_benchmark.js
-
+          node --check experiments/baseline-comparison/prototype_baseline_benchmark/run_prototype_baseline_benchmark.js

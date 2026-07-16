@@ -12,12 +12,22 @@ $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
 $PaperRequests = @{ 4 = 1000; 5 = 10000; 6 = 2000; 7 = 2000; 8 = 10000; 9 = 10000; 10 = 10000 }
+$ExperimentNames = @{
+    4 = "baseline-comparison"
+    5 = "arrival-rate"
+    6 = "cross-domain-ratio"
+    7 = "management-ratio"
+    8 = "service-ca-number"
+    9 = "availability-timeout"
+    10 = "availability-service-ca-number"
+}
+$ExperimentName = $ExperimentNames[$Figure]
 if ($Requests -le 0) {
     $Requests = if ($PaperScale) { $PaperRequests[$Figure] } else { 50 }
 }
 
 $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$SessionDir = Join-Path $Root ("experiment_artifacts\Fig{0}\Fig{0}_{1}" -f $Figure, $Stamp)
+$SessionDir = Join-Path $Root ("experiment_artifacts\{0}\{0}_{1}" -f $ExperimentName, $Stamp)
 $ResultsDir = Join-Path $SessionDir "results"
 New-Item -ItemType Directory -Force -Path $ResultsDir | Out-Null
 $TranscriptPath = Join-Path $SessionDir "console.log"
@@ -47,7 +57,7 @@ function Invoke-Checked {
 
 Start-Transcript -LiteralPath $TranscriptPath -Force | Out-Null
 try {
-    Write-Host "Fig$Figure real experiment session"
+    Write-Host "$ExperimentName real experiment session (paper Fig. $Figure)"
     Write-Host "Requests per selected point/class: $Requests"
     Write-Host "Results are isolated under: $ResultsDir"
 
@@ -60,7 +70,7 @@ try {
             Start-Sleep -Seconds 10
         }
         Invoke-Checked "node" @(
-            "Fig4/prototype_baseline_benchmark/run_prototype_baseline_benchmark.js",
+            "experiments/baseline-comparison/prototype_baseline_benchmark/run_prototype_baseline_benchmark.js",
             "--requests", [string]$Requests,
             "--noop-probes", [string][Math]::Max(20, [Math]::Min($Requests, 200)),
             "--actual-overhead",
@@ -68,46 +78,46 @@ try {
         )
     } elseif ($Figure -eq 5) {
         Invoke-Checked "python" @(
-            "Fig5-lambda/run_fig5_lambda.py",
+            "experiments/arrival-rate/run_fig5_lambda.py",
             "--lambda-values", $(if ($PaperScale) { "2,3,4,5,6,7,8,10,12,14" } else { "4,8" }),
             "--mean-block-ms-values", $(if ($PaperScale) { "80,90,100" } else { "80" }),
             "--requests", [string]$Requests,
-            "--tag", "github_fig5_$Stamp",
+            "--tag", "github_arrival_rate_$Stamp",
             "--output-dir", $ResultsDir,
             $StopPowArg
         )
     } elseif ($Figure -eq 6) {
         Invoke-Checked "python" @(
-            "Fig6-epsilon/run_fig6_epsilon.py",
+            "experiments/cross-domain-ratio/run_fig6_epsilon.py",
             "--epsilon-points", $(if ($PaperScale) { "0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5" } else { "0.1,0.3" }),
             "--requests", [string]$Requests,
-            "--tag", "github_fig6_$Stamp",
+            "--tag", "github_cross_domain_ratio_$Stamp",
             "--output-dir", $ResultsDir,
             $StopPowArg
         )
     } elseif ($Figure -eq 7) {
         Invoke-Checked "python" @(
-            "Fig7-p/run_fig7_p.py",
+            "experiments/management-ratio/run_fig7_p.py",
             "--p-values", $(if ($PaperScale) { "0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5" } else { "0.2" }),
             "--requests", [string]$Requests,
-            "--tag", "github_fig7_$Stamp",
+            "--tag", "github_management_ratio_$Stamp",
             "--output-dir", $ResultsDir,
             $StopPowArg
         )
     } elseif ($Figure -eq 8) {
         Invoke-Checked "python" @(
-            "Fig8-M/run_fig8_m.py",
+            "experiments/service-ca-number/run_fig8_m.py",
             "--m-values", $(if ($PaperScale) { "2,3,4,5,6,7,8,9" } else { "4,6" }),
             "--requests", [string]$Requests,
-            "--tag", "github_fig8_$Stamp",
+            "--tag", "github_service_ca_number_$Stamp",
             "--output-dir", $ResultsDir,
             $StopPowArg
         )
     } elseif ($Figure -eq 9) {
         $ProbeDir = Join-Path $ResultsDir "real_chain_probe"
         Invoke-Checked "python" @(
-            "Fig7-p/run_fig7_p.py", "--p-values", "0.2", "--requests", [string]$Requests,
-            "--epsilon", "0.1", "--mean-block-ms", "20", "--tag", "github_fig9_probe_$Stamp",
+            "experiments/management-ratio/run_fig7_p.py", "--p-values", "0.2", "--requests", [string]$Requests,
+            "--epsilon", "0.1", "--mean-block-ms", "20", "--tag", "github_availability_timeout_probe_$Stamp",
             "--output-dir", $ProbeDir, $StopPowArg
         )
         Invoke-Checked "python" @(
@@ -117,8 +127,8 @@ try {
     } elseif ($Figure -eq 10) {
         $ProbeDir = Join-Path $ResultsDir "real_chain_probe"
         Invoke-Checked "python" @(
-            "Fig8-M/run_fig8_m.py", "--m-values", "6", "--requests", [string]$Requests,
-            "--epsilon", "0.1", "--mean-block-ms", "20", "--tag", "github_fig10_probe_$Stamp",
+            "experiments/service-ca-number/run_fig8_m.py", "--m-values", "6", "--requests", [string]$Requests,
+            "--epsilon", "0.1", "--mean-block-ms", "20", "--tag", "github_availability_service_ca_number_probe_$Stamp",
             "--output-dir", $ProbeDir, $StopPowArg
         )
         Invoke-Checked "python" @(
@@ -138,11 +148,11 @@ try {
     if ($StartedHere -and -not $KeepChain) {
         & $StopScript -ErrorAction SilentlyContinue
     }
-    & (Join-Path $Root "scripts\Collect-ExperimentArtifacts.ps1") -Figure $Figure -SessionDir $SessionDir -ResultsDir $(if ($Figure -ge 9) { Join-Path $ResultsDir "real_chain_probe" } else { $ResultsDir })
+    & (Join-Path $Root "scripts\Collect-ExperimentArtifacts.ps1") -Figure $Figure -Experiment $ExperimentName -SessionDir $SessionDir -ResultsDir $(if ($Figure -ge 9) { Join-Path $ResultsDir "real_chain_probe" } else { $ResultsDir })
     Remove-Item Env:DPKI_LIVE_TRACE -ErrorAction SilentlyContinue
     Remove-Item Env:DPKI_VERBOSE_TRACE -ErrorAction SilentlyContinue
     Remove-Item Env:PYTHONUNBUFFERED -ErrorAction SilentlyContinue
 }
 
-if (-not $Succeeded) { throw "Fig$Figure experiment did not complete." }
-Write-Host "Fig$Figure experiment completed: $SessionDir"
+if (-not $Succeeded) { throw "$ExperimentName experiment did not complete." }
+Write-Host "$ExperimentName experiment completed: $SessionDir"
