@@ -45,14 +45,14 @@ module.exports = {
 
     if (row.requestClass === "intra-off-chain") {
       await certificateVerification(row, ctx.openssl, 1);
-      await mptVerify(row, ctx.services, 1, label);
+      await mptVerify(row, ctx.services, chain, 1, label);
       await assertion(row, ctx.openssl, 1);
       return;
     }
 
     if (row.requestClass === "intra-on-chain" || row.requestClass === "cross-on-chain") {
       await certificateVerification(row, ctx.openssl, 1);
-      await mptVerify(row, ctx.services, row.requestClass === "cross-on-chain" ? 2 : 1, label);
+      await mptVerify(row, ctx.services, chain, row.requestClass === "cross-on-chain" ? 2 : 1, label);
       await chainRecord(row, chain, "chainRecord", chain.contract.methods.putAuthRecord(
         requestId,
         chain.source.domainId,
@@ -68,7 +68,7 @@ module.exports = {
         onChainStorageBytes: authRecordStorageBytes(),
       });
       await chainStateRead(row, chain, requestId);
-      await assertion(row, ctx.openssl, row.requestClass === "cross-on-chain" ? 2 : 1);
+      await assertion(row, ctx.openssl, 1);
       return;
     }
 

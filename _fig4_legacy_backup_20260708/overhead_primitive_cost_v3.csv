@@ -1,5 +1,0 @@
-Primitive,Used by,On-chain storage B,Gas (10^3)
-Cert/root write,Proposed Mgmt.; Multi-CA Mgmt.; full-contract Mgmt.,654.0,235.697
-Auth record write + read,Proposed Intra-on; Proposed Cross,590.0,281.469
-Full-contract intra auth,full-contract Intra-on,942.0,357.23
-Full-contract cross auth,full-contract Cross,1006.0,363.278

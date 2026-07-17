@@ -1,6 +1,0 @@
-Primitive,Applied request,Used by,On-chain storage B,Receipt gas used (10^3)
-Cert/root write,Management,Proposed Mgmt.; Multi-CA Mgmt.; full-contract Mgmt.,654.0,181.306
-Auth record write + read,Intra-domain,Proposed DPKI (on-chain),590.0,216.515
-Auth record write + read,Cross-domain,Proposed DPKI (cross-domain),590.0,216.527
-Full-contract auth,Intra-domain,full-contract DPKI,942.0,274.776
-Full-contract auth,Cross-domain,full-contract DPKI,1006.0,279.457

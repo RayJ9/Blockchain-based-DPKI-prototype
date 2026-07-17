@@ -1,5 +1,0 @@
-Primitive,Used by,Gas (10^3),Storage payload B
-Cert/root write,Proposed Mgmt.; Multi-CA Mgmt.; full-contract Mgmt.,235.697,654.0
-Auth record write + read,Proposed Intra-on; Proposed Cross,281.469,590.0
-Full-contract intra auth,full-contract Intra-on,357.208,942.0
-Full-contract cross auth,full-contract Cross,363.256,1006.0

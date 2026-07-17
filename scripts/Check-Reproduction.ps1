@@ -42,7 +42,7 @@ $RequiredPaths = @(
     "experiments\baseline-comparison\plot_fig4.m",
     "experiments\baseline-comparison\run_experiment.ps1",
     "experiments\baseline-comparison\prototype_baseline_benchmark\run_prototype_baseline_benchmark.js",
-    "experiments\baseline-comparison\prototype_baseline_benchmark\contracts\Fig4OverheadBenchmark.sol",
+    "experiments\baseline-comparison\prototype_baseline_benchmark\contracts\Fig4BaselineBenchmark.sol",
     "experiments\arrival-rate\run_fig5_lambda.py",
     "experiments\arrival-rate\run_experiment.ps1",
     "experiments\arrival-rate\replot_figure.py",

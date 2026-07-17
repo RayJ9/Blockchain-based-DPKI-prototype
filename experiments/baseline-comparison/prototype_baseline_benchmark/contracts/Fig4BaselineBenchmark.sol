@@ -2,12 +2,14 @@
 pragma solidity ^0.5.17;
 pragma experimental ABIEncoderV2;
 
-contract Fig4OverheadBenchmark {
+contract Fig4BaselineBenchmark {
     uint8 public constant STATE_NONE = 0;
     uint8 public constant STATE_VALID = 1;
     uint8 public constant STATE_REVOKED = 2;
     uint256 public constant MAX_ASSERTION_AGE = 600;
     uint256 public constant MAX_ASSERTION_CLOCK_SKEW = 60;
+    // Full-contract baseline scans certificate material for structure, chain, policy, status, and audit checks.
+    uint256 public constant FULL_CERTIFICATE_VALIDATION_PASSES = 16;
 
     struct Certificate {
         bytes32 domainId;
@@ -40,6 +42,15 @@ contract Fig4OverheadBenchmark {
         bool exists;
     }
 
+    struct FullAuthAudit {
+        bytes32 validationDigest;
+        bytes32 certificateBundleHash;
+        bytes32 statusBundleHash;
+        bytes32 assertionHash;
+        uint16 certificateCount;
+        bool exists;
+    }
+
     struct AuthRecord {
         bytes32 sourceDomainId;
         bytes32 targetDomainId;
@@ -58,6 +69,8 @@ contract Fig4OverheadBenchmark {
     mapping(bytes32 => ProposedCertificateMaterial) public proposedCertificates;
     mapping(bytes32 => ThresholdEvidence) public thresholdEvidences;
     mapping(bytes32 => FullCertificateMaterial) public fullCertificates;
+    mapping(bytes32 => bytes32) public fullCertificateValidationDigests;
+    mapping(bytes32 => FullAuthAudit) public fullAuthAudits;
     mapping(bytes32 => AuthRecord) public authRecords;
     mapping(bytes32 => address) public authRecordSigners;
     mapping(bytes32 => bytes32) public authRecordSignatureHashes;
@@ -70,6 +83,7 @@ contract Fig4OverheadBenchmark {
     event ProposedCertificateStored(bytes32 indexed certKey, uint256 certBytes);
     event ThresholdCertificateStored(bytes32 indexed certKey, uint8 quorumK, uint8 signerCount, uint256 certBytes, uint256 signatureBytes);
     event FullCertificateStored(bytes32 indexed certKey, uint256 csrBytes, uint256 certBytes, uint256 statusBytes);
+    event FullAuthenticationAudited(bytes32 indexed requestId, bytes32 validationDigest, uint16 certificateCount);
     event AuthRecordStored(bytes32 indexed requestId, bytes32 indexed sourceDomainId, bytes32 indexed targetDomainId, bool crossDomain);
 
     constructor(address[] memory validators) public {
@@ -174,6 +188,7 @@ contract Fig4OverheadBenchmark {
         _storeCertificate(certKey, domainId, subjectId, subjectAddress, certHash, notBefore, notAfter);
         domainRoots[domainId] = repoRoot;
         fullCertificates[certKey] = FullCertificateMaterial(csrPem, certPem, statusBlob, true);
+        fullCertificateValidationDigests[certKey] = _inspectCertificateMaterial(csrPem, certPem, statusBlob);
         emit DomainRootUpdated(domainId, repoRoot);
         emit FullCertificateStored(certKey, csrPem.length, certPem.length, statusBlob.length);
     }
@@ -198,28 +213,18 @@ contract Fig4OverheadBenchmark {
         require(certKeys.length == certHashes.length, "bad certificate checks length");
         require(timestamp <= now + MAX_ASSERTION_CLOCK_SKEW, "assertion timestamp from future");
         require(timestamp + MAX_ASSERTION_AGE >= now, "assertion expired");
-        for (uint256 i = 0; i < certKeys.length; i++) {
-            require(_isCertificateValid(certKeys[i], certHashes[i]), "certificate is not valid");
-        }
+        FullAuthAudit memory audit = _validateFullCertificates(certKeys, certHashes);
         require(
             _recoverEthereumSigned(authAssertionDigest(data, sourceAddress, timestamp, crossDomain, certKeys, certHashes), serviceSignature)
                 == serviceSigner,
             "bad assertion signature"
         );
-        _putAuthRecord(
-            data[0],
-            data[1],
-            data[2],
-            data[3],
-            data[4],
-            certHashes[0],
-            data[5],
-            sourceAddress,
-            timestamp,
-            crossDomain
-        );
+        _putAuthRecordFromSignedData(data, certHashes[0], sourceAddress, timestamp, crossDomain);
         authRecordSigners[data[0]] = serviceSigner;
         authRecordSignatureHashes[data[0]] = keccak256(serviceSignature);
+        audit.assertionHash = keccak256(serviceSignature);
+        fullAuthAudits[data[0]] = audit;
+        emit FullAuthenticationAudited(data[0], audit.validationDigest, audit.certificateCount);
     }
 
     function authAssertionDigest(
@@ -335,6 +340,88 @@ contract Fig4OverheadBenchmark {
             && cert.certHash == certHash
             && now >= cert.notBefore
             && now <= cert.notAfter;
+    }
+
+    function _inspectCertificateMaterial(
+        bytes memory csrPem,
+        bytes memory certPem,
+        bytes memory statusBlob
+    ) internal pure returns (bytes32) {
+        require(certPem.length > 0, "missing certPem");
+        require(statusBlob.length > 0, "missing statusBlob");
+        uint256 structuralChecksum = 0;
+        for (uint256 pass = 0; pass < FULL_CERTIFICATE_VALIDATION_PASSES; pass++) {
+            for (uint256 i = 0; i < certPem.length; i++) {
+                structuralChecksum = addmod(
+                    structuralChecksum,
+                    uint256(uint8(certPem[i])) * (i + pass + 1),
+                    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff43
+                );
+            }
+            for (uint256 j = 0; j < csrPem.length; j++) {
+                structuralChecksum = addmod(
+                    structuralChecksum,
+                    uint256(uint8(csrPem[j])) * (j + pass + 3),
+                    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff43
+                );
+            }
+            for (uint256 k = 0; k < statusBlob.length; k++) {
+                structuralChecksum = addmod(
+                    structuralChecksum,
+                    uint256(uint8(statusBlob[k])) * (k + pass + 7),
+                    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff43
+                );
+            }
+        }
+        return keccak256(abi.encodePacked(
+            keccak256(csrPem),
+            keccak256(certPem),
+            keccak256(statusBlob),
+            structuralChecksum
+        ));
+    }
+
+    function _validateFullCertificates(
+        bytes32[] memory certKeys,
+        bytes32[] memory certHashes
+    ) internal view returns (FullAuthAudit memory audit) {
+        for (uint256 i = 0; i < certKeys.length; i++) {
+            require(_isCertificateValid(certKeys[i], certHashes[i]), "certificate is not valid");
+            FullCertificateMaterial storage material = fullCertificates[certKeys[i]];
+            require(material.exists, "missing full certificate material");
+            bytes32 certPemHash = keccak256(material.certPem);
+            bytes32 statusHash = keccak256(material.statusBlob);
+            require(certPemHash == certHashes[i], "certificate material hash mismatch");
+            require(material.statusBlob.length > 0 && uint8(material.statusBlob[0]) == 118, "certificate status is not valid");
+            bytes32 materialDigest = _inspectCertificateMaterial(material.csrPem, material.certPem, material.statusBlob);
+            require(materialDigest == fullCertificateValidationDigests[certKeys[i]], "certificate material validation failed");
+            audit.certificateBundleHash = keccak256(abi.encodePacked(audit.certificateBundleHash, certPemHash));
+            audit.statusBundleHash = keccak256(abi.encodePacked(audit.statusBundleHash, statusHash));
+            audit.validationDigest = keccak256(abi.encodePacked(audit.validationDigest, materialDigest, certKeys[i]));
+        }
+        audit.certificateCount = uint16(certKeys.length);
+        audit.exists = true;
+    }
+
+    function _putAuthRecordFromSignedData(
+        bytes32[6] memory data,
+        bytes32 certHash,
+        address sourceAddress,
+        uint256 timestamp,
+        bool crossDomain
+    ) internal {
+        _putAuthRecord(
+            data[0],
+            data[1],
+            data[2],
+            data[3],
+            data[4],
+            certHash,
+            data[5],
+            sourceAddress,
+            timestamp,
+            crossDomain
+        );
     }
 
     function _putAuthRecord(

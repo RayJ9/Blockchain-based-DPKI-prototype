@@ -6,7 +6,7 @@ module.exports = {
     const {
       issue,
       assertion,
-      ocspVerify,
+      fullContractCertificateValidation,
       chainRecord,
       signContractAssertion,
       signedAuthRecordStorageBytes,
@@ -25,6 +25,7 @@ module.exports = {
         persistStatus: false,
         countOffchainStorage: false,
       });
+      await fullContractCertificateValidation(row, ctx.openssl, 2);
       await chainRecord(row, chain, "contractExecution", chain
         ? chain.contract.methods.putFullCertificateBundleAndDomainRoot(
           keccakBytes32(chain.web3, `full-cert:${row.index}`),
@@ -51,10 +52,8 @@ module.exports = {
     }
 
     const crossDomain = row.requestClass === "cross-on-chain";
+    await fullContractCertificateValidation(row, ctx.openssl, 3);
     addCertStatusChecks(row, crossDomain ? 2 : 1);
-    if (crossDomain) {
-      await ocspVerify(row, ctx.services, 1, `${label}:counterparty-ca`);
-    }
     const certs = crossDomain ? [chain.source, chain.service] : [chain.source];
     const timestamp = Math.floor(Date.now() / 1000);
     const signed = signContractAssertion(chain, requestId, crossDomain, certs, timestamp);

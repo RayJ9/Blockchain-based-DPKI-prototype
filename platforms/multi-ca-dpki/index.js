@@ -6,9 +6,9 @@ module.exports = {
     const {
       issue,
       assertion,
+      certificateVerification,
       ocspVerify,
       thresholdValidate,
-      thresholdManagementCeremony,
       signThresholdCertificateBundle,
       thresholdCertificateStorageBytes,
       chainRecord,
@@ -30,19 +30,15 @@ module.exports = {
         countOffchainStorage: false,
       });
 
-      if (ctx.args.actualOverhead) {
-        await thresholdManagementCeremony(row, ctx.services, ctx.args, label);
-      } else {
-        await measure(row, "thresholdIssue", async () => {
-          await Promise.all(Array.from({ length: ctx.args.thresholdN }, (_, i) =>
-            postJson(18343, "/threshold", {
-              nodeId: i,
-              cert: `${label}:issue`,
-              nonce: `${label}:issue:${i}`,
-            }).catch(() => null),
-          ));
-        });
-      }
+      await measure(row, "thresholdIssue", async () => {
+        await Promise.all(Array.from({ length: ctx.args.thresholdN }, (_, i) =>
+          postJson(18343, "/threshold", {
+            nodeId: i,
+            cert: `${label}:issue`,
+            nonce: `${label}:issue:${i}`,
+          }).catch(() => null),
+        ));
+      });
 
       const committee = signThresholdCertificateBundle(
         chain,
@@ -81,14 +77,17 @@ module.exports = {
     }
 
     if (row.requestClass === "intra-auth") {
+      await certificateVerification(row, ctx.openssl, 1);
+      await ocspVerify(row, ctx.services, 1, label);
       await thresholdValidate(row, ctx.services, ctx.args, label);
       await assertion(row, ctx.openssl, 1);
       return;
     }
 
     if (row.requestClass === "cross-auth") {
+      await certificateVerification(row, ctx.openssl, 1);
       await thresholdValidate(row, ctx.services, ctx.args, label);
-      await ocspVerify(row, ctx.services, 1, `${label}:counterparty-ca`);
+      await ocspVerify(row, ctx.services, 2, `${label}:counterparty-ca`);
       await assertion(row, ctx.openssl, 2);
       return;
     }

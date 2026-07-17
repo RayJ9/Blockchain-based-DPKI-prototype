@@ -7,8 +7,8 @@ const { performance } = require("perf_hooks");
 
 const ROOT = path.resolve(__dirname, "..", "..", "..");
 const PROTOTYPE_NODE_MODULES = path.join(ROOT, "dpki-experiment-prototype", "node_modules");
-const CONTRACT_PATH = path.join(__dirname, "contracts", "Fig4OverheadBenchmark.sol");
-const CONTRACT_NAME = "Fig4OverheadBenchmark";
+const CONTRACT_PATH = path.join(__dirname, "contracts", "Fig4BaselineBenchmark.sol");
+const CONTRACT_NAME = "Fig4BaselineBenchmark";
 const PLATFORM_REGISTRY = require(path.join(ROOT, "platform_registry"));
 const VERBOSE_TRACE = /^(1|true|yes|on)$/i.test(process.env.DPKI_VERBOSE_TRACE || "");
 
@@ -47,7 +47,6 @@ const DEFAULTS = {
   thresholdN: 6,
   noopProbes: null,
   seed: 20260706,
-  actualOverhead: false,
 };
 
 const REQUEST_CLASSES = [
@@ -95,7 +94,6 @@ function parseArgs() {
     else if (key === "--threshold-k" && next) args.thresholdK = Number(next), i += 1;
     else if (key === "--threshold-n" && next) args.thresholdN = Number(next), i += 1;
     else if (key === "--noop-probes" && next) args.noopProbes = Number(next), i += 1;
-    else if (key === "--actual-overhead") args.actualOverhead = true;
     else if (key === "--no-chain") args.noChain = true;
     else if (key === "--help") {
       console.log([
@@ -349,6 +347,7 @@ function prepareOpenSslWorkspace(workDir) {
     caKey,
     caCert,
     leafKey,
+    leafCsr,
     leafCert,
     leafPub,
     payload,
@@ -564,7 +563,9 @@ async function prepareNetworkServices(args, rng) {
     await sleep(0.8 + rng() * 1.8);
     const index = Math.abs(Number(body.index || 0)) % leaves.length;
     const leaf = leaves[index];
+    const proofStart = performance.now();
     const proof = merkleProof(levels, index);
+    const proofGenerationMs = performance.now() - proofStart;
     const msg = Buffer.from(`${leaf}:${rootHex}:${body.nonce || ""}`);
     const signature = signBuffer(serviceKey.privateKey, msg).toString("base64");
     return {
@@ -574,6 +575,7 @@ async function prepareNetworkServices(args, rng) {
       proof,
       msg: msg.toString("base64"),
       signature,
+      proofGenerationMs,
     };
   }));
 
@@ -613,6 +615,7 @@ async function prepareNetworkServices(args, rng) {
     servicePublicKey: serviceKey.publicKey,
     thresholdPublicKeys: thresholdKeys.map((item) => item.publicKey),
     thresholdKeyPairs: thresholdKeys,
+    rootHex,
     servers,
   };
 }
@@ -638,7 +641,7 @@ async function ocspVerify(row, services, count, requestLabel) {
   }
 }
 
-async function mptVerify(row, services, count, requestLabel) {
+async function mptVerify(row, services, chain, count, requestLabel) {
   for (let i = 0; i < count; i += 1) {
     await measure(row, "mptValidation", async () => {
       const before = metricValue(row, "externalPayloadBytes");
@@ -647,6 +650,18 @@ async function mptVerify(row, services, count, requestLabel) {
         nonce: `${requestLabel}:${row.index}:${i}`,
       });
       addMetric(row, "mptPayloadBytes", metricValue(row, "externalPayloadBytes") - before);
+
+      addMetric(row, "mptProofGenerationMs", Number(response.proofGenerationMs || 0));
+      const rootQueryStart = performance.now();
+      const finalizedRoot = chain
+        ? await chain.contract.methods.domainRoots(chain.service.domainId).call()
+        : `0x${response.rootHex}`;
+      addMetric(row, "mptRootQueryMs", performance.now() - rootQueryStart);
+      if (String(finalizedRoot).toLowerCase() !== `0x${response.rootHex}`.toLowerCase()) {
+        throw new Error("MPT root does not match the finalized on-chain root");
+      }
+
+      const verificationStart = performance.now();
       const msg = Buffer.from(response.msg, "base64");
       const signature = Buffer.from(response.signature, "base64");
       if (!verifyBuffer(services.servicePublicKey, msg, signature)) {
@@ -655,6 +670,7 @@ async function mptVerify(row, services, count, requestLabel) {
       if (!verifyMerkleProof(response.leaf, response.proof, response.rootHex)) {
         throw new Error("MPT/Merkle proof failed");
       }
+      addMetric(row, "mptProofVerificationMs", performance.now() - verificationStart);
       addMptProofCount(row, 1);
       addSigOps(row, 2);
     });
@@ -663,31 +679,6 @@ async function mptVerify(row, services, count, requestLabel) {
 
 async function thresholdValidate(row, services, args, requestLabel) {
   await measure(row, "thresholdValidation", async () => {
-    if (args.actualOverhead) {
-      for (let nodeId = 0; nodeId < args.thresholdN; nodeId += 1) {
-        const before = metricValue(row, "externalPayloadBytes");
-        const response = await postJsonTracked(row, 18343, "/threshold", {
-          nodeId,
-          cert: requestLabel,
-          nonce: `${requestLabel}:${row.index}:${nodeId}`,
-        }, 2, "external");
-        addMetric(row, "thresholdPayloadBytes", metricValue(row, "externalPayloadBytes") - before);
-        const msg = Buffer.from(response.msg, "base64");
-        const sig = Buffer.from(response.signature, "base64");
-        const key = services.thresholdPublicKeys[response.nodeId];
-        if (response.state !== "valid" || !verifyBuffer(key, msg, sig)) {
-          throw new Error(`bad threshold response ${response.nodeId}`);
-        }
-        addCertStatusChecks(row, 1);
-        addCaNodeExec(row, 1);
-        addSigOps(row, 2);
-      }
-      if (args.thresholdN < args.thresholdK) {
-        throw new Error("threshold validation failed");
-      }
-      return;
-    }
-
     const controllers = [];
     const promises = [];
     for (let nodeId = 0; nodeId < args.thresholdN; nodeId += 1) {
@@ -731,62 +722,6 @@ async function thresholdValidate(row, services, args, requestLabel) {
     if (accepted.length < args.thresholdK) {
       throw new Error("threshold validation failed");
     }
-  });
-}
-
-async function thresholdManagementCeremony(row, services, args, requestLabel) {
-  await measure(row, "thresholdIssue", async () => {
-    const commitmentSize = 48;
-    const shareSize = 96;
-    for (const phase of ["commit", "share"]) {
-      const payloadSize = phase === "commit" ? commitmentSize : shareSize;
-      for (let fromNodeId = 0; fromNodeId < args.thresholdN; fromNodeId += 1) {
-        addIssueKeyOps(row, 1);
-        for (let toNodeId = 0; toNodeId < args.thresholdN; toNodeId += 1) {
-          if (fromNodeId === toNodeId) continue;
-          const payload = crypto.randomBytes(payloadSize).toString("base64");
-          const msg = Buffer.from(`${phase}:${fromNodeId}:${toNodeId}:${payload}`);
-          const signature = signBuffer(services.thresholdKeyPairs[fromNodeId].privateKey, msg).toString("base64");
-          const before = metricValue(row, "internalPayloadBytes");
-          const response = await postJsonTracked(row, 18343, "/threshold-dkg", {
-            phase,
-            fromNodeId,
-            toNodeId,
-            payloadB64: payload,
-            signature,
-          }, 2, "internal");
-          addMetric(row, "thresholdInternalPayloadBytes", metricValue(row, "internalPayloadBytes") - before);
-          const ackMsg = Buffer.from(response.ackMsg, "base64");
-          const ackSignature = Buffer.from(response.ackSignature, "base64");
-          if (!verifyBuffer(services.thresholdPublicKeys[toNodeId], ackMsg, ackSignature)) {
-            throw new Error(`bad dkg ack ${phase} ${fromNodeId}->${toNodeId}`);
-          }
-          addCaNodeExec(row, 1);
-          addSigOps(row, 4);
-        }
-      }
-    }
-
-    for (let nodeId = 0; nodeId < args.thresholdN; nodeId += 1) {
-      const before = metricValue(row, "internalPayloadBytes");
-      const response = await postJsonTracked(row, 18343, "/threshold", {
-        nodeId,
-        cert: `${requestLabel}:issue`,
-        nonce: `${requestLabel}:issue:${nodeId}`,
-      }, 2, "internal");
-      addMetric(row, "thresholdInternalPayloadBytes", metricValue(row, "internalPayloadBytes") - before);
-      const msg = Buffer.from(response.msg, "base64");
-      const sig = Buffer.from(response.signature, "base64");
-      const key = services.thresholdPublicKeys[response.nodeId];
-      if (response.state !== "valid" || !verifyBuffer(key, msg, sig)) {
-        throw new Error(`bad threshold issue response ${response.nodeId}`);
-      }
-      addCertStatusChecks(row, 1);
-      addCaNodeExec(row, 1);
-      addSigOps(row, 2);
-    }
-
-    addIssueKeyOps(row, 1);
   });
 }
 
@@ -883,17 +818,17 @@ function rpcHexToNumber(value) {
   return Number(value || 0);
 }
 
-function certRecord(web3, domain, subject, account) {
+function certRecord(web3, domain, subject, account, certHash = null) {
   return {
     certKey: keccakBytes32(web3, `cert-key:${domain}:${subject}`),
     domainId: keccakBytes32(web3, `domain:${domain}`),
     subjectId: keccakBytes32(web3, `subject:${subject}`),
     subjectAddress: account.address,
-    certHash: keccakBytes32(web3, `cert-hash:${domain}:${subject}`),
+    certHash: certHash || keccakBytes32(web3, `cert-hash:${domain}:${subject}`),
   };
 }
 
-async function prepareChain(args) {
+async function prepareChain(args, finalizedMptRootHex, openssl) {
   if (args.noChain) return null;
   const web3 = new Web3(new Web3.providers.HttpProvider(args.rpc));
   web3.eth.transactionPollingInterval = 5;
@@ -982,12 +917,18 @@ async function prepareChain(args) {
   const serviceAccount = web3.eth.accounts.privateKeyToAccount(`0x${sha256Hex("fig4-service")}`);
   const now = Math.floor(Date.now() / 1000);
   const notAfter = now + 10 * 365 * 24 * 60 * 60;
-  const source = certRecord(web3, "a", "entity-a", sourceAccount);
-  const target = certRecord(web3, "b", "entity-b", targetAccount);
-  const service = certRecord(web3, "main", "service-a", serviceAccount);
-  const repoRoot = keccakBytes32(web3, "repo-root");
+  const initialCsr = fs.readFileSync(openssl.leafCsr);
+  const initialCert = fs.readFileSync(openssl.leafCert);
+  const initialCertHash = web3.utils.keccak256(`0x${initialCert.toString("hex")}`);
+  const source = certRecord(web3, "a", "entity-a", sourceAccount, initialCertHash);
+  const target = certRecord(web3, "b", "entity-b", targetAccount, initialCertHash);
+  const service = certRecord(web3, "main", "service-a", serviceAccount, initialCertHash);
+  const repoRoot = finalizedMptRootHex
+    ? `0x${String(finalizedMptRootHex).replace(/^0x/i, "")}`
+    : keccakBytes32(web3, "repo-root");
   for (const record of [source, target, service]) {
-    await signAndSend(contract.methods.putCertificateAndDomainRoot(
+    const statusBlob = Buffer.from(`valid:${record.domainId}:${record.subjectId}`, "utf8");
+    await signAndSend(contract.methods.putFullCertificateBundleAndDomainRoot(
       record.certKey,
       record.domainId,
       record.subjectId,
@@ -996,6 +937,9 @@ async function prepareChain(args) {
       0,
       notAfter,
       repoRoot,
+      `0x${initialCsr.toString("hex")}`,
+      `0x${initialCert.toString("hex")}`,
+      `0x${statusBlob.toString("hex")}`,
     ), contract.options.address);
   }
   return {
@@ -1180,6 +1124,15 @@ async function certificateVerification(row, ctx, count) {
   }
 }
 
+async function fullContractCertificateValidation(row, ctx, count) {
+  await measure(row, "contractExecution", async () => {
+    for (let i = 0; i < count; i += 1) {
+      opensslVerifyCert(ctx);
+      addCertStatusChecks(row, 1);
+    }
+  });
+}
+
 async function assertion(row, ctx, count) {
   for (let i = 0; i < count; i += 1) {
     const result = await measure(
@@ -1254,6 +1207,9 @@ function newRow(mechanism, requestClass, index) {
     assertionPayloadBytes: 0,
     ocspPayloadBytes: 0,
     mptPayloadBytes: 0,
+    mptProofGenerationMs: 0,
+    mptRootQueryMs: 0,
+    mptProofVerificationMs: 0,
     thresholdPayloadBytes: 0,
     thresholdInternalPayloadBytes: 0,
     chainWritePayloadBytes: 0,
@@ -1277,10 +1233,10 @@ function buildBaselineHelpers() {
     issue,
     assertion,
     certificateVerification,
+    fullContractCertificateValidation,
     ocspVerify,
     mptVerify,
     thresholdValidate,
-    thresholdManagementCeremony,
     chainRecord,
     chainStateRead,
     signThresholdCertificateBundle,
@@ -1327,6 +1283,9 @@ function flattenRow(row) {
     certificateVerificationMs: row.stages.certificateVerification || 0,
     statusValidationMs: row.stages.statusValidation || 0,
     mptValidationMs: row.stages.mptValidation || 0,
+    mptProofGenerationMs: row.mptProofGenerationMs,
+    mptRootQueryMs: row.mptRootQueryMs,
+    mptProofVerificationMs: row.mptProofVerificationMs,
     thresholdValidationMs: row.stages.thresholdValidation || 0,
     thresholdIssueMs: row.stages.thresholdIssue || 0,
     chainRecordMs: row.stages.chainRecord || 0,
@@ -1384,46 +1343,16 @@ function summarizeRows(rows) {
     "certificateVerificationMs",
     "statusValidationMs",
     "mptValidationMs",
+    "mptProofGenerationMs",
+    "mptRootQueryMs",
+    "mptProofVerificationMs",
     "thresholdValidationMs",
     "thresholdIssueMs",
     "chainRecordMs",
     "chainStateReadMs",
     "contractExecutionMs",
     "assertionMs",
-    "gasUsed",
-    "estimatedGas",
-    "txInputBytes",
-    "rawTxBytes",
-    "receiptLogBytes",
     "receiptWaitMs",
-    "estimateGasMs",
-    "txCount",
-    "issueKeyOps",
-    "certStatusChecks",
-    "mptProofCount",
-    "caNodeExec",
-    "sigOps",
-    "msgCount",
-    "payloadBytes",
-    "externalPayloadBytes",
-    "internalPayloadBytes",
-    "issuePayloadBytes",
-    "assertionPayloadBytes",
-    "ocspPayloadBytes",
-    "mptPayloadBytes",
-    "thresholdPayloadBytes",
-    "thresholdInternalPayloadBytes",
-    "chainWritePayloadBytes",
-    "chainReadPayloadBytes",
-    "chainReadOps",
-    "chainReadBytes",
-    "onChainStorageBytes",
-    "offChainStorageBytes",
-    "onChainSigVerifyOps",
-    "issuedKeyBytes",
-    "issuedCsrBytes",
-    "issuedCertBytes",
-    "issuedStatusBytes",
   ];
   const summary = [];
   for (const [key, group] of groups) {
@@ -1453,12 +1382,33 @@ async function main() {
   const services = await prepareNetworkServices(args, rng);
   let chain = null;
   try {
-    chain = await prepareChain(args);
+    chain = await prepareChain(args, services.rootHex, openssl);
   } catch (error) {
     if (!args.noChain) throw error;
   }
 
   const ctx = { args, openssl, services, chain };
+  const metricColumns = [
+    "mechanism",
+    "requestClass",
+    "index",
+    "totalServiceMs",
+    "issueUpdateMs",
+    "certificateVerificationMs",
+    "statusValidationMs",
+    "mptValidationMs",
+    "mptProofGenerationMs",
+    "mptRootQueryMs",
+    "mptProofVerificationMs",
+    "thresholdValidationMs",
+    "thresholdIssueMs",
+    "chainRecordMs",
+    "chainStateReadMs",
+    "contractExecutionMs",
+    "assertionMs",
+    "receiptWaitMs",
+    "notes",
+  ];
   const flattenedRows = [];
   try {
     console.log(`Running ${REQUEST_CLASSES.length} request classes with mixed seeded order: ${args.requests} rounds`);
@@ -1469,7 +1419,9 @@ async function main() {
         await runWorkflow(row, ctx);
         const flattened = flattenRow(row);
         flattenedRows.push(flattened);
-        traceEvent("REQUEST", flattened);
+        traceEvent("REQUEST", Object.fromEntries(
+          metricColumns.map((column) => [column, flattened[column]]),
+        ));
       }
     }
   } finally {
@@ -1478,57 +1430,6 @@ async function main() {
     }
   }
 
-  const metricColumns = [
-    "mechanism",
-    "requestClass",
-    "index",
-    "totalServiceMs",
-    "issueUpdateMs",
-    "certificateVerificationMs",
-    "statusValidationMs",
-    "mptValidationMs",
-    "thresholdValidationMs",
-    "thresholdIssueMs",
-    "chainRecordMs",
-    "chainStateReadMs",
-    "contractExecutionMs",
-    "assertionMs",
-    "gasUsed",
-    "estimatedGas",
-    "txInputBytes",
-    "rawTxBytes",
-    "receiptLogBytes",
-    "receiptWaitMs",
-    "estimateGasMs",
-    "txCount",
-    "issueKeyOps",
-    "certStatusChecks",
-    "mptProofCount",
-    "caNodeExec",
-    "sigOps",
-    "msgCount",
-    "payloadBytes",
-    "externalPayloadBytes",
-    "internalPayloadBytes",
-    "issuePayloadBytes",
-    "assertionPayloadBytes",
-    "ocspPayloadBytes",
-    "mptPayloadBytes",
-    "thresholdPayloadBytes",
-    "thresholdInternalPayloadBytes",
-    "chainWritePayloadBytes",
-    "chainReadPayloadBytes",
-    "chainReadOps",
-    "chainReadBytes",
-    "onChainStorageBytes",
-    "offChainStorageBytes",
-    "onChainSigVerifyOps",
-    "issuedKeyBytes",
-    "issuedCsrBytes",
-    "issuedCertBytes",
-    "issuedStatusBytes",
-    "notes",
-  ];
   const summaryRows = summarizeRows(flattenedRows);
   const summaryColumns = Object.keys(summaryRows[0] || { mechanism: "", requestClass: "", count: "" });
 
@@ -1540,7 +1441,6 @@ async function main() {
     threshold: `${args.thresholdK}-of-${args.thresholdN}`,
     rpc: args.rpc,
     noChain: args.noChain,
-    actualOverhead: args.actualOverhead,
     executionOrder: "mixed seeded shuffle by request index",
     note: "On-chain stage latency includes estimateGas/local contract execution simulation, signing, and tx submission. PoW mining/receipt waiting is preserved separately as receiptWaitMs.",
   }, null, 2)}\n`);

@@ -50,8 +50,16 @@ function Invoke-Checked {
     $CommandName = [System.IO.Path]::GetFileNameWithoutExtension($Command)
     $CommandLog = Join-Path $CommandLogDir ("{0:D2}_{1}.log" -f $script:CommandIndex, $CommandName)
     Write-Host "RUN: $Command $($Arguments -join ' ')"
-    & $Command @Arguments 2>&1 | Tee-Object -LiteralPath $CommandLog
-    $ExitCode = $LASTEXITCODE
+    $PreviousErrorAction = $ErrorActionPreference
+    try {
+        # Native programs routinely use stderr for non-fatal diagnostics. Keep
+        # those lines visible and archived, and use the exit code for failure.
+        $ErrorActionPreference = "Continue"
+        & $Command @Arguments 2>&1 | Tee-Object -LiteralPath $CommandLog
+        $ExitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $PreviousErrorAction
+    }
     if ($ExitCode -ne 0) { throw "Command failed with exit code ${ExitCode}: $Command" }
 }
 
@@ -73,7 +81,6 @@ try {
             "experiments/baseline-comparison/prototype_baseline_benchmark/run_prototype_baseline_benchmark.js",
             "--requests", [string]$Requests,
             "--noop-probes", [string][Math]::Max(20, [Math]::Min($Requests, 200)),
-            "--actual-overhead",
             "--out", $ResultsDir
         )
     } elseif ($Figure -eq 5) {
