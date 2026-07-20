@@ -9,9 +9,10 @@ $ErrorActionPreference = "Stop"
 
 $PrototypeRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $WorkspaceRoot = Resolve-Path (Join-Path $PrototypeRoot "..")
-$PluginRoot = Join-Path $WorkspaceRoot "omnilink\omnilink-plugin"
-$TemplateConfig = Join-Path $PluginRoot "omnilink.pow.toml"
-$Exe = Join-Path $PluginRoot "build\omni.exe"
+$PackageRoot = Join-Path $WorkspaceRoot "omnilink-runtime"
+$TemplateConfig = Join-Path $PackageRoot "config\omnilink.pow.toml"
+$Exe = Join-Path $PackageRoot "bin\windows-x64\omni.exe"
+$Installer = Join-Path $PackageRoot "Install-OmnilinkRuntime.ps1"
 $RuntimeRoot = Join-Path $PrototypeRoot "runtime"
 $ConfigDir = Join-Path $RuntimeRoot "configs"
 $LogDir = Join-Path $RuntimeRoot "logs"
@@ -44,9 +45,7 @@ function Wait-Web3Ready {
     throw "Chain RPC did not become ready at $Url"
 }
 
-if ($Build -or -not (Test-Path -LiteralPath $Exe)) {
-    & (Join-Path $WorkspaceRoot "pow-4nodes-runtime\scripts\build-omnilink-pow.ps1")
-}
+& $Installer -Force:$Build
 if (-not (Test-Path -LiteralPath $Exe)) {
     throw "Omnilink binary not found at $Exe"
 }
@@ -109,7 +108,7 @@ foreach ($chain in $chains) {
     [System.IO.File]::WriteAllText($configPath, $config, $utf8NoBom)
 
     $argList = "-f `"$configPath`" -datadir `"$nodeDir`""
-    $process = Start-Process -FilePath $Exe -ArgumentList $argList -WorkingDirectory $PluginRoot `
+    $process = Start-Process -FilePath $Exe -ArgumentList $argList -WorkingDirectory $PackageRoot `
         -RedirectStandardOutput $stdout -RedirectStandardError $stderr -WindowStyle Hidden -PassThru
     $process.Id | Set-Content -LiteralPath (Join-Path $RuntimeRoot "$name.pid")
     $manifest += [pscustomobject]@{

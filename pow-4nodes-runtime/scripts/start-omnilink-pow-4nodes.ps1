@@ -19,9 +19,10 @@ $ErrorActionPreference = "Stop"
 $PowRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $DpkiRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $WorkspaceRoot = $DpkiRoot
-$PluginRoot = Join-Path $WorkspaceRoot "omnilink\omnilink-plugin"
-$TemplateConfig = Join-Path $PluginRoot "omnilink.pow.toml"
-$Exe = Join-Path $PluginRoot "build\omni.exe"
+$PackageRoot = Join-Path $WorkspaceRoot "omnilink-runtime"
+$TemplateConfig = Join-Path $PackageRoot "config\omnilink.pow.toml"
+$Exe = Join-Path $PackageRoot "bin\windows-x64\omni.exe"
+$Installer = Join-Path $PackageRoot "Install-OmnilinkRuntime.ps1"
 $RuntimeRoot = Join-Path $PowRoot "runtime"
 $ConfigDir = Join-Path $RuntimeRoot "configs"
 $LogDir = Join-Path $RuntimeRoot "logs"
@@ -96,9 +97,7 @@ function Set-TomlValue {
   return [regex]::Replace($Text, $Pattern, $Replacement, [System.Text.RegularExpressions.RegexOptions]::Multiline)
 }
 
-if ($Build -or -not (Test-Path $Exe)) {
-  & (Join-Path $PSScriptRoot "build-omnilink-pow.ps1")
-}
+& $Installer -Force:$Build
 
 if (-not (Test-Path $Exe)) {
   throw "Omnilink binary not found at $Exe"
@@ -172,6 +171,7 @@ for ($i = 0; $i -lt $NodeCount; $i += 1) {
   $health = $HealthBase + $i * 10
   $p2p = $P2pBase + $i
   $grpcLog = (Join-Path $LogDir "grpc33-node$i.log").Replace("\", "/")
+  $nodeLog = (Join-Path $LogDir "omnilink-node$i.log").Replace("\", "/")
   $nodeLocalMiners = 1
   $disableMiningValue = "false"
   if ($AggregateMiningOnNode0) {
@@ -186,6 +186,7 @@ for ($i = 0; $i -lt $NodeCount; $i += 1) {
   New-Item -ItemType Directory -Force -Path $nodeDir | Out-Null
 
   $config = $template
+  $config = Set-TomlValue $config '^logFile\s*=\s*"[^"]+"' "logFile=`"$nodeLog`""
   $config = Set-TomlValue $config 'singleMode\s*=\s*(true|false)' 'singleMode=false'
   $config = Set-TomlValue $config 'grpcLogFile\s*=\s*"[^"]+"' "grpcLogFile=`"$grpcLog`""
   $config = Set-TomlValue $config '^port\s*=\s*\d+' "port=$p2p"
@@ -208,7 +209,7 @@ for ($i = 0; $i -lt $NodeCount; $i += 1) {
   $process = Start-Process `
     -FilePath $Exe `
     -ArgumentList $argList `
-    -WorkingDirectory $PluginRoot `
+    -WorkingDirectory $PackageRoot `
     -RedirectStandardOutput $stdout `
     -RedirectStandardError $stderr `
     -WindowStyle Hidden `

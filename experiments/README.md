@@ -7,7 +7,7 @@ cross-reference.
 | Paper figure | Directory | Evaluation |
 | --- | --- | --- |
 | Fig. 3 | `pow-interval-validation/` | PoW interval-distribution validation |
-| Fig. 4 | `baseline-comparison/` | latency and overhead comparison of four platforms |
+| Fig. 4 | `baseline-comparison/` | latency comparison of four platforms |
 | Fig. 5 | `arrival-rate/` | request-arrival-rate sweep |
 | Fig. 6 | `cross-domain-ratio/` | cross-domain-request-ratio sweep |
 | Fig. 7 | `management-ratio/` | certificate-management-request-ratio sweep |

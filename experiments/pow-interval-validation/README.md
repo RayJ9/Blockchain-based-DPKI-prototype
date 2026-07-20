@@ -2,6 +2,16 @@
 
 Section VI.2 strict PoW-clock validation figure.
 
+Run a new isolated real-chain sample without changing retained paper data:
+
+```powershell
+.\experiments\pow-interval-validation\run_experiment.ps1 -SampleCount 1000 -MeanBlockMs 100
+```
+
+The launcher starts four precompiled Omnilink nodes, records each sampled
+`poissonDelay`, writes CSV and manifest files under `experiment_artifacts/`,
+copies node logs/configuration, and creates a zip archive.
+
 The figure uses the `poissonDelay` field emitted by the Omnilink
 `PowNewBlock` log entry. This field is sampled by the exponential PoW clock
 before transaction binding, block pre-execution, nonce scanning, block writes,

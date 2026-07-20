@@ -1,7 +1,7 @@
 param(
     [switch]$SkipPython,
     [switch]$SkipNode,
-    [switch]$SkipOmnilinkBuild
+    [Alias("SkipOmnilinkBuild")][switch]$SkipOmnilinkInstall
 )
 
 $ErrorActionPreference = "Stop"
@@ -20,10 +20,6 @@ Require-Command python "Install Python 3.10 or newer and add it to PATH."
 Require-Command openssl "Install OpenSSL 3.x and add it to PATH."
 Require-Command node "Install Node.js 18 or newer and add it to PATH."
 Require-Command npm "Install npm together with Node.js."
-if (-not $SkipOmnilinkBuild) {
-    Require-Command go "Install Go and add it to PATH before building Omnilink."
-}
-
 if (-not $SkipPython) {
     python -m pip install -r requirements.txt
     if ($LASTEXITCODE -ne 0) { throw "Python dependency installation failed." }
@@ -39,8 +35,8 @@ if (-not $SkipNode) {
     }
 }
 
-if (-not $SkipOmnilinkBuild) {
-    & (Join-Path $Root "pow-4nodes-runtime\scripts\build-omnilink-pow.ps1")
+if (-not $SkipOmnilinkInstall) {
+    & (Join-Path $Root "omnilink-runtime\Install-OmnilinkRuntime.ps1")
 }
 
 & (Join-Path $Root "scripts\Check-Reproduction.ps1")
