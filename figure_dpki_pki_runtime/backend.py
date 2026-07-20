@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-SIMU_DIR = ROOT / ".internal" / "legacy-simulations" / "simu2-8-packaged"
+SIMU_DIR = ROOT / "blockchain" / ".internal" / "old-ver-simulations" / "simu2-8-packaged"
 
 for module_dir in (SIMU_DIR, ROOT):
     if str(module_dir) not in sys.path:

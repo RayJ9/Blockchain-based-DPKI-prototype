@@ -1,6 +1,7 @@
 JIoT/
 response_letter/
 DPKI-and-DID-platform-Lenovo/
+_paper_text.txt
 
 __pycache__/
 *.pyc
@@ -44,7 +45,8 @@ paper_revision_plan/
 practical_microbenchmark/
 
 # Superseded local simulation workspaces. Compatibility modules still used by
-# the semantic experiment folders live under .internal/legacy-simulations/.
+# the semantic experiment folders live under
+# blockchain/.internal/old-ver-simulations/.
 simu1_boundaries/
 simu2_tail_prob_archive_pre_final_20260613_230901/
 simu3_Compare_episilon/

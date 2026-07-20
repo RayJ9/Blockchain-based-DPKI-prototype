@@ -10,7 +10,7 @@ semantically named folders under `experiments/`.
 - `blockchain/sidechain-three-chain`
 - `blockchain/pow-4nodes-runtime`
 - `blockchain/platforms`
-- `.internal/legacy-simulations`
+- `blockchain/.internal/old-ver-simulations`
 
 ## Figure Status
 
@@ -42,7 +42,7 @@ powershell -ExecutionPolicy Bypass -File scripts\Replot-Retained-Figures.ps1
 ## Notes
 
 - The parameter-sweep runners import compatibility modules from
-  `.internal/legacy-simulations` and execute through `blockchain/dpki-experiment`.
+  `blockchain/.internal/old-ver-simulations` and execute through `blockchain/dpki-experiment`.
 - Every public experiment entrypoint starts the main chain and both domain
   sidechains, initializes the CA registry/checkpoints, and archives all three
   chain logs.

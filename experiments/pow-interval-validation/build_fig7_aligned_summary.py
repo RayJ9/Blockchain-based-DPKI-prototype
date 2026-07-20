@@ -11,7 +11,7 @@ WORKSPACE_ROOT = ROOT.parent.parent
 NO_AUTHSIG_SUMMARY = ROOT / "source_data" / "summary_by_request_class_no_authsig.csv"
 FIG7_DELAY = WORKSPACE_ROOT / "experiments" / "management-ratio" / "delay_by_request_type.csv"
 SERVICE_PROBE_ROOT = (
-    WORKSPACE_ROOT / ".internal" / "legacy-simulations" / "simu2-8-packaged" / "service_probe"
+    WORKSPACE_ROOT / "blockchain" / ".internal" / "old-ver-simulations" / "simu2-8-packaged" / "service_probe"
 )
 FIG3_ALIGNED = ROOT / "source_data" / "summary_by_request_class_fig7_aligned.csv"
 FIG4_ALIGNED = WORKSPACE_ROOT / "experiments" / "baseline-comparison" / "source_data" / "summary_by_request_class_fig7_aligned.csv"

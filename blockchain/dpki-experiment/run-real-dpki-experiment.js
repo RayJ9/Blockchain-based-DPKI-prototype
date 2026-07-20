@@ -18,7 +18,7 @@ const OUT_DIR = path.join(EXPERIMENT_DIR, "outputs");
 const CONTRACT_PATH = path.join(EXPERIMENT_DIR, "contracts", "DPKIExperiment.sol");
 const SIMU2_DIR = process.env.DPKI_COMPAT_OUTPUT_DIR
   ? path.resolve(process.env.DPKI_COMPAT_OUTPUT_DIR)
-  : path.join(ROOT, ".internal", "legacy-simulations", "simu2_tail_prob");
+  : path.join(ROOT, "blockchain", ".internal", "old-ver-simulations", "simu2_tail_prob");
 const OPENSSL_RUNTIME_ROOT = path.join(os.tmpdir(), "chain33-dpki-http-runtime");
 const VERBOSE_TRACE = /^(1|true|yes|on)$/i.test(process.env.DPKI_VERBOSE_TRACE || "");
 
@@ -4796,7 +4796,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 workspace = Path(r'${ROOT.replace(/\\/g, "\\\\")}').resolve()
-sys.path.insert(0, str(workspace / '.internal' / 'legacy-simulations'))
+sys.path.insert(0, str(workspace / 'blockchain' / '.internal' / 'old-ver-simulations'))
 from simu2_tail_prob.simu2_cross_domain_experiment import ModelParams, plot_results, save_bounds_check, theory_rows
 out = Path(r'${SIMU2_DIR.replace(/\\/g, "\\\\")}').resolve()
 experiment_out = Path(r'${OUT_DIR.replace(/\\/g, "\\\\")}').resolve()
@@ -4871,7 +4871,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-sys.path.insert(0, str(Path(r'${ROOT.replace(/\\/g, "\\\\")}').resolve() / '.internal' / 'legacy-simulations'))
+sys.path.insert(0, str(Path(r'${ROOT.replace(/\\/g, "\\\\")}').resolve() / 'blockchain' / '.internal' / 'old-ver-simulations'))
 from simu2_tail_prob.simu2_cross_domain_experiment import ModelParams, plot_results, save_bounds_check, theory_rows
 
 root = Path(r'${ROOT.replace(/\\/g, "\\\\")}').resolve()

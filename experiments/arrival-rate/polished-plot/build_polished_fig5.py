@@ -10,7 +10,7 @@ from scipy.interpolate import PchipInterpolator
 
 ROOT = Path(__file__).resolve().parent
 WORKSPACE_ROOT = ROOT.parents[2]
-SIMU_DIR = WORKSPACE_ROOT / ".internal" / "legacy-simulations" / "simu2-8-packaged"
+SIMU_DIR = WORKSPACE_ROOT / "blockchain" / ".internal" / "old-ver-simulations" / "simu2-8-packaged"
 if str(SIMU_DIR) not in sys.path:
     sys.path.insert(0, str(SIMU_DIR))
 

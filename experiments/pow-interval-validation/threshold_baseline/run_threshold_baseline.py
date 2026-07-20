@@ -26,7 +26,7 @@ ANCHOR_CSV = ROOT / "source_data" / "summary_by_request_class_fig7_aligned.csv"
 if not ANCHOR_CSV.exists():
     ANCHOR_CSV = ROOT / "source_data" / "summary_by_request_class_no_authsig.csv"
 SERVICE_PROBE_ROOT = (
-    ROOT.parent.parent / ".internal" / "legacy-simulations" / "simu2-8-packaged" / "service_probe"
+    ROOT.parent.parent / "blockchain" / ".internal" / "old-ver-simulations" / "simu2-8-packaged" / "service_probe"
 )
 
 SUMMARY_COLUMNS = [

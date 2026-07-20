@@ -2,7 +2,7 @@
   "mechanism": "threshold-validation-dpki",
   "description": "k-of-n validator endorsement baseline; assertion is included in certificate verification stage.",
   "anchorCsv": "experiments/pow-interval-validation/source_data/summary_by_request_class_fig7_aligned.csv",
-  "serviceProbeRoot": ".internal/legacy-simulations/simu2-8-packaged/service_probe",
+  "serviceProbeRoot": "blockchain/.internal/old-ver-simulations/simu2-8-packaged/service_probe",
   "roundsPerRequestClass": 2000,
   "validators": 8,
   "threshold": 4,
