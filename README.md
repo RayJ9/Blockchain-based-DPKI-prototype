@@ -161,17 +161,3 @@ without rerunning the experiments:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\Replot-Retained-Figures.ps1
 ```
-
-## 5. Repository Layout
-
-| Path | Contents |
-| --- | --- |
-| `omnilink/` | complete Omnilink Go source and PoW configuration template |
-| `blockchain/sidechain-three-chain/` | main-chain and two-sidechain runtime, contracts, and initialization workflow |
-| `blockchain/pow-4nodes-runtime/` | retained four-node PoW compatibility launcher |
-| `blockchain/dpki-experiment/` | shared Node.js real-system runner and canonical DPKI contract |
-| `blockchain/platforms/` | proposed DPKI and three comparison platforms |
-| `blockchain/.internal/old-ver-simulations/` | old-version compatibility modules still imported by Fig. 5-Fig. 10 runners |
-| `figure_dpki_pki_runtime/` | shared sweep, measurement, and availability-statistics code |
-| `experiments/` | semantic experiment entrypoints, retained measurements, and figure scripts |
-| `scripts/` | installation, checking, orchestration, tail extraction, and artifact archiving |
