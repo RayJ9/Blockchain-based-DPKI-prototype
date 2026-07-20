@@ -5,11 +5,11 @@ const crypto = require("crypto");
 
 const ROOT = path.resolve(__dirname, "..", "..", "..");
 const OUT_DIR = __dirname;
-const CONTRACT_PATH = path.join(ROOT, "dpki-experiment-prototype", "contracts", "DPKIExperiment.sol");
-const PROTOTYPE_NODE_MODULES = path.join(ROOT, "dpki-experiment-prototype", "node_modules");
+const CONTRACT_PATH = path.join(ROOT, "blockchain", "dpki-experiment", "contracts", "DPKIExperiment.sol");
+const EXPERIMENT_NODE_MODULES = path.join(ROOT, "blockchain", "dpki-experiment", "node_modules");
 
-const solc = require(path.join(PROTOTYPE_NODE_MODULES, "solc"));
-const Web3 = require(path.join(PROTOTYPE_NODE_MODULES, "web3"));
+const solc = require(path.join(EXPERIMENT_NODE_MODULES, "solc"));
+const Web3 = require(path.join(EXPERIMENT_NODE_MODULES, "web3"));
 const rlp = require(path.join(PROTOTYPE_NODE_MODULES, "rlp"));
 
 const DEFAULTS = {

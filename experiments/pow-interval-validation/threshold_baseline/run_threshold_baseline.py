@@ -25,7 +25,9 @@ OUT_DIR = Path(__file__).resolve().parent
 ANCHOR_CSV = ROOT / "source_data" / "summary_by_request_class_fig7_aligned.csv"
 if not ANCHOR_CSV.exists():
     ANCHOR_CSV = ROOT / "source_data" / "summary_by_request_class_no_authsig.csv"
-SERVICE_PROBE_ROOT = ROOT.parent.parent / "simu2-8-packaged" / "service_probe"
+SERVICE_PROBE_ROOT = (
+    ROOT.parent.parent / ".internal" / "legacy-simulations" / "simu2-8-packaged" / "service_probe"
+)
 
 SUMMARY_COLUMNS = [
     "mechanism",

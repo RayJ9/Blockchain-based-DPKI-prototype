@@ -30,7 +30,7 @@ if (-not $SkipPython) {
 }
 
 if (-not $SkipNode) {
-    Push-Location (Join-Path $Root "dpki-experiment-prototype")
+    Push-Location (Join-Path $Root "blockchain\dpki-experiment")
     try {
         npm ci
         if ($LASTEXITCODE -ne 0) { throw "Node dependency installation failed." }
@@ -40,7 +40,7 @@ if (-not $SkipNode) {
 }
 
 if (-not $SkipOmnilinkBuild) {
-    & (Join-Path $Root "pow-4nodes-runtime\scripts\build-omnilink-pow.ps1")
+    & (Join-Path $Root "blockchain\pow-4nodes-runtime\scripts\build-omnilink-pow.ps1")
 }
 
 & (Join-Path $Root "scripts\Check-Reproduction.ps1")

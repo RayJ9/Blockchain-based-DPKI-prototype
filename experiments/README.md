@@ -18,3 +18,9 @@ cross-reference.
 Each runnable directory exposes `run_experiment.ps1`. Retained figure inputs
 and outputs stay inside the owning experiment directory, while new run logs and
 receipts are written under `experiment_artifacts/<experiment-name>/`.
+
+Every entrypoint initializes the three-chain layout under
+`blockchain/sidechain-three-chain`: the main chain records CA/checkpoint state,
+Sidechain A executes the measured workload, and Sidechain B represents the
+remote domain used by cross-domain initialization. Logs from all three chains
+are included in the experiment archive.

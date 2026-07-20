@@ -168,6 +168,11 @@ def write_lambda_figure_data(points: pd.DataFrame, smooth: pd.DataFrame, output_
     curve = smooth.rename(columns=rename_map).copy()
     curve.insert(0, "dataKind", "plot_curve")
     series_columns = list(rename_map.values())
+    for column in series_columns:
+        if column not in raw.columns:
+            raw[column] = np.nan
+        if column not in curve.columns:
+            curve[column] = np.nan
     parameter_columns = [column for column in raw.columns if column not in {"dataKind", "lambda", *series_columns}]
     for column in parameter_columns:
         if column not in curve.columns:

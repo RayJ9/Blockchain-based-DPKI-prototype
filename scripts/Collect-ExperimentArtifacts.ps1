@@ -14,13 +14,14 @@ $ChainLogDest = Join-Path $SessionPath "blockchain_logs"
 $RunLogDest = Join-Path $SessionPath "prototype_run_logs"
 New-Item -ItemType Directory -Force -Path $ChainLogDest, $RunLogDest | Out-Null
 
-$PowLogs = Join-Path $Root "pow-4nodes-runtime\runtime\logs"
-if (Test-Path -LiteralPath $PowLogs) {
-    Copy-Item -LiteralPath $PowLogs -Destination $ChainLogDest -Recurse -Force
-}
-$PowConfigs = Join-Path $Root "pow-4nodes-runtime\runtime\configs"
-if (Test-Path -LiteralPath $PowConfigs) {
-    Copy-Item -LiteralPath $PowConfigs -Destination $ChainLogDest -Recurse -Force
+$ThreeChainRuntime = Join-Path $Root "blockchain\sidechain-three-chain\runtime"
+if (Test-Path -LiteralPath $ThreeChainRuntime) {
+    foreach ($Name in @("configs", "logs", "chains.json")) {
+        $Source = Join-Path $ThreeChainRuntime $Name
+        if (Test-Path -LiteralPath $Source) {
+            Copy-Item -LiteralPath $Source -Destination $ChainLogDest -Recurse -Force
+        }
+    }
 }
 
 $RunSources = Join-Path $ResultsPath "logs\run_sources.csv"

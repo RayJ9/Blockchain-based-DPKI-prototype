@@ -12,7 +12,9 @@ texput.log
 .tools/
 **/node_modules/
 **/logs/
-**/runtime/
+/blockchain/pow-4nodes-runtime/runtime/
+/blockchain/sidechain-three-chain/runtime/
+/blockchain/dpki-experiment/runtime/
 **/outputs/
 **/outputs_recovered_*/
 **/result/logs/
@@ -41,8 +43,8 @@ paper-figure-pipeline(1).zip
 paper_revision_plan/
 practical_microbenchmark/
 
-# Superseded local simulation workspaces. Current reproducible scripts use the
-# semantic experiment folders plus simu2-8-packaged and simu2_tail_prob.
+# Superseded local simulation workspaces. Compatibility modules still used by
+# the semantic experiment folders live under .internal/legacy-simulations/.
 simu1_boundaries/
 simu2_tail_prob_archive_pre_final_20260613_230901/
 simu3_Compare_episilon/

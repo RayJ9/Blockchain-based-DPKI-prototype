@@ -10,7 +10,7 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_LOG_DIR = ROOT.parent.parent / "pow-4nodes-runtime" / "runtime" / "node0" / "logs"
+DEFAULT_LOG_DIR = ROOT.parent.parent / "blockchain" / "sidechain-three-chain" / "runtime" / "logs"
 DEFAULT_CSV = ROOT / "source_data" / "strict_pow_clock_samples.csv"
 DEFAULT_MANIFEST = ROOT / "source_data" / "strict_pow_clock_manifest.json"
 

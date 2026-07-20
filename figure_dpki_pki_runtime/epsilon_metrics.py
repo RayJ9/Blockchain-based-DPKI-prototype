@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import shutil
 import subprocess
 import time
@@ -31,7 +32,8 @@ from .backend import (
 )
 
 
-POW_SCRIPTS = ROOT / "pow-4nodes-runtime" / "scripts"
+POW_SCRIPTS = ROOT / "blockchain" / "pow-4nodes-runtime" / "scripts"
+SIDECHAIN_SCRIPTS = ROOT / "blockchain" / "sidechain-three-chain" / "scripts"
 DEFAULT_EPSILON_POINTS = [round(float(x), 2) for x in np.arange(0.0, 0.6001, 0.05)]
 FINAL_OUTPUT_FILES = [
     "figure.png",
@@ -72,10 +74,17 @@ def run_powershell(script: Path, args: list[str]) -> None:
         ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script), *args],
         cwd=ROOT,
         check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.STDOUT,
     )
 
 
 def restart_pow(mean_block_ms: int) -> None:
+    if os.environ.get("DPKI_USE_SIDECHAINS", "").lower() in {"1", "true", "yes", "on"}:
+        run_powershell(SIDECHAIN_SCRIPTS / "stop-three-chains.ps1", [])
+        run_powershell(SIDECHAIN_SCRIPTS / "start-three-chains.ps1", ["-MeanBlockMs", str(mean_block_ms)])
+        time.sleep(30)
+        return
     run_powershell(POW_SCRIPTS / "stop-omnilink-pow-4nodes.ps1", [])
     ready = POW_RUNTIME / "ready.txt"
     if ready.exists():
@@ -88,6 +97,9 @@ def restart_pow(mean_block_ms: int) -> None:
 
 
 def stop_pow() -> None:
+    if os.environ.get("DPKI_USE_SIDECHAINS", "").lower() in {"1", "true", "yes", "on"}:
+        run_powershell(SIDECHAIN_SCRIPTS / "stop-three-chains.ps1", [])
+        return
     run_powershell(POW_SCRIPTS / "stop-omnilink-pow-4nodes.ps1", [])
 
 

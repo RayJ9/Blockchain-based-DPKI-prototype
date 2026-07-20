@@ -6,10 +6,10 @@ const childProcess = require("child_process");
 const { performance } = require("perf_hooks");
 
 const ROOT = path.resolve(__dirname, "..", "..", "..");
-const PROTOTYPE_NODE_MODULES = path.join(ROOT, "dpki-experiment-prototype", "node_modules");
+const EXPERIMENT_NODE_MODULES = path.join(ROOT, "blockchain", "dpki-experiment", "node_modules");
 const CONTRACT_PATH = path.join(__dirname, "contracts", "Fig4BaselineBenchmark.sol");
 const CONTRACT_NAME = "Fig4BaselineBenchmark";
-const PLATFORM_REGISTRY = require(path.join(ROOT, "platform_registry"));
+const PLATFORM_REGISTRY = require(path.join(ROOT, "blockchain", "platform_registry"));
 const VERBOSE_TRACE = /^(1|true|yes|on)$/i.test(process.env.DPKI_VERBOSE_TRACE || "");
 
 function traceEvent(kind, payload) {
@@ -17,8 +17,8 @@ function traceEvent(kind, payload) {
   console.log(`[TRACE][${kind}] ${JSON.stringify(payload)}`);
 }
 
-const solc = require(path.join(PROTOTYPE_NODE_MODULES, "solc"));
-const Web3 = require(path.join(PROTOTYPE_NODE_MODULES, "web3"));
+const solc = require(path.join(EXPERIMENT_NODE_MODULES, "solc"));
+const Web3 = require(path.join(EXPERIMENT_NODE_MODULES, "web3"));
 
 const NOOP_CONTRACT_SOURCE = `
 pragma solidity ^0.5.17;
@@ -769,7 +769,7 @@ function receiptLogBytes(receipt) {
 }
 
 function contractAddressFrom(web3, sender, nonce) {
-  const rlp = require(path.join(PROTOTYPE_NODE_MODULES, "rlp"));
+  const rlp = require(path.join(EXPERIMENT_NODE_MODULES, "rlp"));
   const encoded = rlp.encode([Buffer.from(sender.slice(2), "hex"), nonce]);
   const digest = web3.utils.keccak256(`0x${Buffer.from(encoded).toString("hex")}`);
   return web3.utils.toChecksumAddress(`0x${digest.slice(-40)}`);

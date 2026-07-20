@@ -2,13 +2,13 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.resolve(__dirname, "..");
-const solc = require(path.join(root, "dpki-experiment-prototype", "node_modules", "solc"));
+const solc = require(path.join(root, "blockchain", "dpki-experiment", "node_modules", "solc"));
 const contracts = [
-  "platforms/proposed-dpki/contracts/ProposedDPKI.sol",
-  "platforms/multi-ca-dpki/contracts/ThresholdValidationDPKI.sol",
-  "platforms/full-contract-dpki/contracts/FullContractDPKI.sol",
-  "sidechain-three-chain-prototype/contracts/MainChainCARegistry.sol",
-  "sidechain-three-chain-prototype/contracts/SidechainDPKI.sol",
+  "blockchain/platforms/proposed-dpki/contracts/ProposedDPKI.sol",
+  "blockchain/platforms/multi-ca-dpki/contracts/ThresholdValidationDPKI.sol",
+  "blockchain/platforms/full-contract-dpki/contracts/FullContractDPKI.sol",
+  "blockchain/sidechain-three-chain/contracts/MainChainCARegistry.sol",
+  "blockchain/sidechain-three-chain/contracts/SidechainDPKI.sol",
 ];
 
 for (const relativePath of contracts) {

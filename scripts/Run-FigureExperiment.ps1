@@ -1,5 +1,5 @@
 param(
-    [Parameter(Mandatory = $true)][ValidateRange(4, 10)][int]$Figure,
+    [Parameter(Mandatory = $true)][ValidateRange(3, 10)][int]$Figure,
     [int]$Requests = 0,
     [switch]$PaperScale,
     [switch]$KeepChain,
@@ -11,8 +11,9 @@ Set-StrictMode -Version Latest
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
-$PaperRequests = @{ 4 = 1000; 5 = 10000; 6 = 2000; 7 = 2000; 8 = 10000; 9 = 10000; 10 = 10000 }
+$PaperRequests = @{ 3 = 1000; 4 = 1000; 5 = 10000; 6 = 2000; 7 = 2000; 8 = 10000; 9 = 10000; 10 = 10000 }
 $ExperimentNames = @{
+    3 = "pow-interval-validation"
     4 = "baseline-comparison"
     5 = "arrival-rate"
     6 = "cross-domain-ratio"
@@ -37,12 +38,23 @@ $env:DPKI_LIVE_TRACE = "1"
 $env:DPKI_VERBOSE_TRACE = "1"
 $env:PYTHONUNBUFFERED = "1"
 
-$StopScript = Join-Path $Root "pow-4nodes-runtime\scripts\stop-omnilink-pow-4nodes.ps1"
-$StartScript = Join-Path $Root "pow-4nodes-runtime\scripts\start-omnilink-pow-4nodes.ps1"
+$BlockchainRoot = Join-Path $Root "blockchain"
+$ThreeChainRoot = Join-Path $BlockchainRoot "sidechain-three-chain"
+$StopScript = Join-Path $ThreeChainRoot "scripts\stop-three-chains.ps1"
+$StartScript = Join-Path $ThreeChainRoot "scripts\start-three-chains.ps1"
+$BootstrapScript = Join-Path $ThreeChainRoot "run-sidechain-smoke.js"
+$LegacyPowStopScript = Join-Path $BlockchainRoot "pow-4nodes-runtime\scripts\stop-omnilink-pow-4nodes.ps1"
 $StartedHere = $false
 $Succeeded = $false
-$StopPowArg = if ($KeepChain) { "--no-stop-pow" } else { "--stop-pow" }
+$StopPowArg = "--no-stop-pow"
 $CommandIndex = 0
+
+$env:DPKI_USE_SIDECHAINS = "1"
+$env:DPKI_EXPERIMENT_RPC = "http://127.0.0.1:18745"
+$env:DPKI_EXPERIMENT_JRPC = "http://127.0.0.1:18901"
+$env:DPKI_CHAIN_ID = "4101"
+$env:DPKI_CHAIN_RUNTIME = Join-Path $ThreeChainRoot "runtime"
+$env:SIDECHAIN_OUTPUT_DIR = Join-Path $SessionDir "sidechain_bootstrap"
 
 function Invoke-Checked {
     param([string]$Command, [string[]]$Arguments)
@@ -69,18 +81,30 @@ try {
     Write-Host "Requests per selected point/class: $Requests"
     Write-Host "Results are isolated under: $ResultsDir"
 
-    if ($Figure -eq 4) {
-        if (-not $UseRunningChain) {
-            & $StopScript -ErrorAction SilentlyContinue
-            & $StartScript -MeanBlockMs 20 -MineEmpty -AggregateMiningOnNode0 -WarmupSeconds 10
-            $StartedHere = $true
-            Write-Host "Waiting 10 seconds for peer synchronization before contract deployment..."
-            Start-Sleep -Seconds 10
-        }
+    if (-not $UseRunningChain) {
+        & $LegacyPowStopScript -ErrorAction SilentlyContinue
+        & $StopScript -ErrorAction SilentlyContinue
+        & $StartScript -MeanBlockMs 20 -Clean
+        $StartedHere = $true
+        Write-Host "Bootstrapping the main-chain CA registry and both domain sidechains..."
+        Invoke-Checked "node" @($BootstrapScript)
+    }
+
+    if ($Figure -eq 3) {
+        Start-Sleep -Seconds ([Math]::Max(12, [Math]::Ceiling($Requests * 0.02 / 3.0) + 5))
+        Invoke-Checked "python" @(
+            "experiments/pow-interval-validation/extract_strict_pow_clock.py",
+            "--log-dir", (Join-Path $ThreeChainRoot "runtime\logs"),
+            "--sample-count", [string]$Requests,
+            "--output-csv", (Join-Path $ResultsDir "strict_pow_clock_samples.csv"),
+            "--manifest", (Join-Path $ResultsDir "strict_pow_clock_manifest.json")
+        )
+    } elseif ($Figure -eq 4) {
         Invoke-Checked "node" @(
             "experiments/baseline-comparison/prototype_baseline_benchmark/run_prototype_baseline_benchmark.js",
             "--requests", [string]$Requests,
             "--noop-probes", [string][Math]::Max(20, [Math]::Min($Requests, 200)),
+            "--rpc", $env:DPKI_EXPERIMENT_RPC,
             "--out", $ResultsDir
         )
     } elseif ($Figure -eq 5) {
@@ -155,10 +179,26 @@ try {
     if ($StartedHere -and -not $KeepChain) {
         & $StopScript -ErrorAction SilentlyContinue
     }
+    $BootstrapRoot = [System.IO.Path]::GetFullPath($env:SIDECHAIN_OUTPUT_DIR)
+    if (Test-Path -LiteralPath $BootstrapRoot) {
+        Get-ChildItem -LiteralPath $BootstrapRoot -Recurse -File -Filter "*.key.pem" -ErrorAction SilentlyContinue | ForEach-Object {
+            $KeyPath = [System.IO.Path]::GetFullPath($_.FullName)
+            if (-not $KeyPath.StartsWith($BootstrapRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+                throw "Refusing to remove an ephemeral key outside $BootstrapRoot"
+            }
+            Remove-Item -LiteralPath $KeyPath -Force
+        }
+    }
     & (Join-Path $Root "scripts\Collect-ExperimentArtifacts.ps1") -Figure $Figure -Experiment $ExperimentName -SessionDir $SessionDir -ResultsDir $(if ($Figure -ge 9) { Join-Path $ResultsDir "real_chain_probe" } else { $ResultsDir })
     Remove-Item Env:DPKI_LIVE_TRACE -ErrorAction SilentlyContinue
     Remove-Item Env:DPKI_VERBOSE_TRACE -ErrorAction SilentlyContinue
     Remove-Item Env:PYTHONUNBUFFERED -ErrorAction SilentlyContinue
+    Remove-Item Env:DPKI_USE_SIDECHAINS -ErrorAction SilentlyContinue
+    Remove-Item Env:DPKI_EXPERIMENT_RPC -ErrorAction SilentlyContinue
+    Remove-Item Env:DPKI_EXPERIMENT_JRPC -ErrorAction SilentlyContinue
+    Remove-Item Env:DPKI_CHAIN_ID -ErrorAction SilentlyContinue
+    Remove-Item Env:DPKI_CHAIN_RUNTIME -ErrorAction SilentlyContinue
+    Remove-Item Env:SIDECHAIN_OUTPUT_DIR -ErrorAction SilentlyContinue
 }
 
 if (-not $Succeeded) { throw "$ExperimentName experiment did not complete." }
