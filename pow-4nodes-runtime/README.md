@@ -4,11 +4,8 @@ This runtime starts four independent Omnilink processes. Each process is one
 PoW maintainer/miner, and the aggregate target mining interval is controlled by
 `-MeanBlockMs`.
 
-The launcher uses the verified precompiled runtime under `omnilink-runtime/`;
-Go and the Omnilink source tree are not required.
-
 ```powershell
-.\pow-4nodes-runtime\scripts\start-omnilink-pow-4nodes.ps1 -Clean -MeanBlockMs 200
+.\pow-4nodes-runtime\scripts\start-omnilink-pow-4nodes.ps1 -Build -Clean -MeanBlockMs 200
 node .\dpki-experiment-prototype\run-real-dpki-experiment.js --consensus-backend pow --rpc http://127.0.0.1:8545
 .\pow-4nodes-runtime\scripts\stop-omnilink-pow-4nodes.ps1
 ```

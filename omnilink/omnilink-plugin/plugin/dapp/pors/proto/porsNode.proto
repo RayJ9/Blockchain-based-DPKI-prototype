@@ -1,0 +1,65 @@
+syntax = "proto3";
+package types;
+option go_package = "../types";
+
+import "common.proto";
+import "pors.proto";
+
+// This is used in exec itself
+message PorsNodePower {
+    string address = 1;
+    int64  power   = 2;
+}
+
+// Consensus send request
+message ReqPorsNodes {
+    int64 height = 1;
+}
+
+// Exec response
+message PorsNodes {
+    repeated PorsNodePower nodes = 1;
+}
+
+message PorsPowerUpdate {
+    string address = 1;
+    int64  power   = 2;
+    int64  height  = 3;
+    PowerProof proof = 4;
+}
+
+message PowerProof {
+    repeated bytes pubkeyBytes = 1;
+    bytes aggregatedSig = 2;
+}
+
+message PorsExecAction {
+    oneof value {
+        PorsPowerUpdate powerUpdate       = 1;
+        PorsBlockInfo   blockInfo         = 2;
+    }
+    int32 Ty = 100;
+}
+
+message ReqPorsBlockInfo {
+    int64 height = 1;
+}
+
+// This is from consensus
+message PorsNodeInfo {
+    string nodeIP      = 1;
+    string nodeID      = 2;
+    string address     = 3;
+    string pubKey      = 4;
+    int64  votingPower = 5;
+    int64  accum       = 6;
+}
+
+message PorsNodeInfoSet {
+    repeated PorsNodeInfo nodes = 1;
+}
+
+service pors {
+    rpc IsSync(ReqNil) returns (PorsIsHealthy) {}
+    rpc GetNodeInfo(ReqNil) returns (PorsNodeInfoSet) {}
+}

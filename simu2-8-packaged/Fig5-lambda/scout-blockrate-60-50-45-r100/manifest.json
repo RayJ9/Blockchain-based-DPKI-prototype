@@ -1,0 +1,73 @@
+{
+  "createdAt": "2026-06-21T17:50:32",
+  "scriptArgs": {
+    "lambda_values": [
+      2.0
+    ],
+    "mean_block_ms_values": [
+      60.0,
+      50.0,
+      45.0
+    ],
+    "requests": 100,
+    "epsilon": 0.1,
+    "p_manage": 0.1,
+    "gamma_on_chain": 0.2,
+    "q_manage": 0.3,
+    "service_cas": 4,
+    "service_shape_mode": "none",
+    "actual_execution_mode": "serial",
+    "dpki_root_read_mode": "chain",
+    "dpki_proof_read_mode": "http",
+    "dpki_proof_base_port": 20080,
+    "dpki_q_mode": "config",
+    "dpki_auth_shape_mean_ms": 0.0,
+    "dpki_management_shape_mean_ms": 0.0,
+    "pki_auth_shape_mean_ms": 0.0,
+    "pki_cross_shape_mean_ms": 0.0,
+    "pki_management_shape_mean_ms": 0.0,
+    "dpki_proof_http_mean_ms": 7.5,
+    "dpki_proof_http_tail_probability": 0.05,
+    "dpki_proof_http_tail_multiplier": 15.0,
+    "dpki_auth_transfer_http_mean_ms": 1.0,
+    "dpki_auth_transfer_http_tail_probability": 0.22,
+    "dpki_auth_transfer_http_tail_multiplier": 6.0,
+    "dpki_management_http_mean_ms": 10.0,
+    "dpki_management_http_tail_probability": 0.35,
+    "dpki_management_http_tail_multiplier": 10.0,
+    "dpki_management_transfer_http_mean_ms": 30.0,
+    "dpki_management_transfer_http_tail_probability": 0.35,
+    "dpki_management_transfer_http_tail_multiplier": 10.0,
+    "seed": 81001,
+    "tag": "scout_blockrate_60_50_45_r100",
+    "output_dir": "simu2_tail_prob/Fig5-lambda/scout-blockrate-60-50-45-r100",
+    "reuse_existing": false,
+    "restart_pow": true,
+    "stop_pow": false,
+    "ylim": [
+      0.08,
+      0.34
+    ]
+  },
+  "logsDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\simu2_tail_prob\\Fig5-lambda\\scout-blockrate-60-50-45-r100\\logs",
+  "runs": [
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\scout_blockrate_60_50_45_r100_blockms_45_lambda_2_r100",
+      "lambda": 2.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\scout_blockrate_60_50_45_r100_blockms_50_lambda_2_r100",
+      "lambda": 2.0
+    },
+    {
+      "runDir": "C:\\Users\\admin\\Desktop\\Blockchain_based DPKI platform\\DPKI-and-DID-platform-Lenovo\\chain33-dpki-real-experiment\\outputs\\real_sweeps\\lambda_experiment\\scout_blockrate_60_50_45_r100_blockms_60_lambda_2_r100",
+      "lambda": 2.0
+    }
+  ],
+  "checks": {
+    "allDpkiInBounds": true,
+    "maxPkiAbsError": NaN,
+    "maxTxTotalMs": 290.2544000148773,
+    "slowTxOver1000ms": 0
+  }
+}

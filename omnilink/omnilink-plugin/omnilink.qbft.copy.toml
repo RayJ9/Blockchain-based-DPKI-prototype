@@ -1,0 +1,269 @@
+Title="local"
+version="1.65.4-7fe229c"
+# 是否按照块高度设置过期时间，开启后优化了交易去重性能
+TxHeight=true
+DisableForkCheck=true
+
+[log]
+# 日志级别，支持debug(dbug)/info/warn/error(eror)/crit
+loglevel = "debug"
+logConsoleLevel = "info"
+# 日志文件名，可带目录，所有生成的日志文件都放到此目录下
+logFile = "logs/omnilink.log"
+# 单个日志文件的最大值（单位：兆）
+maxFileSize = 300
+# 最多保存的历史日志文件个数
+maxBackups = 100
+# 最多保存的历史日志消息（单位：天）
+maxAge = 28
+# 日志文件名是否使用本地事件（否则使用UTC时间）
+localTime = true
+# 历史日志文件是否压缩（压缩格式为gz）
+compress = true
+# 是否打印调用源文件和行号
+callerFile = false
+# 是否打印调用方法
+callerFunction = false
+
+[blockchain]
+# 缓存区块的个数
+defCacheSize=128
+# 同步区块时一次最多申请获取的区块个数
+maxFetchBlockNum=128
+# 向对端节点请求同步区块的时间间隔
+timeoutSeconds=5
+batchBlockNum=128
+driver="leveldb"
+dbPath="datadir"
+dbCache=128
+isStrongConsistency=false
+# 是否为单节点模式
+singleMode=false
+# 同步区块批量写数据库时，是否需要立即写磁盘，非固态硬盘的电脑可以设置为false，以提高性能
+batchsync=false
+# 是否记录添加或者删除区块的序列，若节点作为主链节点，为平行链节点提供服务，需要设置为true
+isRecordBlockSequence=true
+# 是否为平行链节点
+isParaChain=false
+# 是否开启交易快速查询索引
+enableTxQuickIndex=true
+# 是否开启精简localdb
+enableReExecLocal=false
+enablePushSubscribe=true
+# 对端节点只比自己高一个区块，等待超时后，同步该区块
+onChainTimeout=30
+# 是否关闭区块广播
+disableBlockBroadcast=true
+
+# <--- 数据分片相关参数 --->
+# 是否关闭分片功能
+disableShard=true
+# 每个分片包含的区块数
+chunkblockNum=100
+# 使能从P2pStore中获取数据
+enableFetchP2pstore=true
+highAllowPackHeight=300
+lowAllowPackHeight=200
+
+[p2p]
+# 配置p2p网络类型，dht,gossip两种,统一使用dht
+types=["gossip"]
+dbPath="datadir/addrbook"
+dbCache=4
+grpcLogFile="grpc33.log"
+#waitPid 等待seed导入
+waitPid=false
+# 是否启动P2P服务
+enable=true
+driver="leveldb"
+
+[p2p.sub.gossip]
+port=13802
+# 种子节点，格式为ip:port，多个节点以逗号分隔，如seeds=["10.0.0.1:13802","10.0.0.2:13802","10.0.0.3:13802"]
+seeds=["192.168.1.181:13802","192.168.1.182:13802","192.168.1.183:13802","192.168.1.184:13802"]
+isSeed=true
+innerSeedEnable=false
+useGithub=false
+innerBounds=300
+channel=1099
+serverStart=true
+maxTTL=1
+
+[rpc]
+jrpcBindAddr=":8801"
+grpcBindAddr=":8802"
+whitelist=["*"]
+jrpcFuncWhitelist=["*"]
+grpcFuncWhitelist=["*"]
+
+[rpc.sub.eth]
+enable=true
+httpAddr=":9545"
+httpApi=["eth","web3","personal","admin","net"]
+# websocket 绑定地址
+wsAddr=":9546"
+wsApi=["eth","web3","personal","admin","net"]
+
+[mempool]
+# mempool队列存储策略名称，可配，timeline，score，price，默认timeline
+name="timeline"
+# mempool缓存容量大小，默认10240，不能超过maxTxNumber的10倍
+poolCacheSize=120000
+# 每个账户在mempool中得最大交易数量，默认100
+maxTxNumPerAccount=120000
+# 目前execCheck效率较低，支持关闭交易execCheck，提升性能，默认false
+disableExecCheck=true
+#minTxFeeRate=100000
+
+[consensus]
+# 共识名称
+name="qbft"
+# 是否参与共识，联盟链打开
+minerstart=true
+
+[mver.consensus]
+# 基金账户地址
+fundKeyAddr = "1BQXS6TxaYYG5mADaWij4AxhZZUTpw95a5"
+# 挖矿难度
+powLimitBits="0x1f00ffff"
+# 区块包含最多交易数
+maxTxNumber = 25000      #160
+
+[mver.consensus.ForkChainParamV1]
+# 区块包含最多交易数
+maxTxNumber = 25000
+
+[consensus.sub.qbft]
+# 创世交易地址
+genesis="14KEKbYtKKQm4wMthSK9J4La4nAiidGozt"
+# 创世交易地址账户余额
+genesisAmount=100000000
+# 创世区块时间(UTC时间)
+genesisBlockTime=1717171200
+# 获取交易间隔时长,以下时长单位均为毫秒
+timeoutTxAvail=500
+# 等待proposal超时基准时长
+timeoutPropose=5000
+# 每轮延长等待proposal的时长
+timeoutProposeDelta=500
+# 等待pre-vote超时基准时长
+timeoutPrevote=3000
+# 每轮延长等待pre-vote的时长
+timeoutPrevoteDelta=500
+# 等待pre-commit超时基准时长
+timeoutPrecommit=3000
+# 每轮延长等待pre-commit的时长
+timeoutPrecommitDelta=500
+# 收到对一个区块的2/3pre-commits后,等待落后者投票超时时长,超时后将启动新高度流程
+timeoutCommit=500
+# 是否在收到所有pre-commits,还未达到超时等待时长时,取消等待,如果为true,将启动新高度流程;如果为false,等到超时才启动新高度流程
+skipTimeoutCommit=false
+# 创建空区块的时间间隔,如果等于0则认为不出空块，单位为秒
+emptyBlockInterval=0
+# 节点公钥文件
+#genesisFile="genesis.json"
+# 节点私钥文件
+#privFile="priv_validator.json"
+# 共识端口号，默认为33001
+#port=33001
+# 共识节点，格式为ip:port，多个节点以逗号分隔，节点数至少为4个
+validatorNodes=["192.168.1.181:33001","192.168.1.182:33001","192.168.1.183:33001","192.168.1.184:33001"]
+# 是否开启快速同步，推荐打开
+fastSync=true
+# propose阶段是否预执行区块，提高性能推荐关闭
+preExec=false
+# 签名算法,支持"secp256k1","ed25519","sm2","bls",默认为"ed25519"
+signName="bls"
+# 是否使用聚合签名,签名算法需支持该特性,比如"bls"
+useAggregateSignature=true
+# 连续提议区块的个数，默认为1
+#multiBlocks=10
+# 消息发送间隔，单位为毫秒
+#messageInterval=50
+
+[crypto]
+enableTypes=["secp256k1","bls","none"]
+
+
+[store]
+# 联盟链推荐使用kvmvcc
+name="kvmvcc"
+driver="leveldb"
+dbPath="datadir/kvmvcc"
+dbCache=5120
+
+[store.sub.kvmvcc]
+enableMavlPrefix=false
+enableMVCC=false
+
+[wallet]
+minFee=100000
+driver="leveldb"
+dbPath="datadir/wallet"
+dbCache=16
+signType="secp256k1"
+
+[wallet.sub.ticket]
+minerdisable=true
+minerwhitelist=["*"]
+
+[wallet.sub.multisig]
+rescanMultisigAddr=false
+
+[exec]
+enableStat=false
+enableMVCC=false
+alias=["token1:token","token2:token","token3:token"]
+saveTokenTxList=false
+disableAddrIndex=false
+disableTxIndex=false
+disableFeeIndex=false
+disableTxDupCheck=true
+
+[exec.sub.manage]
+superManager=["14KEKbYtKKQm4wMthSK9J4La4nAiidGozt"]
+
+[exec.sub.token]
+saveTokenTxList=true
+tokenApprs=[]
+
+[exec.sub.cert]
+enable=false
+cryptoPath="./test/authdir/crypto"
+signType="auth_sm2"
+
+[exec.sub.relay]
+genesis="12qyocayNF7Lv6C9qW4avxs2E7U41fKSfv"
+
+
+[exec.sub.evm]
+ethMapFromExecutor="paracross"
+ethMapFromSymbol="coins.para"
+evmGasLimit=50000000
+evmDebugEnable=0
+
+[exec.sub.paracross]
+nodeGroupFrozenCoins=0
+#平行链共识停止后主链等待的高度
+paraConsensusStopBlocks=30000
+
+[exec.sub.autonomy]
+total="16htvcBNSEA7fZhAdLJphDwQRQJaHpyHTp"
+useBalance=false
+
+[metrics]
+#是否使能发送metrics数据的发送
+enableMetrics=false
+#数据保存模式
+dataEmitMode="influxdb"
+
+[metrics.sub.influxdb]
+#以纳秒为单位的发送间隔
+duration=1000000000
+url="http://influxdb:8086"
+database="omnilinkmetrics"
+username=""
+password=""
+namespace=""
+
+[pprof]

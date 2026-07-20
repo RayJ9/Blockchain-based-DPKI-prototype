@@ -26,11 +26,7 @@ $RequiredPaths = @(
     "sidechain-three-chain-prototype\scripts\stop-three-chains.ps1",
     "sidechain-three-chain-prototype\contracts\MainChainCARegistry.sol",
     "sidechain-three-chain-prototype\contracts\SidechainDPKI.sol",
-    "omnilink-runtime\runtime-manifest.json",
-    "omnilink-runtime\releases\omnilink-windows-x64.zip",
-    "omnilink-runtime\config\omnilink.pow.toml",
-    "omnilink-runtime\Install-OmnilinkRuntime.ps1",
-    "omnilink-runtime\LICENSE",
+    "omnilink",
     "dpki-experiment-prototype",
     "dpki-experiment-prototype\package.json",
     "dpki-experiment-prototype\package-lock.json",
@@ -41,7 +37,6 @@ $RequiredPaths = @(
     "pow-4nodes-runtime\scripts\stop-omnilink-pow-4nodes.ps1",
     "simu2-8-packaged\real_figure_sweep_common.py",
     "experiments\pow-interval-validation\generate_data_fig3.py",
-    "experiments\pow-interval-validation\run_experiment.ps1",
     "experiments\pow-interval-validation\plot_fig3.m",
     "experiments\baseline-comparison\generate_data_fig4.py",
     "experiments\baseline-comparison\plot_fig4.m",
@@ -79,8 +74,6 @@ foreach ($Path in $RequiredPaths) {
         throw "Missing required reproduction path: $Path"
     }
 }
-
-& "omnilink-runtime\Install-OmnilinkRuntime.ps1" -VerifyOnly
 
 if (-not $SkipPythonCompile) {
     $PythonFiles = @(

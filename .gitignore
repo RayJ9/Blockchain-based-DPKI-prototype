@@ -4,24 +4,16 @@ DPKI-and-DID-platform-Lenovo/
 
 __pycache__/
 *.pyc
-.pytest_cache/
-.venv/
-venv/
 *.log
 texput.log
-*.asv
-.DS_Store
-Thumbs.db
 
 .vscode/
 .idea/
-.agents/
 .tools/
 **/node_modules/
 **/logs/
 **/runtime/
 **/outputs/
-**/archives/
 **/outputs_recovered_*/
 **/result/logs/
 **/.cache/
@@ -40,9 +32,6 @@ smoke_test_*/
 _latest_*.txt
 experiment_artifacts/
 experiment_archives/
-omnilink-runtime/bin/windows-x64/omni.exe
-_paper_text.txt
-_fig4_legacy_backup_*/
 
 # Restored or local-only process archives. They are not needed for the
 # reproducible figure package and should not be pushed.
@@ -51,11 +40,6 @@ paper-figure-pipeline/
 paper-figure-pipeline(1).zip
 paper_revision_plan/
 practical_microbenchmark/
-
-# Exploratory parameter searches are local diagnostics. The retained inputs
-# and final paper figures live under experiments/.
-simu2_tail_prob/Fig5-lambda/scout-*/
-simu2-8-packaged/Fig5-lambda/scout-*/
 
 # Superseded local simulation workspaces. Current reproducible scripts use the
 # semantic experiment folders plus simu2-8-packaged and simu2_tail_prob.

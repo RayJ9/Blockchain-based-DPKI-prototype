@@ -1,0 +1,17 @@
+// Copyright Fuzamei Corp. 2018 All Rights Reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// protoc --go_out=plugins=grpc:./ ./sign.proto
+
+syntax = "proto3";
+
+package btcscript;
+option go_package = "../script";
+
+message Signature {
+    bytes lockScript   = 1;
+    bytes unlockScript = 2;
+    int64 lockTime     = 3;
+    int64 utxoSequence = 4;
+}

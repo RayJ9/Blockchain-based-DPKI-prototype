@@ -1,0 +1,4 @@
+runDir,lambda,meanBlockMs,configuredLambdaBlock
+C:\Users\admin\Desktop\Blockchain_based DPKI platform\DPKI-and-DID-platform-Lenovo\chain33-dpki-real-experiment\outputs\real_sweeps\lambda_experiment\scout_blockrate_60_50_45_r100_blockms_45_lambda_2_r100,2.0,45.0,22.22222222222222
+C:\Users\admin\Desktop\Blockchain_based DPKI platform\DPKI-and-DID-platform-Lenovo\chain33-dpki-real-experiment\outputs\real_sweeps\lambda_experiment\scout_blockrate_60_50_45_r100_blockms_50_lambda_2_r100,2.0,50.0,20.0
+C:\Users\admin\Desktop\Blockchain_based DPKI platform\DPKI-and-DID-platform-Lenovo\chain33-dpki-real-experiment\outputs\real_sweeps\lambda_experiment\scout_blockrate_60_50_45_r100_blockms_60_lambda_2_r100,2.0,60.0,16.666666666666668
