@@ -67,3 +67,13 @@ simu78/
 /blockchain/.internal/old-ver-simulations/**/*.npy
 /blockchain/.internal/old-ver-simulations/**/*.mat
 /blockchain/.internal/old-ver-simulations/**/*.json
+
+# Local reproduction and audit material, retained on disk only.
+/REPRODUCTION_STATUS.md
+/.github/workflows/reproduction-check.yml
+/scripts/Check-Reproduction.ps1
+/scripts/Replot-Retained-Figures.ps1
+/experiments/baseline-comparison/reproduce_latency.ps1
+/AVAILABILITY_AUDIT.md
+/scripts/Audit-Availability.py
+/report_supplement_*/

@@ -43,5 +43,6 @@ if (-not $SkipOmnilinkBuild) {
     & (Join-Path $Root "blockchain\pow-4nodes-runtime\scripts\build-omnilink-pow.ps1")
 }
 
-& (Join-Path $Root "scripts\Check-Reproduction.ps1")
+node (Join-Path $Root "scripts\Check-ModuleContracts.js")
+if ($LASTEXITCODE -ne 0) { throw "Module contract check failed." }
 Write-Host "Environment setup completed."

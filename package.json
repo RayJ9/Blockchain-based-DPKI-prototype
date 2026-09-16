@@ -5,7 +5,7 @@
   "description": "Reproducible Omnilink/OpenSSL experiments for blockchain-based DPKI figures.",
   "scripts": {
     "setup": "powershell -ExecutionPolicy Bypass -File scripts/Setup-Environment.ps1",
-    "check": "powershell -ExecutionPolicy Bypass -File scripts/Check-Reproduction.ps1",
+    "check": "node scripts/Check-ModuleContracts.js",
     "smoke": "powershell -ExecutionPolicy Bypass -File scripts/Run-All-Smoke.ps1"
   }
 }
