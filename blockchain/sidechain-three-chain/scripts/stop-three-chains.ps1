@@ -1,7 +1,10 @@
+param([string]$RuntimeDirectory = "")
+
 $ErrorActionPreference = "Stop"
 
 $ChainRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $RuntimeRoot = Join-Path $ChainRoot "runtime"
+if ($RuntimeDirectory) { $RuntimeRoot = [System.IO.Path]::GetFullPath($RuntimeDirectory) }
 
 if (-not (Test-Path -LiteralPath $RuntimeRoot)) {
     Write-Host "No three-chain runtime exists."

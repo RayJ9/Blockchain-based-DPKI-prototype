@@ -3,20 +3,21 @@ param(
     [int]$Requests = 0,
     [switch]$PaperScale,
     [switch]$KeepChain,
-    [switch]$UseRunningChain
+    [switch]$UseRunningChain,
+    [int]$Rounds = 10,
+    [int]$WarmupRequests = 20,
+    [string]$PfValues = "0,0.2,0.6,1",
+    [string]$MValues = "",
+    [string]$Timeouts = "",
+    [ValidateSet("both", "nonresponding", "malicious")][string]$Scenario = "both",
+    [int]$Seed = 20260916,
+    [ValidateRange(1, 60000)][int]$MeanBlockMs = 60
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
-
-if ($Figure -ge 9) {
-    Write-Warning "Fig. $Figure runs a latency-only probe. Fault injection and availability-curve generation are not implemented."
-    if ($PaperScale) {
-        throw "Paper-scale availability experiments are not implemented. No retained-data substitute is available."
-    }
-}
 
 $PaperRequests = @{ 3 = 1000; 4 = 1000; 5 = 10000; 6 = 2000; 7 = 2000; 8 = 10000; 9 = 10000; 10 = 10000 }
 $ExperimentNames = @{
@@ -60,7 +61,12 @@ $env:DPKI_USE_SIDECHAINS = "1"
 $env:DPKI_EXPERIMENT_RPC = "http://127.0.0.1:18745"
 $env:DPKI_EXPERIMENT_JRPC = "http://127.0.0.1:18901"
 $env:DPKI_CHAIN_ID = "4101"
-$env:DPKI_CHAIN_RUNTIME = Join-Path $ThreeChainRoot "runtime"
+if (-not $UseRunningChain -or -not $env:DPKI_CHAIN_RUNTIME) {
+    $env:DPKI_CHAIN_RUNTIME = Join-Path $ThreeChainRoot "runtime"
+}
+if ($Figure -ge 9 -and -not $UseRunningChain) {
+    $env:DPKI_CHAIN_RUNTIME = Join-Path $ThreeChainRoot "runtime\availability_$Stamp"
+}
 $env:SIDECHAIN_OUTPUT_DIR = Join-Path $SessionDir "sidechain_bootstrap"
 
 function Invoke-Checked {
@@ -89,9 +95,13 @@ try {
     Write-Host "Results are isolated under: $ResultsDir"
 
     if (-not $UseRunningChain) {
-        & $LegacyPowStopScript -ErrorAction SilentlyContinue
-        & $StopScript -ErrorAction SilentlyContinue
-        & $StartScript -MeanBlockMs 20 -Clean
+        if ($Figure -ge 9) {
+            & $StartScript -MeanBlockMs $MeanBlockMs -RuntimeDirectory $env:DPKI_CHAIN_RUNTIME
+        } else {
+            & $LegacyPowStopScript -ErrorAction SilentlyContinue
+            & $StopScript -ErrorAction SilentlyContinue
+            & $StartScript -MeanBlockMs 20 -Clean
+        }
         $StartedHere = $true
         Write-Host "Bootstrapping the main-chain CA registry and both domain sidechains..."
         Invoke-Checked "node" @($BootstrapScript)
@@ -151,28 +161,16 @@ try {
             "--output-dir", $ResultsDir,
             $StopPowArg
         )
-    } elseif ($Figure -eq 9) {
-        $ProbeDir = Join-Path $ResultsDir "real_chain_probe"
-        Invoke-Checked "python" @(
-            "experiments/management-ratio/run_fig7_p.py", "--p-values", "0.2", "--requests", [string]$Requests,
-            "--epsilon", "0.1", "--mean-block-ms", "20", "--tag", "github_availability_timeout_probe_$Stamp",
-            "--output-dir", $ProbeDir, $StopPowArg
+    } elseif ($Figure -ge 9) {
+        $AvailabilityArgs = @(
+            "-m", "figure_dpki_pki_runtime.availability_experiment", "--figure", [string]$Figure,
+            "--requests", [string]$Requests, "--rounds", [string]$Rounds,
+            "--warmup-requests", [string]$WarmupRequests, "--pf-values", $PfValues,
+            "--scenario", $Scenario, "--seed", [string]$Seed, "--output-dir", $ResultsDir
         )
-        Invoke-Checked "python" @(
-            "scripts/Extract-TailProbe.py", "--figure", "9", "--result-dir", $ProbeDir,
-            "--output-dir", (Join-Path $ResultsDir "tail_probe")
-        )
-    } elseif ($Figure -eq 10) {
-        $ProbeDir = Join-Path $ResultsDir "real_chain_probe"
-        Invoke-Checked "python" @(
-            "experiments/service-ca-number/run_fig8_m.py", "--m-values", "6", "--requests", [string]$Requests,
-            "--epsilon", "0.1", "--mean-block-ms", "20", "--tag", "github_availability_service_ca_number_probe_$Stamp",
-            "--output-dir", $ProbeDir, $StopPowArg
-        )
-        Invoke-Checked "python" @(
-            "scripts/Extract-TailProbe.py", "--figure", "10", "--result-dir", $ProbeDir,
-            "--output-dir", (Join-Path $ResultsDir "tail_probe")
-        )
+        if ($MValues) { $AvailabilityArgs += @("--m-values", $MValues) }
+        if ($Timeouts) { $AvailabilityArgs += @("--timeouts", $Timeouts) }
+        Invoke-Checked "python" $AvailabilityArgs
     }
     $Succeeded = $true
 } finally {
@@ -184,7 +182,7 @@ try {
         Get-Content -LiteralPath $CommandLog.FullName | Add-Content -LiteralPath $FullConsole
     }
     if ($StartedHere -and -not $KeepChain) {
-        & $StopScript -ErrorAction SilentlyContinue
+        & $StopScript -RuntimeDirectory $env:DPKI_CHAIN_RUNTIME -ErrorAction SilentlyContinue
     }
     $BootstrapRoot = [System.IO.Path]::GetFullPath($env:SIDECHAIN_OUTPUT_DIR)
     if (Test-Path -LiteralPath $BootstrapRoot) {
@@ -196,7 +194,7 @@ try {
             Remove-Item -LiteralPath $KeyPath -Force
         }
     }
-    & (Join-Path $Root "scripts\Collect-ExperimentArtifacts.ps1") -Figure $Figure -Experiment $ExperimentName -SessionDir $SessionDir -ResultsDir $(if ($Figure -ge 9) { Join-Path $ResultsDir "real_chain_probe" } else { $ResultsDir })
+    & (Join-Path $Root "scripts\Collect-ExperimentArtifacts.ps1") -Figure $Figure -Experiment $ExperimentName -SessionDir $SessionDir -ResultsDir $ResultsDir
     Remove-Item Env:DPKI_LIVE_TRACE -ErrorAction SilentlyContinue
     Remove-Item Env:DPKI_VERBOSE_TRACE -ErrorAction SilentlyContinue
     Remove-Item Env:PYTHONUNBUFFERED -ErrorAction SilentlyContinue

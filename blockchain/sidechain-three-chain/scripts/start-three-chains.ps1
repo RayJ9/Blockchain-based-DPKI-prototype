@@ -2,7 +2,8 @@ param(
     [int]$MeanBlockMs = 80,
     [UInt32]$DifficultyBits = 521142271,
     [switch]$Build,
-    [switch]$Clean
+    [switch]$Clean,
+    [string]$RuntimeDirectory = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -14,6 +15,7 @@ $PluginRoot = Join-Path $WorkspaceRoot "omnilink\omnilink-plugin"
 $TemplateConfig = Join-Path $PluginRoot "omnilink.pow.toml"
 $Exe = Join-Path $PluginRoot "build\omni.exe"
 $RuntimeRoot = Join-Path $ChainRoot "runtime"
+if ($RuntimeDirectory) { $RuntimeRoot = [System.IO.Path]::GetFullPath($RuntimeDirectory) }
 $ConfigDir = Join-Path $RuntimeRoot "configs"
 $LogDir = Join-Path $RuntimeRoot "logs"
 
@@ -53,7 +55,7 @@ if (-not (Test-Path -LiteralPath $Exe)) {
 }
 
 if ($Clean) {
-    & (Join-Path $PSScriptRoot "stop-three-chains.ps1")
+    & (Join-Path $PSScriptRoot "stop-three-chains.ps1") -RuntimeDirectory $RuntimeRoot
     if (Test-Path -LiteralPath $RuntimeRoot) {
         $resolvedRuntime = [System.IO.Path]::GetFullPath($RuntimeRoot)
         $resolvedChainRoot = [System.IO.Path]::GetFullPath($ChainRoot)

@@ -36,6 +36,9 @@ _latest_*.txt
 experiment_artifacts/
 experiment_archives/
 
+# Local experiment tests stay on disk, outside the published runtime code.
+/blockchain/dpki-experiment/*.test.js
+
 # Restored or local-only process archives. They are not needed for the
 # reproducible figure package and should not be pushed.
 oldver_simulation/
@@ -62,6 +65,7 @@ simu78/
 /experiments/**/*.npy
 /experiments/**/*.mat
 /experiments/**/*.json
+/experiments/**/*.jsonl
 /blockchain/.internal/old-ver-simulations/**/*.csv
 /blockchain/.internal/old-ver-simulations/**/*.npz
 /blockchain/.internal/old-ver-simulations/**/*.npy

@@ -86,6 +86,7 @@ function parseArgs() {
     const arg = process.argv[i];
     const next = process.argv[i + 1];
     if (arg === "--rpc" && next) args.rpc = next;
+    else if (arg === "--availability-config" && next) args.availabilityConfig = next;
     else if (arg === "--consensus-backend" && next) args.consensusBackend = next;
     else if (arg === "--pow-rpc" && next) args.powRpc = next;
     else if (arg === "--pow-runtime" && next) args.powRuntime = next;
@@ -2092,7 +2093,12 @@ async function runDpkiMerkleAuthExecution(
   }
 
   await verifyAttempt(canRetry);
-  if (!okProof || !okCertificate || !okAssertion || !okSignature) {
+  if (!okProof) {
+    const error = new Error("DPKI Merkle proof does not match the finalized certificate repository");
+    error.code = "INVALID_MERKLE_PROOF";
+    throw error;
+  }
+  if (!okCertificate || !okAssertion || !okSignature) {
     throw new Error("DPKI Merkle authentication execution failed");
   }
   return { source, target, proof };
@@ -3834,7 +3840,6 @@ function writeStageStatistics(requestRows) {
 
   const columns = ["model", "kind", "stage", "count", "meanMs", "medianMs", "minMs", "maxMs"];
   writeCsv(path.join(OUT_DIR, "real_stage_statistics.csv"), rows, columns);
-  writeCsv(path.join(SIMU2_DIR, "real_stage_statistics.csv"), rows, columns);
   console.log("REAL STAGE STATISTICS");
   for (const row of rows) {
     console.log(
@@ -3878,7 +3883,6 @@ function writeChainTxBreakdown() {
     "error",
   ];
   writeCsv(path.join(OUT_DIR, "real_chain_tx_breakdown.csv"), chainTxBreakdowns, columns);
-  writeCsv(path.join(SIMU2_DIR, "real_chain_tx_breakdown.csv"), chainTxBreakdowns, columns);
 
   const successful = chainTxBreakdowns.filter((row) => !row.error && Number.isFinite(Number(row.totalMs)));
   const groups = new Map();
@@ -3915,9 +3919,17 @@ function writeMeasuredParameters(args, chainObservation) {
 
 async function main() {
   const args = parseArgs();
+  const availability = args.availabilityConfig
+    ? require("./availability-experiment").validateConfig(JSON.parse(fs.readFileSync(args.availabilityConfig, "utf8").replace(/^\uFEFF/, "")))
+    : null;
+  if (availability && (args.skipPki || args.resetPerEpsilon || args.epsilonValues.length !== 1 || args.dpkiRootReadMode !== "chain")) {
+    throw new Error("Availability injection requires both models, a single epsilon, shared initialization and finalized on-chain root reads");
+  }
+  if (availability && fs.existsSync(path.join(availability.outputDir, "availability_manifest.json"))) {
+    throw new Error("Availability output already contains a run; choose a new output directory");
+  }
   ACTIVE_ARGS = args;
   ensureDir(OUT_DIR);
-  ensureDir(SIMU2_DIR);
 
   const backend = String(args.consensusBackend).toLowerCase();
   const usePow = backend === "pow" || backend === "omnilink-pow";
@@ -3994,6 +4006,72 @@ async function main() {
     contract = prepared.contract;
     platform = prepared.platform;
     pkiPlatform = prepared.pkiPlatform;
+  }
+
+  if (availability) {
+    // Management and sender-1 use the same account: share its nonce allocator.
+    platform.runtimeNonceManager = txSenders.find(sender => sender.account.toLowerCase() === args.account.toLowerCase()).nonceManager;
+    const observationStart = await observeChainBlockPosition(web3);
+    try {
+      await require("./availability-experiment").runAvailability(availability, {
+        args,
+        senderCount: txSenders.length,
+        makeRequest(model, rand, index) {
+          const epsilon = args.epsilonValues[0];
+          const management = rand() < args.pManage;
+          const cross = !management && rand() < epsilon;
+          const kind = management ? "management" : cross ? "cross-domain"
+            : model === "PKI" ? "intra-pki" : rand() < args.gammaOnChain ? "intra-on-chain" : "intra-off-chain";
+          return model === "DPKI"
+            ? buildRequest(web3, hash, rand, epsilon, index, args, kind)
+            : buildPkiRequest(web3, hash, rand, epsilon, index, kind);
+        },
+        makeProof(request, corrupt) {
+          const source = findCert(platform, request.sourceDomain, request.sourceSubject);
+          const payload = JSON.parse(JSON.stringify(buildDpkiProofPayload(platform, hash, source.domain, source.key)));
+          if (corrupt) {
+            payload.items[payload.items.length - 1].valueHash = hash.text(`false-certificate-status:${request.nonce}`);
+            // A compromised CA can sign a false answer with its own legitimate
+            // key; the finalized Merkle root must still reject this proof.
+            payload.signatureBase64 = signDpkiProofPayload(payload, findIssuerForCert(platform, source));
+          }
+          return payload;
+        },
+        async verifyOffchain(request, payload) {
+          const stages = {};
+          let first = true;
+          await runDpkiMerkleAuthExecution(web3, contract, platform, hash, request, args, stages, {}, true,
+            async source => {
+              if (!first) return proofForDpkiExecution(platform, hash, source, request, args, stages);
+              first = false;
+              if (!verifyDpkiProofPayload(platform, source, payload, stages)) {
+                const error = new Error("Invalid signed CA response");
+                error.code = "INVALID_MERKLE_PROOF";
+                throw error;
+              }
+              return dpkiProofEnvelopeToProof(payload);
+            });
+        },
+        executeDpki(request, senderId) {
+          const sender = txSenders[senderId];
+          return executeRequest(web3, contract, sender.account, sender.privateKey, sender.nonceManager, platform, hash, request, args);
+        },
+        executePki(request) { return executePkiRequest(pkiPlatform, request, args); },
+      });
+    } finally {
+      const observationEnd = await observeChainBlockPosition(web3).catch(() => null);
+      fs.mkdirSync(availability.outputDir, { recursive: true });
+      fs.writeFileSync(path.join(availability.outputDir, "chain_observation.json"), JSON.stringify({
+        chainId: ACTIVE_CHAIN_ID, contractAddress: contract.options.address,
+        configuredMeanBlockMs: powStatus ? powStatus.runtimeConfig.meanBlockMs : null,
+        start: observationStart, end: observationEnd,
+      }, null, 2));
+      fs.writeFileSync(path.join(availability.outputDir, "chain_transactions.json"), JSON.stringify(chainTxBreakdowns, null, 2));
+      cleanupOpenSslOcspResponders();
+      cleanupPkiServiceResponders();
+      cleanupDpkiProofResponders();
+    }
+    return;
   }
 
   const summaryRows = [];
@@ -4278,65 +4356,6 @@ async function main() {
     "avgTxPerChainBlock",
   ]);
 
-  writeCsv(path.join(SIMU2_DIR, "simulation_results_by_epsilon.csv"), summaryRows, [
-    "epsilon",
-    "DPKI_sim",
-    "PKI_sim",
-    "PKI_sim_raw",
-    "pkiAuthCount",
-    "pkiOcspCount",
-  ]);
-  writeCsv(path.join(SIMU2_DIR, "simulation_results_by_epsilon_detailed.csv"), summaryDetailRows, [
-    "epsilon",
-    "model",
-    "E_T",
-    "completed",
-    "onChainCount",
-    "offChainCount",
-    "crossDomainCount",
-    "managementCount",
-    "actualOnChainRatio",
-    "actualOffChainRatio",
-    "actualCrossDomainRatio",
-    "actualManagementRatio",
-    "arrivalSpanSec",
-    "targetLambdaOffchain",
-    "targetLambdaOnchain",
-    "observedLambdaOffchain",
-    "observedLambdaOnchain",
-    "avgLatencyMs",
-    "avgLatencyRawMs",
-    "avgQueueMs",
-    "avgServiceMs",
-    "avgServiceRawMs",
-    "avgOffchainProofMs",
-    "avgPkiChainVerifyMs",
-    "PKI_sim_raw",
-    "pkiAuthCount",
-    "pkiOcspCount",
-    "chainTxCount",
-    "chainBlockCount",
-    "avgTxPerChainBlock",
-    "maxTxPerChainBlock",
-    "gasUsed",
-  ]);
-  writeCsv(path.join(SIMU2_DIR, "lambda_summary_by_epsilon.csv"), lambdaSummaryRows, [
-    "epsilon",
-    "targetLambdaOffchain",
-    "observedLambdaOffchain",
-    "targetLambdaOnchain",
-    "observedLambdaOnchain",
-    "actualOnChainRatio",
-    "actualCrossDomainRatio",
-    "arrivalSpanSec",
-    "completed",
-    "onChainCount",
-    "offChainCount",
-    "crossDomainCount",
-    "chainBlockCount",
-    "avgTxPerChainBlock",
-  ]);
-
   fs.writeFileSync(
     path.join(OUT_DIR, "deployment.json"),
     JSON.stringify(
@@ -4413,7 +4432,9 @@ process.once("SIGTERM", () => {
   process.exit(143);
 });
 
-main().catch((error) => {
+module.exports = { makeHasher, buildMpt, mptProof, verifyMpt, runDpkiMerkleAuthExecution };
+
+if (require.main === module) main().catch((error) => {
   cleanupOpenSslOcspResponders();
   cleanupPkiServiceResponders();
   cleanupDpkiProofResponders();

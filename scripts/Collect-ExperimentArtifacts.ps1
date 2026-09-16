@@ -15,6 +15,7 @@ $RunLogDest = Join-Path $SessionPath "prototype_run_logs"
 New-Item -ItemType Directory -Force -Path $ChainLogDest, $RunLogDest | Out-Null
 
 $ThreeChainRuntime = Join-Path $Root "blockchain\sidechain-three-chain\runtime"
+if ($env:DPKI_CHAIN_RUNTIME) { $ThreeChainRuntime = $env:DPKI_CHAIN_RUNTIME }
 if (Test-Path -LiteralPath $ThreeChainRuntime) {
     foreach ($Name in @("configs", "logs", "chains.json")) {
         $Source = Join-Path $ThreeChainRuntime $Name
