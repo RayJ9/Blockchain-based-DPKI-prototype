@@ -4191,6 +4191,11 @@ async function main() {
     }
 
     for (const row of pki ? [...dpki.rows, ...pki.rows] : dpki.rows) {
+      for (const field of ["latencyMs", "queueMs", "serviceMs"]) {
+        if (!Number.isFinite(row[field]) || row[field] < 0) {
+          throw new Error(`Invalid measured ${field} for request ${row.requestId}`);
+        }
+      }
       requestRows.push({
         epsilon,
         model: row.requestId && String(row.requestId).includes("pki") ? "PKI" : row.onChain || row.kind === "intra-off-chain" ? "DPKI" : "PKI",
@@ -4202,8 +4207,8 @@ async function main() {
         arrivalWallMs: row.arrivalWallMs,
         finishWallMs: row.finishWallMs,
         latencyMs: row.latencyMs,
-        queueMs: row.queueMs || 0,
-        serviceMs: row.serviceMs || 0,
+        queueMs: row.queueMs,
+        serviceMs: row.serviceMs,
         workerId: row.workerId,
         chainReads: row.chainReads || 0,
         verifiedCertificateSteps: row.verifiedCertificateSteps || 0,
@@ -4232,15 +4237,15 @@ async function main() {
     ? {
         startBlockNumber: chainObservationStart.blockNumber,
         endBlockNumber: chainObservationEnd.blockNumber,
-        observedBlocks: Math.max(0, chainObservationEnd.blockNumber - chainObservationStart.blockNumber),
+        observedBlocks: chainObservationEnd.blockNumber - chainObservationStart.blockNumber,
         startWallMs: chainObservationStart.wallMs,
         endWallMs: chainObservationEnd.wallMs,
-        durationSec: Math.max(0, (chainObservationEnd.monotonicMs - chainObservationStart.monotonicMs) / 1000),
+        durationSec: (chainObservationEnd.monotonicMs - chainObservationStart.monotonicMs) / 1000,
         lambdaBlockByHeightPerSec:
           chainObservationEnd.monotonicMs > chainObservationStart.monotonicMs
-            ? Math.max(0, chainObservationEnd.blockNumber - chainObservationStart.blockNumber) /
+            ? (chainObservationEnd.blockNumber - chainObservationStart.blockNumber) /
               ((chainObservationEnd.monotonicMs - chainObservationStart.monotonicMs) / 1000)
-            : 0,
+            : null,
         powRuntimeConfig: powStatus ? powStatus.runtimeConfig : null,
       }
     : null;
