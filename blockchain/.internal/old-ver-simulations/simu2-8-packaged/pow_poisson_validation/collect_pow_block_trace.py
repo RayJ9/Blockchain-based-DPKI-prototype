@@ -97,7 +97,7 @@ def collect(args: argparse.Namespace) -> None:
             time.sleep(max(0.001, args.poll_ms / 1000.0))
             continue
 
-        elapsed = ((rpc_start + rpc_end) / 2.0) - start_perf
+        elapsed = rpc_end - start_perf
         poll_latency_ms = (rpc_end - rpc_start) * 1000.0
         if height > last_height:
             delta = height - last_height
@@ -112,23 +112,14 @@ def collect(args: argparse.Namespace) -> None:
                 }
             )
 
-            span = max(elapsed - last_height_elapsed, 0.0)
-            for offset in range(1, delta + 1):
-                interpolated = delta > 1
-                event_elapsed = (
-                    last_height_elapsed + span * offset / delta if interpolated else elapsed
-                )
-                block_number = last_height + offset
-                event_rows.append(
-                    {
-                        "eventIndex": len(event_rows) + 1,
-                        "blockNumber": block_number,
-                        "timestampMs": int((start_wall + event_elapsed) * 1000),
-                        "elapsedSec": f"{event_elapsed:.9f}",
-                        "interpolated": str(interpolated).lower(),
-                        "sourceDelta": delta,
-                    }
-                )
+            event_rows.append({
+                "eventIndex": len(event_rows) + 1,
+                "blockNumber": height,
+                "timestampMs": int((start_wall + elapsed) * 1000),
+                "elapsedSec": f"{elapsed:.9f}",
+                "interpolated": "false",
+                "sourceDelta": delta,
+            })
 
             last_height = height
             last_height_elapsed = elapsed
@@ -141,7 +132,7 @@ def collect(args: argparse.Namespace) -> None:
     end_height = get_block_number(args.rpc, args.rpc_timeout_sec)
     duration_sec = end_perf - start_perf
     observed_blocks = max(0, end_height - start_height)
-    interpolated_blocks = sum(1 for row in event_rows if row["interpolated"] == "true")
+    missing_timestamps = sum(int(row["sourceDelta"]) - 1 for row in event_rows)
 
     write_csv(
         out_dir / "block_trace.csv",
@@ -181,10 +172,7 @@ def collect(args: argparse.Namespace) -> None:
         "observedBlocksByHeight": observed_blocks,
         "observedEventsRecorded": len(event_rows),
         "heightChangeObservations": len(trace_rows),
-        "interpolatedBlocks": interpolated_blocks,
-        "interpolatedBlockFraction": (
-            interpolated_blocks / len(event_rows) if event_rows else 0.0
-        ),
+        "unobservedBlockTimestamps": missing_timestamps,
         "pollCount": poll_count,
         "rpcErrors": rpc_errors,
         "lambdaByHeightPerSec": observed_blocks / duration_sec if duration_sec > 0 else None,
@@ -197,12 +185,8 @@ def collect(args: argparse.Namespace) -> None:
         f"Done. Recorded {len(event_rows)} block events over {duration_sec:.3f} s "
         f"(height delta={observed_blocks}, lambda={manifest['lambdaByHeightPerSec']:.4f}/s)."
     )
-    if interpolated_blocks:
-        print(
-            "Warning: some blocks were reconstructed from height jumps. "
-            f"Interpolated fraction={manifest['interpolatedBlockFraction']:.4f}. "
-            "Use a larger MeanBlockMs or smaller poll-ms if this is high."
-        )
+    if missing_timestamps:
+        print(f"{missing_timestamps} block timestamps were not observed; no timestamps were interpolated.")
     print(f"Output: {out_dir}")
 
 

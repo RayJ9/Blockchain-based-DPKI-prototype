@@ -131,30 +131,28 @@ for ii = 1:size(positions, 1)
     ax.FontSize = 6.4;
 
     if ii <= 2
-        tsTarget = tsSliceTargets(ii);
+        [~, tsIndex] = min(abs(tsValues - tsSliceTargets(ii)));
+        tsTarget = tsValues(tsIndex);
         xValues = pfValues;
-        yUpper = interp1(tsValues(:), Upper, tsTarget, 'linear');
-        yLower = interp1(tsValues(:), Lower, tsTarget, 'linear');
-        yCenter = interp1(tsValues(:), Center, tsTarget, 'linear');
-        yPki = interp1(tsValues(:), PKI, tsTarget, 'linear');
+        yUpper = Upper(tsIndex, :);
+        yLower = Lower(tsIndex, :);
+        yCenter = Center(tsIndex, :);
+        yPki = PKI(tsIndex, :);
         xlim(ax, [min(pfValues), max(pfValues)]);
         xlabel(ax, '$p_f$', 'Interpreter', 'latex');
         titleText = sprintf('$t_s=%.2f$', tsTarget);
     else
-        pfTarget = pfSliceTargets(ii - 2);
+        [~, pfIndex] = min(abs(pfValues - pfSliceTargets(ii - 2)));
+        pfTarget = pfValues(pfIndex);
         xValues = tsValues;
-        yUpper = interp1(pfValues(:), Upper', pfTarget, 'linear');
-        yLower = interp1(pfValues(:), Lower', pfTarget, 'linear');
-        yCenter = interp1(pfValues(:), Center', pfTarget, 'linear');
-        yPki = interp1(pfValues(:), PKI', pfTarget, 'linear');
+        yUpper = Upper(:, pfIndex).';
+        yLower = Lower(:, pfIndex).';
+        yCenter = Center(:, pfIndex).';
+        yPki = PKI(:, pfIndex).';
         xlim(ax, [min(tsValues), max(tsValues)]);
         xlabel(ax, '$t_s$', 'Interpreter', 'latex');
         titleText = sprintf('$p_f=%.1f$', pfTarget);
     end
-    yUpper = smoothAvailabilityCurve(yUpper);
-    yLower = smoothAvailabilityCurve(yLower);
-    yCenter = smoothAvailabilityCurve(yCenter);
-    yPki = smoothAvailabilityCurve(yPki);
     plot(ax, xValues, yUpper, '-', ...
         'Color', colors.upper, 'LineWidth', 1.10);
     plot(ax, xValues, yLower, '-', ...
@@ -175,19 +173,6 @@ for ii = 1:size(positions, 1)
 end
 end
 
-function y = smoothAvailabilityCurve(y)
-raw = y(:).';
-if numel(raw) >= 9
-    y = smoothdata(raw, 'movmean', 5);
-elseif numel(raw) >= 5
-    y = smoothdata(raw, 'movmean', 3);
-else
-    y = raw;
-end
-y = min(max(y, 0), 1);
-y(1) = raw(1);
-y(end) = raw(end);
-end
 
 function addCaption(figHandle, axesHandles, caption, fontSize, yOffset, minY)
 positions = collectPositions(axesHandles);

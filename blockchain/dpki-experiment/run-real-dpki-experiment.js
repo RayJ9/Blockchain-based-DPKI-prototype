@@ -16,9 +16,6 @@ const ROOT = path.resolve(__dirname, "..", "..");
 const EXPERIMENT_DIR = __dirname;
 const OUT_DIR = path.join(EXPERIMENT_DIR, "outputs");
 const CONTRACT_PATH = path.join(EXPERIMENT_DIR, "contracts", "DPKIExperiment.sol");
-const SIMU2_DIR = process.env.DPKI_COMPAT_OUTPUT_DIR
-  ? path.resolve(process.env.DPKI_COMPAT_OUTPUT_DIR)
-  : path.join(ROOT, "blockchain", ".internal", "old-ver-simulations", "simu2_tail_prob");
 const OPENSSL_RUNTIME_ROOT = path.join(os.tmpdir(), "chain33-dpki-http-runtime");
 const VERBOSE_TRACE = /^(1|true|yes|on)$/i.test(process.env.DPKI_VERBOSE_TRACE || "");
 
@@ -57,100 +54,19 @@ const DEFAULTS = {
   rawTxSubmitTimeoutMs: 250,
   rawTxSubmitRetries: 4,
   rawTxReceiptTimeoutMs: 15000,
-  serviceShapeMode: "target-exponential",
-  dpkiAuthShapeMeanMs: 0,
-  dpkiCrossShapeMeanMs: 0,
-  dpkiOnchainShapeMeanMs: 0,
-  dpkiIntraOffchainShapeMeanMs: 0,
-  dpkiOffchainShapeMeanMs: 0,
-  dpkiManagementShapeMeanMs: 0,
-  pkiAuthShapeMeanMs: 0,
-  pkiCrossShapeMeanMs: 0,
-  pkiIntraShapeMeanMs: 0,
-  pkiManagementShapeMeanMs: 0,
   ocspBasePort: 19080,
   dpkiProofBasePort: 20080,
   pkiServiceBasePort: 21080,
-  httpShapeSegments: 1,
-  httpShapeTailProbability: 0.2,
-  httpShapeTailMultiplier: 4.0,
-  dpkiProofHttpMeanMs: 7.5,
-  dpkiProofHttpHops: 1,
-  dpkiProofHttpSegments: 1,
-  dpkiProofHttpTailProbability: 0.05,
-  dpkiProofHttpTailMultiplier: 15.0,
-  dpkiAuthTransferHttpMeanMs: 12,
-  dpkiAuthTransferHttpHops: 1,
-  dpkiAuthTransferHttpSegments: 1,
-  dpkiAuthTransferHttpTailProbability: 0.22,
-  dpkiAuthTransferHttpTailMultiplier: 6.0,
-  dpkiOnchainExtraHttpMeanMs: 0,
-  dpkiOnchainExtraHttpHops: 1,
-  dpkiOnchainExtraHttpSegments: 1,
-  dpkiOnchainExtraHttpTailProbability: 0.0,
-  dpkiOnchainExtraHttpTailMultiplier: 1.0,
-  dpkiCrossExtraHttpMeanMs: 0,
-  dpkiCrossExtraHttpHops: 1,
-  dpkiCrossExtraHttpSegments: 1,
-  dpkiCrossExtraHttpTailProbability: 0.0,
-  dpkiCrossExtraHttpTailMultiplier: 1.0,
-  dpkiManagementHttpMeanMs: 6,
-  dpkiManagementHttpHops: 1,
-  dpkiManagementHttpSegments: 1,
-  dpkiManagementHttpTailProbability: 0.15,
-  dpkiManagementHttpTailMultiplier: 3.0,
-  dpkiManagementTransferHttpMeanMs: 10,
-  dpkiManagementTransferHttpHops: 1,
-  dpkiManagementTransferHttpSegments: 1,
-  dpkiManagementTransferHttpTailProbability: 0.22,
-  dpkiManagementTransferHttpTailMultiplier: 5.0,
-  dpkiManagementExtraHttpMeanMs: 0,
-  dpkiManagementExtraHttpHops: 1,
-  dpkiManagementExtraHttpSegments: 1,
-  dpkiManagementExtraHttpTailProbability: 0.0,
-  dpkiManagementExtraHttpTailMultiplier: 1.0,
-  pkiAuthHttpMeanMs: 5,
-  pkiAuthHttpHops: 1,
-  pkiAuthHttpSegments: 1,
-  pkiAuthHttpTailProbability: 0.15,
-  pkiAuthHttpTailMultiplier: 3.0,
-  pkiAuthTransferHttpMeanMs: 0,
-  pkiAuthTransferHttpHops: 1,
-  pkiAuthTransferHttpSegments: 1,
-  pkiAuthTransferHttpTailProbability: 0.2,
-  pkiAuthTransferHttpTailMultiplier: 4.0,
-  pkiCrossExtraHttpMeanMs: 0,
-  pkiCrossExtraHttpHops: 1,
-  pkiCrossExtraHttpSegments: 1,
-  pkiCrossExtraHttpTailProbability: 0.0,
-  pkiCrossExtraHttpTailMultiplier: 1.0,
-  pkiManagementHttpMeanMs: 6,
-  pkiManagementHttpHops: 1,
-  pkiManagementHttpSegments: 1,
-  pkiManagementHttpTailProbability: 0.15,
-  pkiManagementHttpTailMultiplier: 3.0,
-  pkiManagementTransferHttpMeanMs: 8,
-  pkiManagementTransferHttpHops: 1,
-  pkiManagementTransferHttpSegments: 1,
-  pkiManagementTransferHttpTailProbability: 0.2,
-  pkiManagementTransferHttpTailMultiplier: 4.0,
-  pkiManagementExtraHttpMeanMs: 0,
-  pkiManagementExtraHttpHops: 1,
-  pkiManagementExtraHttpSegments: 1,
-  pkiManagementExtraHttpTailProbability: 0.0,
-  pkiManagementExtraHttpTailMultiplier: 1.0,
   resetPerEpsilon: false,
   skipPki: false,
   arrivalMode: "wall",
   kindPlanMode: "fixed",
   dpkiRootReadMode: "chain",
   dpkiProofReadMode: "http",
-  actualExecutionMode: "serial",
+  actualExecutionMode: "parallel",
   seed: 3302,
 };
 
-const PKI_AUTH_NETWORK_SETUP_MS = 1.48386291;
-const PKI_OCSP_NETWORK_RTT_MS = 1.40121465;
 const PKI_CROSS_DOMAIN_CHAIN_STEPS = 3;
 const MANAGEMENT_DOMAIN = "management";
 const MANAGEMENT_POOL_SIZE = 8;
@@ -203,88 +119,9 @@ function parseArgs() {
       args.estimateGas = false;
       continue;
     }
-    else if (arg === "--service-shape-mode" && next) args.serviceShapeMode = next;
-    else if (arg === "--dpki-auth-shape-mean-ms" && next) args.dpkiAuthShapeMeanMs = Number(next);
-    else if (arg === "--dpki-cross-shape-mean-ms" && next) args.dpkiCrossShapeMeanMs = Number(next);
-    else if (arg === "--dpki-onchain-shape-mean-ms" && next) args.dpkiOnchainShapeMeanMs = Number(next);
-    else if (arg === "--dpki-intra-offchain-shape-mean-ms" && next) args.dpkiIntraOffchainShapeMeanMs = Number(next);
-    else if (arg === "--dpki-offchain-shape-mean-ms" && next) args.dpkiOffchainShapeMeanMs = Number(next);
-    else if (arg === "--dpki-management-shape-mean-ms" && next) args.dpkiManagementShapeMeanMs = Number(next);
-    else if (arg === "--pki-auth-shape-mean-ms" && next) args.pkiAuthShapeMeanMs = Number(next);
-    else if (arg === "--pki-cross-shape-mean-ms" && next) args.pkiCrossShapeMeanMs = Number(next);
-    else if (arg === "--pki-intra-shape-mean-ms" && next) args.pkiIntraShapeMeanMs = Number(next);
-    else if (arg === "--pki-management-shape-mean-ms" && next) args.pkiManagementShapeMeanMs = Number(next);
     else if (arg === "--ocsp-base-port" && next) args.ocspBasePort = Number(next);
     else if (arg === "--dpki-proof-base-port" && next) args.dpkiProofBasePort = Number(next);
     else if (arg === "--pki-service-base-port" && next) args.pkiServiceBasePort = Number(next);
-    else if (arg === "--http-shape-segments" && next) args.httpShapeSegments = Number(next);
-    else if (arg === "--http-shape-tail-probability" && next) args.httpShapeTailProbability = Number(next);
-    else if (arg === "--http-shape-tail-multiplier" && next) args.httpShapeTailMultiplier = Number(next);
-    else if (arg === "--dpki-proof-http-mean-ms" && next) args.dpkiProofHttpMeanMs = Number(next);
-    else if (arg === "--dpki-proof-http-hops" && next) args.dpkiProofHttpHops = Number(next);
-    else if (arg === "--dpki-proof-http-segments" && next) args.dpkiProofHttpSegments = Number(next);
-    else if (arg === "--dpki-proof-http-tail-probability" && next) args.dpkiProofHttpTailProbability = Number(next);
-    else if (arg === "--dpki-proof-http-tail-multiplier" && next) args.dpkiProofHttpTailMultiplier = Number(next);
-    else if (arg === "--dpki-auth-transfer-http-mean-ms" && next) args.dpkiAuthTransferHttpMeanMs = Number(next);
-    else if (arg === "--dpki-auth-transfer-http-hops" && next) args.dpkiAuthTransferHttpHops = Number(next);
-    else if (arg === "--dpki-auth-transfer-http-segments" && next) args.dpkiAuthTransferHttpSegments = Number(next);
-    else if (arg === "--dpki-auth-transfer-http-tail-probability" && next) args.dpkiAuthTransferHttpTailProbability = Number(next);
-    else if (arg === "--dpki-auth-transfer-http-tail-multiplier" && next) args.dpkiAuthTransferHttpTailMultiplier = Number(next);
-    else if (arg === "--dpki-onchain-extra-http-mean-ms" && next) args.dpkiOnchainExtraHttpMeanMs = Number(next);
-    else if (arg === "--dpki-onchain-extra-http-hops" && next) args.dpkiOnchainExtraHttpHops = Number(next);
-    else if (arg === "--dpki-onchain-extra-http-segments" && next) args.dpkiOnchainExtraHttpSegments = Number(next);
-    else if (arg === "--dpki-onchain-extra-http-tail-probability" && next) args.dpkiOnchainExtraHttpTailProbability = Number(next);
-    else if (arg === "--dpki-onchain-extra-http-tail-multiplier" && next) args.dpkiOnchainExtraHttpTailMultiplier = Number(next);
-    else if (arg === "--dpki-cross-extra-http-mean-ms" && next) args.dpkiCrossExtraHttpMeanMs = Number(next);
-    else if (arg === "--dpki-cross-extra-http-hops" && next) args.dpkiCrossExtraHttpHops = Number(next);
-    else if (arg === "--dpki-cross-extra-http-segments" && next) args.dpkiCrossExtraHttpSegments = Number(next);
-    else if (arg === "--dpki-cross-extra-http-tail-probability" && next) args.dpkiCrossExtraHttpTailProbability = Number(next);
-    else if (arg === "--dpki-cross-extra-http-tail-multiplier" && next) args.dpkiCrossExtraHttpTailMultiplier = Number(next);
-    else if (arg === "--dpki-management-http-mean-ms" && next) args.dpkiManagementHttpMeanMs = Number(next);
-    else if (arg === "--dpki-management-http-hops" && next) args.dpkiManagementHttpHops = Number(next);
-    else if (arg === "--dpki-management-http-segments" && next) args.dpkiManagementHttpSegments = Number(next);
-    else if (arg === "--dpki-management-http-tail-probability" && next) args.dpkiManagementHttpTailProbability = Number(next);
-    else if (arg === "--dpki-management-http-tail-multiplier" && next) args.dpkiManagementHttpTailMultiplier = Number(next);
-    else if (arg === "--dpki-management-transfer-http-mean-ms" && next) args.dpkiManagementTransferHttpMeanMs = Number(next);
-    else if (arg === "--dpki-management-transfer-http-hops" && next) args.dpkiManagementTransferHttpHops = Number(next);
-    else if (arg === "--dpki-management-transfer-http-segments" && next) args.dpkiManagementTransferHttpSegments = Number(next);
-    else if (arg === "--dpki-management-transfer-http-tail-probability" && next) args.dpkiManagementTransferHttpTailProbability = Number(next);
-    else if (arg === "--dpki-management-transfer-http-tail-multiplier" && next) args.dpkiManagementTransferHttpTailMultiplier = Number(next);
-    else if (arg === "--dpki-management-extra-http-mean-ms" && next) args.dpkiManagementExtraHttpMeanMs = Number(next);
-    else if (arg === "--dpki-management-extra-http-hops" && next) args.dpkiManagementExtraHttpHops = Number(next);
-    else if (arg === "--dpki-management-extra-http-segments" && next) args.dpkiManagementExtraHttpSegments = Number(next);
-    else if (arg === "--dpki-management-extra-http-tail-probability" && next) args.dpkiManagementExtraHttpTailProbability = Number(next);
-    else if (arg === "--dpki-management-extra-http-tail-multiplier" && next) args.dpkiManagementExtraHttpTailMultiplier = Number(next);
-    else if (arg === "--pki-auth-http-mean-ms" && next) args.pkiAuthHttpMeanMs = Number(next);
-    else if (arg === "--pki-auth-http-hops" && next) args.pkiAuthHttpHops = Number(next);
-    else if (arg === "--pki-auth-http-segments" && next) args.pkiAuthHttpSegments = Number(next);
-    else if (arg === "--pki-auth-http-tail-probability" && next) args.pkiAuthHttpTailProbability = Number(next);
-    else if (arg === "--pki-auth-http-tail-multiplier" && next) args.pkiAuthHttpTailMultiplier = Number(next);
-    else if (arg === "--pki-auth-transfer-http-mean-ms" && next) args.pkiAuthTransferHttpMeanMs = Number(next);
-    else if (arg === "--pki-auth-transfer-http-hops" && next) args.pkiAuthTransferHttpHops = Number(next);
-    else if (arg === "--pki-auth-transfer-http-segments" && next) args.pkiAuthTransferHttpSegments = Number(next);
-    else if (arg === "--pki-auth-transfer-http-tail-probability" && next) args.pkiAuthTransferHttpTailProbability = Number(next);
-    else if (arg === "--pki-auth-transfer-http-tail-multiplier" && next) args.pkiAuthTransferHttpTailMultiplier = Number(next);
-    else if (arg === "--pki-cross-extra-http-mean-ms" && next) args.pkiCrossExtraHttpMeanMs = Number(next);
-    else if (arg === "--pki-cross-extra-http-hops" && next) args.pkiCrossExtraHttpHops = Number(next);
-    else if (arg === "--pki-cross-extra-http-segments" && next) args.pkiCrossExtraHttpSegments = Number(next);
-    else if (arg === "--pki-cross-extra-http-tail-probability" && next) args.pkiCrossExtraHttpTailProbability = Number(next);
-    else if (arg === "--pki-cross-extra-http-tail-multiplier" && next) args.pkiCrossExtraHttpTailMultiplier = Number(next);
-    else if (arg === "--pki-management-http-mean-ms" && next) args.pkiManagementHttpMeanMs = Number(next);
-    else if (arg === "--pki-management-http-hops" && next) args.pkiManagementHttpHops = Number(next);
-    else if (arg === "--pki-management-http-segments" && next) args.pkiManagementHttpSegments = Number(next);
-    else if (arg === "--pki-management-http-tail-probability" && next) args.pkiManagementHttpTailProbability = Number(next);
-    else if (arg === "--pki-management-http-tail-multiplier" && next) args.pkiManagementHttpTailMultiplier = Number(next);
-    else if (arg === "--pki-management-transfer-http-mean-ms" && next) args.pkiManagementTransferHttpMeanMs = Number(next);
-    else if (arg === "--pki-management-transfer-http-hops" && next) args.pkiManagementTransferHttpHops = Number(next);
-    else if (arg === "--pki-management-transfer-http-segments" && next) args.pkiManagementTransferHttpSegments = Number(next);
-    else if (arg === "--pki-management-transfer-http-tail-probability" && next) args.pkiManagementTransferHttpTailProbability = Number(next);
-    else if (arg === "--pki-management-transfer-http-tail-multiplier" && next) args.pkiManagementTransferHttpTailMultiplier = Number(next);
-    else if (arg === "--pki-management-extra-http-mean-ms" && next) args.pkiManagementExtraHttpMeanMs = Number(next);
-    else if (arg === "--pki-management-extra-http-hops" && next) args.pkiManagementExtraHttpHops = Number(next);
-    else if (arg === "--pki-management-extra-http-segments" && next) args.pkiManagementExtraHttpSegments = Number(next);
-    else if (arg === "--pki-management-extra-http-tail-probability" && next) args.pkiManagementExtraHttpTailProbability = Number(next);
-    else if (arg === "--pki-management-extra-http-tail-multiplier" && next) args.pkiManagementExtraHttpTailMultiplier = Number(next);
     else if (arg === "--arrival-mode" && next) args.arrivalMode = next;
     else if (arg === "--kind-plan-mode" && next) args.kindPlanMode = next;
     else if (arg === "--dpki-root-read-mode" && next) args.dpkiRootReadMode = next;
@@ -299,9 +136,10 @@ function parseArgs() {
       continue;
     }
     else if (arg === "--seed" && next) args.seed = Number(next);
-    else continue;
+    else throw new Error(`Unknown option: ${arg}`);
     i += 1;
   }
+  if (args.arrivalMode !== "wall") throw new Error("Only wall-clock arrivals are supported");
   args.epsilonValues = args.epsilonPoints.split(",").map((value) => Number(value.trim()));
   return args;
 }
@@ -329,17 +167,6 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, Math.max(0, ms)));
 }
 
-async function sleepPrecise(ms) {
-  const totalMs = Math.max(0, Number(ms) || 0);
-  if (!totalMs) return;
-  const target = performance.now() + totalMs;
-  if (totalMs > 6) {
-    await sleep(Math.max(0, totalMs - 3));
-  }
-  while (performance.now() < target) {
-    // Busy-wait only for the final few milliseconds to avoid coarse timer quantization.
-  }
-}
 
 function requestJsonRpc(method, params = [], timeoutMs = 1000) {
   const endpoint = new URL(ACTIVE_ARGS.rpc);
@@ -481,259 +308,30 @@ function hashSeed(text) {
   return value >>> 0;
 }
 
-function deterministicExpMs(params, request, label, meanMs) {
-  const seed =
-    (Number(params.seed) >>> 0) ^
-    hashSeed(`${label}:${request.epsilonLabel}:${request.index}:${request.requestId || ""}`);
-  const rand = mulberry32(seed);
-  return expSample(rand, 1 / meanMs);
-}
 
-function deterministicHttpDelayMs(shapeKey, meanMs, options = {}) {
-  const safeMeanMs = positiveOrZero(meanMs);
-  if (!safeMeanMs) return 0;
-  const safeSegments = Math.max(1, Math.floor(Number(options.segments) || 1));
-  const seed = Number(options.seed) >>> 0;
-  const tailProbability = Math.min(0.95, Math.max(0, Number(options.tailProbability) || 0));
-  const maxTailMultiplier = tailProbability > 0 ? (0.999 / tailProbability) : Infinity;
-  const tailMultiplier = Math.max(1, Math.min(maxTailMultiplier, Number(options.tailMultiplier) || 1));
-  const useTail = tailProbability > 0 && tailMultiplier > 1;
-  const rand = mulberry32(((Number(seed) >>> 0) ^ hashSeed(String(shapeKey))) >>> 0);
-  let total = 0;
-  const meanPerSegmentMs = safeMeanMs / safeSegments;
-  const shortMultiplier =
-    useTail ? Math.max(0.001, (1 - tailProbability * tailMultiplier) / (1 - tailProbability)) : 1;
-  for (let i = 0; i < safeSegments; i += 1) {
-    let segmentMeanMs = meanPerSegmentMs;
-    if (useTail) {
-      segmentMeanMs *= rand() < tailProbability ? tailMultiplier : shortMultiplier;
-    }
-    total += expSample(rand, 1 / segmentMeanMs);
-  }
-  return total;
-}
 
-function buildHttpShapeQuery(request, label, config = {}) {
-  const search = new URLSearchParams();
-  search.set("shapeKey", `${label}:${request.epsilonLabel}:${request.index}:${request.requestId || ""}`);
-  search.set("meanMs", String(positiveOrZero(config.meanMs)));
-  search.set("segments", String(Math.max(1, Math.floor(Number(config.segments) || 1))));
-  search.set("tailProbability", String(Math.min(0.95, Math.max(0, Number(config.tailProbability) || 0))));
-  search.set("tailMultiplier", String(Math.max(1, Number(config.tailMultiplier) || 1)));
-  return search.toString();
-}
 
-async function requestHttpWindowSeries(baseUrl, request, label, config = {}) {
-  const hops = Math.max(1, Math.floor(Number(config.hops) || 1));
-  const hopMeanMs = positiveOrZero(config.meanMs) / hops;
-  for (let hop = 0; hop < hops; hop += 1) {
-    const hopConfig = {
-      ...config,
-      meanMs: hopMeanMs,
-      hops: 1,
-    };
-    const shape = buildHttpShapeQuery(request, `${label}:hop${hop + 1}`, hopConfig);
-    await requestJson("GET", `${baseUrl}/shape/window?${shape}`);
-  }
-}
 
-function httpDelayConfigFromUrl(url, fallbackLabel = "http-window") {
-  const meanMs = positiveOrZero(url.searchParams.get("meanMs"));
-  const segments = Math.max(1, Math.floor(Number(url.searchParams.get("segments")) || 1));
-  const tailProbability = Math.min(0.95, Math.max(0, Number(url.searchParams.get("tailProbability")) || 0));
-  const tailMultiplier = Math.max(1, Number(url.searchParams.get("tailMultiplier")) || 1);
-  const shapeKey = url.searchParams.get("shapeKey") || `${fallbackLabel}:${Date.now()}`;
-  return {
-    meanMs,
-    segments,
-    tailProbability,
-    tailMultiplier,
-    shapeKey,
-  };
-}
 
-async function applyHttpDelayFromUrl(url, fallbackLabel) {
-  const config = httpDelayConfigFromUrl(url, fallbackLabel);
-  const delayMs = deterministicHttpDelayMs(config.shapeKey, config.meanMs, {
-    segments: config.segments,
-    tailProbability: config.tailProbability,
-    tailMultiplier: config.tailMultiplier,
-    seed: ACTIVE_ARGS.seed,
-  });
-  if (delayMs > 0) await sleepPrecise(delayMs);
-  return delayMs;
-}
 
-function httpShapeConfigFromParams(prefix, meanKey, params) {
-  const prefixKey = meanKey.replace(/MeanMs$/, "");
-  return {
-    label: prefix,
-    meanMs: positiveOrZero(params[meanKey]),
-    hops: Math.max(1, Math.floor(Number(params[`${prefixKey}Hops`]) || 1)),
-    segments: Math.max(1, Math.floor(Number(params[`${prefixKey}Segments`]) || Number(params.httpShapeSegments) || 1)),
-    tailProbability: Math.min(
-      0.95,
-      Math.max(0, Number(params[`${prefixKey}TailProbability`]) || Number(params.httpShapeTailProbability) || 0)
-    ),
-    tailMultiplier: Math.max(
-      1,
-      Number(params[`${prefixKey}TailMultiplier`]) || Number(params.httpShapeTailMultiplier) || 1
-    ),
-  };
-}
 
-function dpkiProofHttpShapeConfig(params, request) {
-  if (!request || request.kind === "management") return { label: "dpki-proof", meanMs: 0, hops: 1, segments: 1, tailProbability: 0, tailMultiplier: 1 };
-  return httpShapeConfigFromParams("dpki-proof", "dpkiProofHttpMeanMs", params);
-}
 
-function dpkiAuthTransferHttpShapeConfig(params, request) {
-  if (!request || request.kind === "management") {
-    return { label: "dpki-auth-transfer", meanMs: 0, hops: 1, segments: 1, tailProbability: 0, tailMultiplier: 1 };
-  }
-  return httpShapeConfigFromParams("dpki-auth-transfer", "dpkiAuthTransferHttpMeanMs", params);
-}
 
-function dpkiOnchainExtraHttpShapeConfig(params, request) {
-  if (!request || request.kind === "management" || !request.onChain || request.crossDomain) {
-    return { label: "dpki-onchain-extra", meanMs: 0, hops: 1, segments: 1, tailProbability: 0, tailMultiplier: 1 };
-  }
-  return httpShapeConfigFromParams("dpki-onchain-extra", "dpkiOnchainExtraHttpMeanMs", params);
-}
 
-function dpkiCrossExtraHttpShapeConfig(params, request) {
-  if (!request || request.kind === "management" || !request.crossDomain) {
-    return { label: "dpki-cross-extra", meanMs: 0, hops: 1, segments: 1, tailProbability: 0, tailMultiplier: 1 };
-  }
-  return httpShapeConfigFromParams("dpki-cross-extra", "dpkiCrossExtraHttpMeanMs", params);
-}
 
-function dpkiManagementHttpShapeConfig(params) {
-  return httpShapeConfigFromParams("dpki-management-verify", "dpkiManagementHttpMeanMs", params);
-}
 
-function dpkiManagementTransferHttpShapeConfig(params) {
-  return httpShapeConfigFromParams("dpki-management-transfer", "dpkiManagementTransferHttpMeanMs", params);
-}
 
-function dpkiManagementExtraHttpShapeConfig(params) {
-  return httpShapeConfigFromParams("dpki-management-extra", "dpkiManagementExtraHttpMeanMs", params);
-}
 
-function pkiAuthHttpShapeConfig(params, request) {
-  if (!request || request.kind === "management") return { label: "pki-auth", meanMs: 0, hops: 1, segments: 1, tailProbability: 0, tailMultiplier: 1 };
-  return httpShapeConfigFromParams("pki-auth", "pkiAuthHttpMeanMs", params);
-}
 
-function pkiAuthTransferHttpShapeConfig(params, request) {
-  if (!request || request.kind === "management") {
-    return { label: "pki-auth-transfer", meanMs: 0, hops: 1, segments: 1, tailProbability: 0, tailMultiplier: 1 };
-  }
-  return httpShapeConfigFromParams("pki-auth-transfer", "pkiAuthTransferHttpMeanMs", params);
-}
 
-function pkiCrossExtraHttpShapeConfig(params, request) {
-  if (!request || request.kind === "management" || !request.crossDomain) {
-    return { label: "pki-cross-extra", meanMs: 0, hops: 1, segments: 1, tailProbability: 0, tailMultiplier: 1 };
-  }
-  return httpShapeConfigFromParams("pki-cross-extra", "pkiCrossExtraHttpMeanMs", params);
-}
 
-function pkiManagementHttpShapeConfig(params) {
-  return httpShapeConfigFromParams("pki-management-verify", "pkiManagementHttpMeanMs", params);
-}
 
-function pkiManagementTransferHttpShapeConfig(params) {
-  return httpShapeConfigFromParams("pki-management-transfer", "pkiManagementTransferHttpMeanMs", params);
-}
 
-function pkiManagementExtraHttpShapeConfig(params) {
-  return httpShapeConfigFromParams("pki-management-extra", "pkiManagementExtraHttpMeanMs", params);
-}
 
-function positiveOrZero(value) {
-  const number = Number(value);
-  return Number.isFinite(number) && number > 0 ? number : 0;
-}
 
-function modelAuthMeanMs(params) {
-  const mu = Number(params.muAuth);
-  const scaleMs = Number(params.timeScaleMs) || 1000;
-  return mu > 0 ? scaleMs / mu : 0;
-}
 
-function modelManagementMeanMs(params) {
-  const authMeanMs = modelAuthMeanMs(params);
-  const q = Number(params.qManage);
-  return authMeanMs > 0 && q > 0 ? authMeanMs / q : 0;
-}
 
-function requestServiceShapeMeanMs(params, modelName, request) {
-  const mode = String(params.serviceShapeMode || "none").toLowerCase();
-  if (mode === "none" || mode === "off" || mode === "disabled" || mode === "false") return 0;
 
-  const authFallback = modelAuthMeanMs(params);
-  const managementFallback = modelManagementMeanMs(params);
-
-  if (modelName === "DPKI") {
-    if (request.kind === "management") {
-      return positiveOrZero(params.dpkiManagementShapeMeanMs) || managementFallback;
-    }
-    if (request.kind === "cross-domain") {
-      return (
-        positiveOrZero(params.dpkiCrossShapeMeanMs) ||
-        positiveOrZero(params.dpkiOnchainShapeMeanMs) ||
-        positiveOrZero(params.dpkiAuthShapeMeanMs) ||
-        authFallback
-      );
-    }
-    if (request.onChain) {
-      return (
-        positiveOrZero(params.dpkiOnchainShapeMeanMs) ||
-        positiveOrZero(params.dpkiAuthShapeMeanMs) ||
-        authFallback
-      );
-    }
-    return (
-      positiveOrZero(params.dpkiIntraOffchainShapeMeanMs) ||
-      positiveOrZero(params.dpkiOffchainShapeMeanMs) ||
-      positiveOrZero(params.dpkiAuthShapeMeanMs) ||
-      authFallback
-    );
-  }
-
-  if (modelName === "PKI") {
-    if (request.kind === "management") {
-      return positiveOrZero(params.pkiManagementShapeMeanMs) || managementFallback;
-    }
-    if (request.kind === "cross-domain") {
-      return positiveOrZero(params.pkiCrossShapeMeanMs) || positiveOrZero(params.pkiAuthShapeMeanMs) || authFallback;
-    }
-    if (request.kind === "intra-pki") {
-      return positiveOrZero(params.pkiIntraShapeMeanMs) || positiveOrZero(params.pkiAuthShapeMeanMs) || authFallback;
-    }
-    return positiveOrZero(params.pkiAuthShapeMeanMs) || authFallback;
-  }
-
-  return 0;
-}
-
-async function shapeElapsedServiceToTargetExponential(params, modelName, request, startMs, stageTimings) {
-  const meanMs = requestServiceShapeMeanMs(params, modelName, request);
-  if (!Number.isFinite(meanMs) || meanMs <= 0) return;
-  const stageName = `${modelName.toLowerCase()}${request.kind
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("")}TargetExponentialWait`;
-  const targetMs = deterministicExpMs(params, request, `${stageName}:target`, meanMs);
-  const elapsedMs = performance.now() - startMs;
-  const waitMs = Math.max(0, targetMs - elapsedMs);
-  if (waitMs > 0) {
-    await timeStage(stageTimings, stageName, () => sleepPrecise(waitMs));
-  } else {
-    addStage(stageTimings, stageName, 0);
-  }
-}
 
 function stableStringify(value) {
   if (Array.isArray(value)) {
@@ -799,37 +397,7 @@ function mergeStageTimings(target, source) {
   return target;
 }
 
-async function applyDeterministicHttpWindowStage(stageTimings, stageName, request, label, config = {}) {
-  const meanMs = positiveOrZero(config.meanMs);
-  if (!meanMs) {
-    addStage(stageTimings, stageName, 0);
-    return 0;
-  }
-  const segments = Math.max(
-    1,
-    Math.floor((Number(config.segments) || 1) * Math.max(1, Math.floor(Number(config.hops) || 1)))
-  );
-  const shapeKey = `${label}:${request.epsilonLabel}:${request.index}:${request.requestId || ""}`;
-  return timeStage(stageTimings, stageName, async () => {
-    const delayMs = deterministicHttpDelayMs(shapeKey, meanMs, {
-      segments,
-      tailProbability: Math.min(0.95, Math.max(0, Number(config.tailProbability) || 0)),
-      tailMultiplier: Math.max(1, Number(config.tailMultiplier) || 1),
-      seed: ACTIVE_ARGS.seed,
-    });
-    if (delayMs > 0) await sleepPrecise(delayMs);
-    return delayMs;
-  });
-}
 
-async function requestHttpWindowStage(stageTimings, stageName, baseUrl, request, label, config = {}) {
-  const meanMs = positiveOrZero(config.meanMs);
-  if (!baseUrl || !meanMs) {
-    addStage(stageTimings, stageName, 0);
-    return 0;
-  }
-  return timeStage(stageTimings, stageName, () => requestHttpWindowSeries(baseUrl, request, label, config));
-}
 
 function median(values) {
   if (!values.length) return 0;
@@ -2015,13 +1583,7 @@ async function startDpkiProofResponder(platform, hash, args) {
     (async () => {
       const url = new URL(req.url || "/", `http://127.0.0.1:${port}`);
       const parts = url.pathname.split("/").filter(Boolean).map((part) => decodeURIComponent(part));
-      if (req.method === "GET" && parts.length === 2 && parts[0] === "shape" && parts[1] === "window") {
-        const delayMs = await applyHttpDelayFromUrl(url, "dpki-http-window");
-        writeJsonResponse(res, 200, { ok: true, delayMs });
-        return;
-      }
       if (req.method === "GET" && parts.length === 4 && parts[0] === "dpki" && parts[1] === "proofs") {
-        await applyHttpDelayFromUrl(url, "dpki-proof");
         const payload = buildDpkiProofPayload(platform, hash, parts[2], parts[3]);
         writeJsonResponse(res, 200, payload);
         return;
@@ -2035,28 +1597,6 @@ async function startDpkiProofResponder(platform, hash, args) {
           dpkiProofReadMode: "local",
         };
         const stageNames = body.stageNames || {};
-        await applyDeterministicHttpWindowStage(
-          stageTimings,
-          "dpkiOnchainExtraHttpWindow",
-          request,
-          "dpki-onchain-extra",
-          dpkiOnchainExtraHttpShapeConfig(ACTIVE_ARGS, request)
-        );
-        await applyDeterministicHttpWindowStage(
-          stageTimings,
-          "dpkiCrossExtraHttpWindow",
-          request,
-          "dpki-cross-extra",
-          dpkiCrossExtraHttpShapeConfig(ACTIVE_ARGS, request)
-        );
-        const httpWindowStage = body.httpWindowStage || stageNames.httpWindow || "dpkiAuthHttpWindow";
-        await applyDeterministicHttpWindowStage(
-          stageTimings,
-          httpWindowStage,
-          request,
-          "dpki-auth",
-          dpkiProofHttpShapeConfig(ACTIVE_ARGS, request)
-        );
         if (!platform.runtimeWeb3 || !platform.runtimeContract) {
           throw new Error("DPKI auth executor is missing runtime web3/contract context");
         }
@@ -2093,20 +1633,6 @@ async function startDpkiProofResponder(platform, hash, args) {
         const body = await readJsonRequestBody(req);
         const request = body.request || {};
         const stageTimings = {};
-        await applyDeterministicHttpWindowStage(
-          stageTimings,
-          "dpkiManagementExtraHttpWindow",
-          request,
-          "dpki-management-extra",
-          dpkiManagementExtraHttpShapeConfig(ACTIVE_ARGS)
-        );
-        await applyDeterministicHttpWindowStage(
-          stageTimings,
-          "dpkiManagementHttpWindow",
-          request,
-          "dpki-management",
-          dpkiManagementHttpShapeConfig(ACTIVE_ARGS)
-        );
         if (!platform.runtimeWeb3 || !platform.runtimeContract || !platform.runtimeNonceManager) {
           throw new Error("DPKI management executor is missing runtime context");
         }
@@ -2120,7 +1646,6 @@ async function startDpkiProofResponder(platform, hash, args) {
           hash,
           request,
           stageTimings,
-          { includePostHttpWindow: false }
         );
         writeJsonResponse(res, 200, {
           ok: true,
@@ -2192,29 +1717,10 @@ async function startPkiServiceResponder(platform, args) {
     (async () => {
       const url = new URL(req.url || "/", `http://127.0.0.1:${port}`);
       const parts = url.pathname.split("/").filter(Boolean).map((part) => decodeURIComponent(part));
-      if (req.method === "GET" && parts.length === 2 && parts[0] === "shape" && parts[1] === "window") {
-        const delayMs = await applyHttpDelayFromUrl(url, "pki-http-window");
-        writeJsonResponse(res, 200, { ok: true, delayMs });
-        return;
-      }
       if (req.method === "POST" && parts.length === 2 && parts[0] === "pki" && parts[1] === "auth-execute") {
         const body = await readJsonRequestBody(req);
         const request = body.request || {};
         const stageTimings = {};
-        await applyDeterministicHttpWindowStage(
-          stageTimings,
-          "pkiCrossExtraHttpWindow",
-          request,
-          "pki-cross-extra",
-          pkiCrossExtraHttpShapeConfig(ACTIVE_ARGS, request)
-        );
-        await applyDeterministicHttpWindowStage(
-          stageTimings,
-          "pkiAuthHttpWindow",
-          request,
-          "pki-auth",
-          pkiAuthHttpShapeConfig(ACTIVE_ARGS, request)
-        );
         const result = await pkiAuthRequestCore(platform, request, ACTIVE_ARGS, stageTimings);
         writeJsonResponse(res, 200, {
           ok: true,
@@ -2227,21 +1733,7 @@ async function startPkiServiceResponder(platform, args) {
         const body = await readJsonRequestBody(req);
         const request = body.request || {};
         const stageTimings = {};
-        await applyDeterministicHttpWindowStage(
-          stageTimings,
-          "pkiManagementExtraHttpWindow",
-          request,
-          "pki-management-extra",
-          pkiManagementExtraHttpShapeConfig(ACTIVE_ARGS)
-        );
-        await applyDeterministicHttpWindowStage(
-          stageTimings,
-          "pkiManagementHttpWindow",
-          request,
-          "pki-management",
-          pkiManagementHttpShapeConfig(ACTIVE_ARGS)
-        );
-        const result = await pkiManagementRequestCore(platform, request, stageTimings, { includeHttpWindow: false });
+        const result = await pkiManagementRequestCore(platform, request, stageTimings);
         writeJsonResponse(res, 200, {
           ok: true,
           stageTimings: result.stageTimings,
@@ -2340,14 +1832,6 @@ async function putCertAndRootOnChain(web3, contract, account, privateKey, nonceM
 
 async function verifyDpkiManagementRepositoryUpdate(web3, contract, platform, hash, record, expectedRoot, request, stageTimings) {
   return timeStage(stageTimings, "dpkiManagementRepositoryHttpVerify", async () => {
-    if (platform.dpkiProofResponder && platform.dpkiProofResponder.baseUrl) {
-      await requestHttpWindowSeries(
-        platform.dpkiProofResponder.baseUrl,
-        request,
-        "dpki-management-verify",
-        dpkiManagementHttpShapeConfig(ACTIVE_ARGS)
-      );
-    }
     const records = platform.repos.get(MANAGEMENT_DOMAIN) || [];
     const stored = records.find((item) => item.subject === record.subject);
     if (!stored || stored.certHash !== record.certHash) {
@@ -2490,29 +1974,9 @@ async function proofForDpkiExecution(platform, hash, source, request, params, st
   if (!platform.dpkiProofResponder || !platform.dpkiProofResponder.baseUrl) {
     throw new Error("DPKI proof responder is not running; use --dpki-proof-read-mode local to disable HTTP proof reads");
   }
-  const proofConfig = dpkiProofHttpShapeConfig(params, request);
-  const response = await timeStage(stageTimings, stageNames.httpProof || "dpkiMptProofHttpQuery", async () => {
-    const hops = Math.max(1, Math.floor(Number(proofConfig.hops) || 1));
-    if (hops > 1) {
-      await requestHttpWindowSeries(
-        platform.dpkiProofResponder.baseUrl,
-        request,
-        stageNames.httpProof || "dpkiMptProofHttpQuery",
-        {
-          ...proofConfig,
-          meanMs: proofConfig.meanMs * ((hops - 1) / hops),
-          hops: hops - 1,
-        }
-      );
-    }
-    const shape = buildHttpShapeQuery(request, stageNames.httpProof || "dpkiMptProofHttpQuery", {
-      ...proofConfig,
-      meanMs: proofConfig.meanMs / hops,
-      hops: 1,
-    });
-    const url =
-      `${platform.dpkiProofResponder.baseUrl}/dpki/proofs/` +
-      `${encodeURIComponent(source.domain)}/${encodeURIComponent(source.key)}?${shape}`;
+  const response = await timeStage(stageTimings, stageNames.httpProof || "dpkiMptProofHttpQuery", () => {
+    const url = `${platform.dpkiProofResponder.baseUrl}/dpki/proofs/` +
+      `${encodeURIComponent(source.domain)}/${encodeURIComponent(source.key)}`;
     return requestJson("GET", url);
   });
   const ok = verifyDpkiProofPayload(platform, source, response, stageTimings, {
@@ -2637,18 +2101,9 @@ async function runDpkiMerkleAuthExecution(
 async function offchainAuth(web3, contract, platform, hash, request, params) {
   if (platform.dpkiProofResponder && platform.dpkiProofResponder.baseUrl) {
     const stageTimings = {};
-    await requestHttpWindowStage(
-      stageTimings,
-      "dpkiOffchainCertTransferHttp",
-      platform.dpkiProofResponder.baseUrl,
-      request,
-      "dpki-auth-transfer",
-      dpkiAuthTransferHttpShapeConfig(params, request)
-    );
     const response = await requestJson("POST", `${platform.dpkiProofResponder.baseUrl}/dpki/auth-execute`, {
       request,
       canRetry: true,
-      httpWindowStage: "dpkiOffchainHttpWindow",
     });
     return {
       stageTimings: mergeStageTimings(stageTimings, response.stageTimings || {}),
@@ -2996,34 +2451,9 @@ async function onchainAuth(web3, contract, account, privateKey, nonceManager, pl
   let chainReads = 1;
   let verifiedCertificateSteps = certificateChecks.length;
   if (platform.dpkiProofResponder && platform.dpkiProofResponder.baseUrl) {
-    await requestHttpWindowStage(
-      stageTimings,
-      "dpkiOnchainCertTransferHttp",
-      platform.dpkiProofResponder.baseUrl,
-      request,
-      "dpki-auth-transfer",
-      dpkiAuthTransferHttpShapeConfig(ACTIVE_ARGS, request)
-    );
-    await requestHttpWindowStage(
-      stageTimings,
-      "dpkiOnchainRelayHttp",
-      platform.dpkiProofResponder.baseUrl,
-      request,
-      "dpki-onchain-extra",
-      dpkiOnchainExtraHttpShapeConfig(ACTIVE_ARGS, request)
-    );
-    await requestHttpWindowStage(
-      stageTimings,
-      "dpkiCrossRelayHttp",
-      platform.dpkiProofResponder.baseUrl,
-      request,
-      "dpki-cross-extra",
-      dpkiCrossExtraHttpShapeConfig(ACTIVE_ARGS, request)
-    );
     const response = await requestJson("POST", `${platform.dpkiProofResponder.baseUrl}/dpki/auth-execute`, {
       request,
       canRetry: false,
-      httpWindowStage: "dpkiOnchainHttpWindow",
       stageNames: onchainStageNames,
     });
     mergeStageTimings(stageTimings, response.stageTimings || {});
@@ -3143,7 +2573,6 @@ async function managementRequestCore(
       tree.root,
       request,
       stageTimings,
-      { includeHttpWindow: options.includePostHttpWindow !== false }
     );
   } finally {
     finishManagementUpdate(platform);
@@ -3160,22 +2589,6 @@ async function managementRequest(web3, contract, account, privateKey, nonceManag
   return serializeManagementUpdate(platform, async () => {
     if (platform.dpkiProofResponder && platform.dpkiProofResponder.baseUrl) {
       const stageTimings = {};
-      await requestHttpWindowStage(
-        stageTimings,
-        "dpkiManagementDispatchHttp",
-        platform.dpkiProofResponder.baseUrl,
-        request,
-        "dpki-management-transfer",
-        dpkiManagementTransferHttpShapeConfig(ACTIVE_ARGS)
-      );
-      await requestHttpWindowStage(
-        stageTimings,
-        "dpkiManagementRelayHttp",
-        platform.dpkiProofResponder.baseUrl,
-        request,
-        "dpki-management-extra",
-        dpkiManagementExtraHttpShapeConfig(ACTIVE_ARGS)
-      );
       const response = await requestJson("POST", `${platform.dpkiProofResponder.baseUrl}/dpki/management-execute`, {
         request,
       });
@@ -3197,7 +2610,6 @@ async function managementRequest(web3, contract, account, privateKey, nonceManag
       hash,
       request,
       stageTimings,
-      { includePostHttpWindow: true }
     );
   });
 }
@@ -3354,132 +2766,6 @@ async function executeRequest(web3, contract, account, privateKey, nonceManager,
   }
 }
 
-async function runEpsilon(web3, contract, account, privateKey, nonceManager, platform, hash, epsilon, params) {
-  const rand = mulberry32(params.seed + Math.round(epsilon * 1000) * 97);
-  const scaleSec = params.timeScaleMs / 1000;
-  const lambdaTotal = params.lambdaArrival / scaleSec;
-  const lambdaBlock = params.lambdaBlock / scaleSec;
-  const mu = params.muAuth / scaleSec;
-  const qMu = params.qManage * mu;
-  const kindPlan = buildKindPlan(rand, epsilon, params);
-  const arrivals = [];
-  const mempool = [];
-  const completed = [];
-  const offchainServerAvailable = Array.from({ length: params.serviceCAs }, () => 0);
-  let executorAvailable = 0;
-  let nextBlock = Infinity;
-  let nextArrival = expSample(rand, lambdaTotal);
-  let arrivalIndex = 0;
-
-  function completeOffchain(request) {
-    const workerId = offchainServerAvailable.indexOf(Math.min(...offchainServerAvailable));
-    const startSec = Math.max(request.modelArrivalSec, offchainServerAvailable[workerId]);
-    const serviceSec = expSample(rand, mu);
-    const finishSec = startSec + serviceSec;
-    offchainServerAvailable[workerId] = finishSec;
-    completed.push({
-      ...request,
-      workerId,
-      stage: "offchain",
-      modelFinishSec: finishSec,
-      offchainQueueMs: (startSec - request.modelArrivalSec) * 1000,
-      offchainServiceDelayMs: serviceSec * 1000,
-      serviceMs: serviceSec * 1000,
-      latencyMs: (finishSec - request.modelArrivalSec) * 1000,
-    });
-  }
-
-  function formBlock(blockSec) {
-    const batch = mempool.splice(0, mempool.length);
-    nextBlock = Infinity;
-    if (!batch.length) return;
-
-    const executionStartSec = Math.max(blockSec, executorAvailable);
-    let executionServiceSec = 0;
-    for (const request of batch) {
-      executionServiceSec += expSample(rand, request.kind === "management" ? qMu : mu);
-    }
-    const finishSec = executionStartSec + executionServiceSec;
-    executorAvailable = finishSec;
-
-    for (const request of batch) {
-      completed.push({
-        ...request,
-        stage: "onchain",
-        modelBlockSec: blockSec,
-        modelExecutionStartSec: executionStartSec,
-        modelFinishSec: finishSec,
-        blockWaitMs: (blockSec - request.modelArrivalSec) * 1000,
-        executionQueueMs: (executionStartSec - blockSec) * 1000,
-        serviceMs: executionServiceSec * 1000,
-        latencyMs: (finishSec - request.modelArrivalSec) * 1000,
-      });
-    }
-  }
-
-  while (arrivalIndex < params.requestsPerEpsilon || mempool.length > 0) {
-    if (arrivalIndex < params.requestsPerEpsilon && nextArrival <= nextBlock) {
-      const request = buildRequest(web3, hash, rand, epsilon, arrivalIndex, params, kindPlan[arrivalIndex]);
-      request.modelArrivalSec = nextArrival;
-      request.arrivalOffsetMs = nextArrival * 1000;
-      arrivals.push(request);
-      if (request.onChain) {
-        const wasEmpty = mempool.length === 0;
-        mempool.push(request);
-        if (wasEmpty) nextBlock = nextArrival + expSample(rand, lambdaBlock);
-      } else {
-        completeOffchain(request);
-      }
-      arrivalIndex += 1;
-      nextArrival += expSample(rand, lambdaTotal);
-    } else {
-      formBlock(nextBlock);
-    }
-  }
-
-  completed.sort((a, b) => a.modelFinishSec - b.modelFinishSec || a.index - b.index);
-  for (const request of completed) {
-    await executeRequest(web3, contract, account, privateKey, nonceManager, platform, hash, request, params);
-  }
-
-  const averageMs = completed.reduce((sum, item) => sum + item.latencyMs, 0) / completed.length;
-  const onChain = completed.filter((item) => item.onChain);
-  const offChain = completed.filter((item) => !item.onChain);
-  const cross = completed.filter((item) => item.crossDomain);
-  const sortedArrivals = [...arrivals].sort((a, b) => a.arrivalOffsetMs - b.arrivalOffsetMs);
-  const arrivalSpanSec =
-    sortedArrivals.length > 1
-      ? (sortedArrivals[sortedArrivals.length - 1].arrivalOffsetMs - sortedArrivals[0].arrivalOffsetMs) / 1000
-      : 0;
-  const lambdaTotalReal = params.lambdaArrival / (params.timeScaleMs / 1000);
-  const targetLambdaOffchain =
-    (1 - params.pManage) * (1 - params.gammaOnChain) * (1 - epsilon) * lambdaTotalReal;
-  const targetLambdaOnchain =
-    (params.pManage + (1 - params.pManage) * epsilon + (1 - params.pManage) * (1 - epsilon) * params.gammaOnChain) *
-    lambdaTotalReal;
-  return {
-    epsilon,
-    DPKI_sim: averageMs / 1000,
-    completed: completed.length,
-    onChainCount: onChain.length,
-    offChainCount: offChain.length,
-    crossDomainCount: cross.length,
-    actualOnChainRatio: onChain.length / completed.length,
-    actualCrossDomainRatio: cross.length / completed.length,
-    arrivalSpanSec,
-    targetLambdaOffchain,
-    targetLambdaOnchain,
-    observedLambdaOffchain: arrivalSpanSec > 0 ? offChain.length / arrivalSpanSec : 0,
-    observedLambdaOnchain: arrivalSpanSec > 0 ? onChain.length / arrivalSpanSec : 0,
-    avgBlockWaitMs: average(onChain.map((item) => item.blockWaitMs || 0)),
-    avgExecutionQueueMs: average(onChain.map((item) => item.executionQueueMs || 0)),
-    avgChainServiceMs: average(onChain.map((item) => item.serviceMs || 0)),
-    avgOffchainQueueMs: average(offChain.map((item) => item.offchainQueueMs || 0)),
-    avgOffchainServiceDelayMs: average(offChain.map((item) => item.offchainServiceDelayMs || 0)),
-    avgOffchainProofMs: average(offChain.map((item) => item.serviceMs || 0)),
-    rows: completed,
-  };
-}
 
 function createLimiter(maxActive) {
   let active = 0;
@@ -3523,13 +2809,6 @@ function generateArrivalOffsets(rand, count, lambdaArrival, timeScaleMs) {
   return offsets;
 }
 
-function minIndex(values) {
-  let best = 0;
-  for (let i = 1; i < values.length; i += 1) {
-    if (values[i] < values[best]) best = i;
-  }
-  return best;
-}
 
 function stageDurationMs(record, key) {
   const timings = record && record.stageTimings ? record.stageTimings : {};
@@ -3537,76 +2816,10 @@ function stageDurationMs(record, key) {
   return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
-function assertionDurationMs(record, prefix) {
-  return stageDurationMs(record, `${prefix}Sign`) + stageDurationMs(record, `${prefix}Verify`);
-}
 
-function pkiPrimaryQueueServiceMs(record, fallbackMs) {
-  if (record.kind === "management") return fallbackMs;
-  if (record.crossDomain) {
-    return fallbackMs / (1 + PKI_CROSS_DOMAIN_CHAIN_STEPS);
-  }
-  return fallbackMs;
-}
 
-function dpkiOnchainQueueServiceMs(record, fallbackMs) {
-  const authTx =
-    stageDurationMs(record, "dpkiPowOnchainAuthenticateTx") +
-    stageDurationMs(record, "dpkiOnchainAuthenticateTx");
-  const managementTx =
-    stageDurationMs(record, "dpkiPowManagementPutCertAndRootTx") +
-    stageDurationMs(record, "dpkiManagementPutCertAndRootTx");
-  const txMs = authTx + managementTx;
-  return txMs > 0 ? txMs : fallbackMs;
-}
 
-function replayDpkiVirtualQueue(records, arrivalOffsets, originMs, params) {
-  const offchainWorkers = Math.max(1, Math.floor(Number(params.dpkiOffchainWorkers) || Number(params.serviceCAs) || 1));
-  const offchainAvailable = Array.from({ length: offchainWorkers }, () => 0);
-  let onchainAvailable = 0;
 
-  for (const record of [...records].sort((a, b) => a.index - b.index)) {
-    const arrivalOffsetMs = Number(arrivalOffsets[record.index] || 0);
-    const serviceMs = Math.max(0, Number(record.serviceMs) || 0);
-    const queueServiceMs = record.onChain ? dpkiOnchainQueueServiceMs(record, serviceMs) : serviceMs;
-    let startOffsetMs;
-    if (record.onChain) {
-      startOffsetMs = Math.max(arrivalOffsetMs, onchainAvailable);
-      onchainAvailable = startOffsetMs + queueServiceMs;
-      record.workerId = -1;
-    } else {
-      const workerId = minIndex(offchainAvailable);
-      startOffsetMs = Math.max(arrivalOffsetMs, offchainAvailable[workerId]);
-      offchainAvailable[workerId] = startOffsetMs + queueServiceMs;
-      record.workerId = workerId;
-    }
-    record.arrivalOffsetMs = arrivalOffsetMs;
-    record.arrivalWallMs = originMs + arrivalOffsetMs;
-    record.queueMs = Math.max(0, startOffsetMs - arrivalOffsetMs);
-    record.latencyMs = record.queueMs + serviceMs;
-    record.finishWallMs = originMs + startOffsetMs + serviceMs;
-  }
-}
-
-function replayPkiVirtualQueue(records, arrivalOffsets, originMs, params) {
-  const workerCount = Math.max(1, Math.floor(Number(params.serviceCAs) || 1));
-  const available = Array.from({ length: workerCount }, () => 0);
-
-  for (const record of [...records].sort((a, b) => a.index - b.index)) {
-    const arrivalOffsetMs = Number(arrivalOffsets[record.index] || 0);
-    const serviceMs = Math.max(0, Number(record.serviceMs) || 0);
-    const queueServiceMs = pkiPrimaryQueueServiceMs(record, serviceMs);
-    const workerId = pkiWorkerIdForRequest(record, params);
-    const startOffsetMs = Math.max(arrivalOffsetMs, available[workerId]);
-    available[workerId] = startOffsetMs + queueServiceMs;
-    record.workerId = workerId;
-    record.arrivalOffsetMs = arrivalOffsetMs;
-    record.arrivalWallMs = originMs + arrivalOffsetMs;
-    record.queueMs = Math.max(0, startOffsetMs - arrivalOffsetMs);
-    record.latencyMs = record.queueMs + serviceMs;
-    record.finishWallMs = originMs + startOffsetMs + serviceMs;
-  }
-}
 
 function summarizeReceiptBlocks(records) {
   const blockCounts = new Map();
@@ -3634,11 +2847,6 @@ function summarizeReceiptBlocks(records) {
   };
 }
 
-function pkiNetworkCompensationSec(completed, authCount, ocspCount) {
-  if (!completed) return 0;
-  const totalMs = authCount * PKI_AUTH_NETWORK_SETUP_MS + ocspCount * PKI_OCSP_NETWORK_RTT_MS;
-  return totalMs / completed / 1000;
-}
 
 function summarizeMeasuredRecords(epsilon, records, params, modelName) {
   const onChain = records.filter((item) => item.onChain);
@@ -3654,10 +2862,7 @@ function summarizeMeasuredRecords(epsilon, records, params, modelName) {
   const rawSimSec = average(latencies) / 1000;
   const authCount = modelName === "PKI" ? Math.max(0, records.length - management.length) : 0;
   const ocspCount = modelName === "PKI" ? authCount + PKI_CROSS_DOMAIN_CHAIN_STEPS * cross.length : 0;
-  const pkiCompensationSec =
-    modelName === "PKI" ? pkiNetworkCompensationSec(records.length, authCount, ocspCount) : 0;
-  const pkiCompensationMs = pkiCompensationSec * 1000;
-  const simSec = modelName === "PKI" ? rawSimSec + pkiCompensationSec : rawSimSec;
+  const simSec = rawSimSec;
   const targetLambdaOffchain =
     modelName === "DPKI"
       ? (1 - params.pManage) * (1 - params.gammaOnChain) * (1 - epsilon) * params.lambdaArrival
@@ -3686,18 +2891,14 @@ function summarizeMeasuredRecords(epsilon, records, params, modelName) {
     targetLambdaOnchain,
     observedLambdaOffchain: arrivalSpanSec > 0 ? offChain.length / arrivalSpanSec : 0,
     observedLambdaOnchain: arrivalSpanSec > 0 ? onChain.length / arrivalSpanSec : 0,
-    avgLatencyMs: average(latencies) + pkiCompensationMs,
+    avgLatencyMs: average(latencies),
     avgLatencyRawMs: average(latencies),
     avgQueueMs: average(records.map((item) => item.queueMs || 0)),
-    avgServiceMs: average(serviceTimes) + pkiCompensationMs,
+    avgServiceMs: average(serviceTimes),
     avgServiceRawMs: average(serviceTimes),
     avgOffchainProofMs: average(records.filter((item) => item.kind === "intra-off-chain").map((item) => item.serviceMs || 0)),
     avgPkiChainVerifyMs:
-      average(records.filter((item) => modelName === "PKI").map((item) => item.serviceMs || 0)) + pkiCompensationMs,
-    pkiNetworkCompensationSec: pkiCompensationSec,
-    pkiNetworkCompensationMs: pkiCompensationMs,
-    pkiAuthNetworkSetupMs: modelName === "PKI" ? PKI_AUTH_NETWORK_SETUP_MS : 0,
-    pkiOcspNetworkRttMs: modelName === "PKI" ? PKI_OCSP_NETWORK_RTT_MS : 0,
+      average(records.filter((item) => modelName === "PKI").map((item) => item.serviceMs || 0)),
     pkiAuthCount: authCount,
     pkiOcspCount: ocspCount,
     ...receiptStats,
@@ -3709,7 +2910,6 @@ async function runRealDpkiEpsilon(web3, contract, txSenders, platform, hash, eps
   const kindPlan = buildKindPlan(rand, epsilon, params);
   const arrivalOffsets = generateArrivalOffsets(rand, params.requestsPerEpsilon, params.lambdaArrival, params.timeScaleMs);
   const originMs = performance.now() + 100;
-  const virtualArrivals = String(params.arrivalMode || "wall").toLowerCase() === "virtual";
   const completed = [];
   const tasks = [];
   const serialExecution = String(params.actualExecutionMode || "parallel").toLowerCase() === "serial";
@@ -3744,12 +2944,10 @@ async function runRealDpkiEpsilon(web3, contract, txSenders, platform, hash, eps
   }
 
   for (let i = 0; i < params.requestsPerEpsilon; i += 1) {
-    if (!virtualArrivals) {
-      await sleepUntil(originMs, arrivalOffsets[i]);
-    }
+    await sleepUntil(originMs, arrivalOffsets[i]);
     const request = buildRequest(web3, hash, rand, epsilon, i, params, kindPlan[i]);
     request.arrivalOffsetMs = arrivalOffsets[i];
-    request.arrivalWallMs = virtualArrivals ? originMs + arrivalOffsets[i] : performance.now();
+    request.arrivalWallMs = performance.now();
 
     if (request.onChain) {
       const task = limitOnchain(async () => {
@@ -3767,7 +2965,6 @@ async function runRealDpkiEpsilon(web3, contract, txSenders, platform, hash, eps
           params
         );
         result.stageTimings = result.stageTimings || {};
-        await shapeElapsedServiceToTargetExponential(params, "DPKI", request, startMs, result.stageTimings);
         const finishMs = performance.now();
         recordCompletion(request, -1, startMs, finishMs, result, null);
       });
@@ -3792,7 +2989,6 @@ async function runRealDpkiEpsilon(web3, contract, txSenders, platform, hash, eps
             params
           );
           result.stageTimings = result.stageTimings || {};
-          await shapeElapsedServiceToTargetExponential(params, "DPKI", request, startMs, result.stageTimings);
           const finishMs = performance.now();
           recordCompletion(request, workerId, startMs, finishMs, result, null);
         })
@@ -3807,10 +3003,6 @@ async function runRealDpkiEpsilon(web3, contract, txSenders, platform, hash, eps
 
   await Promise.all(tasks);
   completed.sort((a, b) => a.index - b.index);
-  if (virtualArrivals) {
-    replayDpkiVirtualQueue(completed, arrivalOffsets, originMs, params);
-    completed.sort((a, b) => a.index - b.index);
-  }
   const summary = summarizeMeasuredRecords(epsilon, completed, params, "DPKI");
   return { ...summary, rows: completed };
 }
@@ -4415,14 +3607,6 @@ function verifyOpenSslCertificateThenAssertion(
 
 async function verifyPkiManagementRepositoryUpdate(platform, updated, request, stageTimings, options = {}) {
   return timeStage(stageTimings, "pkiManagementRepositoryHttpVerify", async () => {
-    if (options.includeHttpWindow !== false && platform.pkiServiceResponder && platform.pkiServiceResponder.baseUrl) {
-      await requestHttpWindowSeries(
-        platform.pkiServiceResponder.baseUrl,
-        request,
-        "pki-management-verify",
-        pkiManagementHttpShapeConfig(ACTIVE_ARGS)
-      );
-    }
     const stored = findOpenSslCert(platform, updated.domain, updated.subject);
     if (
       stored.certPath !== updated.certPath ||
@@ -4478,22 +3662,6 @@ async function pkiManagementRequestCore(platform, request, stageTimings, options
 async function pkiManagementRequest(platform, request) {
   if (platform.pkiServiceResponder && platform.pkiServiceResponder.baseUrl) {
     const stageTimings = {};
-    await requestHttpWindowStage(
-      stageTimings,
-      "pkiManagementDispatchHttp",
-      platform.pkiServiceResponder.baseUrl,
-      request,
-      "pki-management-transfer",
-      pkiManagementTransferHttpShapeConfig(ACTIVE_ARGS)
-    );
-    await requestHttpWindowStage(
-      stageTimings,
-      "pkiManagementRelayHttp",
-      platform.pkiServiceResponder.baseUrl,
-      request,
-      "pki-management-extra",
-      pkiManagementExtraHttpShapeConfig(ACTIVE_ARGS)
-    );
     const response = await requestJson("POST", `${platform.pkiServiceResponder.baseUrl}/pki/management-execute`, {
       request,
     });
@@ -4503,7 +3671,7 @@ async function pkiManagementRequest(platform, request) {
     };
   }
   const stageTimings = {};
-  return pkiManagementRequestCore(platform, request, stageTimings, { includeHttpWindow: true });
+  return pkiManagementRequestCore(platform, request, stageTimings);
 }
 
 async function pkiAuthRequestCore(platform, request, params, stageTimings) {
@@ -4564,22 +3732,6 @@ async function pkiAuthRequestCore(platform, request, params, stageTimings) {
 async function pkiAuthRequest(platform, request, params) {
   if (platform.pkiServiceResponder && platform.pkiServiceResponder.baseUrl) {
     const stageTimings = {};
-    await requestHttpWindowStage(
-      stageTimings,
-      "pkiCertTransferHttp",
-      platform.pkiServiceResponder.baseUrl,
-      request,
-      "pki-auth-transfer",
-      pkiAuthTransferHttpShapeConfig(ACTIVE_ARGS, request)
-    );
-    await requestHttpWindowStage(
-      stageTimings,
-      "pkiCrossRelayHttp",
-      platform.pkiServiceResponder.baseUrl,
-      request,
-      "pki-cross-extra",
-      pkiCrossExtraHttpShapeConfig(ACTIVE_ARGS, request)
-    );
     const response = await requestJson("POST", `${platform.pkiServiceResponder.baseUrl}/pki/auth-execute`, {
       request,
     });
@@ -4589,14 +3741,6 @@ async function pkiAuthRequest(platform, request, params) {
     };
   }
   const stageTimings = {};
-  if (platform.pkiServiceResponder && platform.pkiServiceResponder.baseUrl) {
-    const config = pkiAuthHttpShapeConfig(ACTIVE_ARGS, request);
-    if (config.meanMs > 0) {
-      await timeStage(stageTimings, "pkiAuthHttpWindow", () =>
-        requestHttpWindowSeries(platform.pkiServiceResponder.baseUrl, request, "pki-auth", config)
-      );
-    }
-  }
   return pkiAuthRequestCore(platform, request, params, stageTimings);
 }
 
@@ -4612,19 +3756,16 @@ async function runRealPkiEpsilon(web3, hash, epsilon, params, pkiPlatform) {
   const kindPlan = buildPkiKindPlan(rand, epsilon, params);
   const arrivalOffsets = generateArrivalOffsets(rand, params.requestsPerEpsilon, params.lambdaArrival, params.timeScaleMs);
   const originMs = performance.now() + 100;
-  const virtualArrivals = String(params.arrivalMode || "wall").toLowerCase() === "virtual";
   const completed = [];
   const tasks = [];
   const workerChains = Array.from({ length: params.serviceCAs }, () => Promise.resolve());
   const workerDepth = Array.from({ length: params.serviceCAs }, () => 0);
 
   for (let i = 0; i < params.requestsPerEpsilon; i += 1) {
-    if (!virtualArrivals) {
-      await sleepUntil(originMs, arrivalOffsets[i]);
-    }
+    await sleepUntil(originMs, arrivalOffsets[i]);
     const request = buildPkiRequest(web3, hash, rand, epsilon, i, kindPlan[i]);
     request.arrivalOffsetMs = arrivalOffsets[i];
-    request.arrivalWallMs = virtualArrivals ? originMs + arrivalOffsets[i] : performance.now();
+    request.arrivalWallMs = performance.now();
     const workerId = pkiWorkerIdForRequest(request, params);
     workerDepth[workerId] += 1;
     const task = workerChains[workerId]
@@ -4632,7 +3773,6 @@ async function runRealPkiEpsilon(web3, hash, epsilon, params, pkiPlatform) {
         const startMs = performance.now();
         const result = await executePkiRequest(pkiPlatform, request, params);
         result.stageTimings = result.stageTimings || {};
-        await shapeElapsedServiceToTargetExponential(params, "PKI", request, startMs, result.stageTimings);
         const finishMs = performance.now();
         completed.push({
           ...request,
@@ -4654,10 +3794,6 @@ async function runRealPkiEpsilon(web3, hash, epsilon, params, pkiPlatform) {
 
   await Promise.all(tasks);
   completed.sort((a, b) => a.index - b.index);
-  if (virtualArrivals) {
-    replayPkiVirtualQueue(completed, arrivalOffsets, originMs, params);
-    completed.sort((a, b) => a.index - b.index);
-  }
   const summary = summarizeMeasuredRecords(epsilon, completed, params, "PKI");
   return { ...summary, rows: completed };
 }
@@ -4667,10 +3803,6 @@ function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function meanPositive(values, fallback) {
-  const clean = values.filter((value) => Number.isFinite(value) && value > 0);
-  return clean.length ? average(clean) : fallback;
-}
 
 function writeStageStatistics(requestRows) {
   const groups = new Map();
@@ -4769,466 +3901,16 @@ function writeChainTxBreakdown() {
   return successful;
 }
 
-function updateSimu2TheoryAndFigure(args, detailedRows) {
-  const scaleSec = args.timeScaleMs / 1000;
-  const mu = args.muAuth / scaleSec;
-  const meanAuthSec = 1 / mu;
-  const meanManagementSec = 1 / (args.qManage * mu);
-  const calibration = {
-    lambdaTotal: args.lambdaArrival / scaleSec,
-    pManage: args.pManage,
-    qManage: args.qManage,
-    mu,
+function writeMeasuredParameters(args, chainObservation) {
+  const metadata = {
+    measurementMode: "unmodified wall-clock request durations",
     serviceCAs: args.serviceCAs,
-    gammaOnChain: args.gammaOnChain,
-    lambdaBlock: args.lambdaBlock / scaleSec,
-    lambdaExecute: args.lambdaExecute / scaleSec,
-    meanAuthSec,
-    meanManagementSec,
+    lambdaBlockMeasured: chainObservation ? chainObservation.lambdaBlockByHeightPerSec : null,
+    configuredLambdaArrival: args.lambdaArrival,
+    configuredQManage: args.qManage,
+    chainObservation,
   };
-  fs.writeFileSync(path.join(OUT_DIR, "theory-calibration.json"), JSON.stringify(calibration, null, 2));
-
-  const plotScript = `
-from pathlib import Path
-import json
-import sys
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-workspace = Path(r'${ROOT.replace(/\\/g, "\\\\")}').resolve()
-sys.path.insert(0, str(workspace / 'blockchain' / '.internal' / 'old-ver-simulations'))
-from simu2_tail_prob.simu2_cross_domain_experiment import ModelParams, plot_results, save_bounds_check, theory_rows
-out = Path(r'${SIMU2_DIR.replace(/\\/g, "\\\\")}').resolve()
-experiment_out = Path(r'${OUT_DIR.replace(/\\/g, "\\\\")}').resolve()
-calibration = json.loads(Path(r'${path.join(OUT_DIR, "theory-calibration.json").replace(/\\/g, "\\\\")}').read_text())
-params = ModelParams(
-    lambda_total=calibration['lambdaTotal'],
-    p_manage=calibration['pManage'],
-    q_manage=calibration['qManage'],
-    mu=calibration['mu'],
-    service_cas=int(calibration['serviceCAs']),
-    gamma_on_chain=calibration['gammaOnChain'],
-    lambda_block=calibration['lambdaBlock'],
-)
-epsilon_values = [float(x) for x in '${args.epsilonPoints}'.split(',')]
-theory = theory_rows(params, np.linspace(min(epsilon_values), max(epsilon_values), 100))
-theory.to_csv(out / 'theory_results_by_epsilon.csv', index=False)
-sim = pd.read_csv(out / 'simulation_results_by_epsilon.csv')
-pd.merge(theory, sim, on='epsilon', how='outer').sort_values('epsilon').to_csv(out / 'combined_results_by_epsilon.csv', index=False)
-save_bounds_check(params, sim, out)
-plot_results(theory, sim, out)
-
-fig, ax1 = plt.subplots(figsize=(6.3, 4.2))
-ax1.plot(sim['epsilon'], sim['DPKI_sim'], '-o', color=(1.0, 0.4, 0.0), linewidth=1.5, markersize=4, label='DPKI Real')
-ax1.set_xlabel(r'$\\epsilon$')
-ax1.set_ylabel(r'DPKI $E[T]$ (s)', color=(1.0, 0.4, 0.0))
-ax1.tick_params(axis='y', labelcolor=(1.0, 0.4, 0.0))
-ax1.grid(True, linestyle='--', linewidth=0.5, alpha=0.6)
-ax2 = ax1.twinx()
-ax2.plot(sim['epsilon'], sim['PKI_sim'] * 1000.0, '-o', color=(0.85, 0.0, 0.0), linewidth=1.5, markersize=4, label='PKI Real')
-ax2.set_ylabel(r'PKI $E[T]$ (ms)', color=(0.85, 0.0, 0.0))
-ax2.tick_params(axis='y', labelcolor=(0.85, 0.0, 0.0))
-lines = ax1.get_lines() + ax2.get_lines()
-ax1.legend(lines, [line.get_label() for line in lines], loc='upper left', fontsize=8, frameon=True)
-fig.tight_layout()
-for directory in (out, experiment_out):
-    fig.savefig(directory / 'Fig7_real_measured_ET.png', dpi=300)
-    fig.savefig(directory / 'Fig7_real_measured_ET.eps', format='eps')
-plt.close(fig)
-
-fig, ax = plt.subplots(figsize=(6.3, 4.2))
-ax.plot(sim['epsilon'], sim['DPKI_sim'], '-o', color=(1.0, 0.4, 0.0), linewidth=1.8, markersize=4, label='DPKI Real')
-ax.plot(sim['epsilon'], sim['PKI_sim'], '-o', color=(0.85, 0.0, 0.0), linewidth=1.8, markersize=4, label='PKI Real')
-ax.set_xlabel(r'$\\epsilon$')
-ax.set_ylabel(r'$E[T]$ (s)')
-ax.grid(True, linestyle='--', linewidth=0.5, alpha=0.6)
-ax.legend(loc='upper left', fontsize=8, frameon=True)
-fig.tight_layout()
-for directory in (out, experiment_out):
-    fig.savefig(directory / 'Fig7_real_measured_ET_same_axis.png', dpi=300)
-    fig.savefig(directory / 'Fig7_real_measured_ET_same_axis.eps', format='eps')
-plt.close(fig)
-`;
-  const child = require("child_process").spawnSync("python", ["-c", plotScript], {
-    cwd: ROOT,
-    encoding: "utf8",
-  });
-  if (child.status !== 0) {
-    console.error(child.stdout);
-    console.error(child.stderr);
-    throw new Error("failed to regenerate simu2 figure");
-  }
-}
-
-function updateCalibratedTheoryAndStats(args) {
-  const calibrationScript = `
-from pathlib import Path
-import json
-import math
-import sys
-import numpy as np
-import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-sys.path.insert(0, str(Path(r'${ROOT.replace(/\\/g, "\\\\")}').resolve() / 'blockchain' / '.internal' / 'old-ver-simulations'))
-from simu2_tail_prob.simu2_cross_domain_experiment import ModelParams, plot_results, save_bounds_check, theory_rows
-
-root = Path(r'${ROOT.replace(/\\/g, "\\\\")}').resolve()
-simu2 = Path(r'${SIMU2_DIR.replace(/\\/g, "\\\\")}').resolve()
-exp = root / 'blockchain' / 'dpki-experiment' / 'outputs'
-pow_runtime = Path(r'${path.resolve(args.powRuntime).replace(/\\/g, "\\\\")}').resolve()
-req = pd.read_csv(exp / 'real_simulation_results_by_epsilon_detailed.csv')
-summary = pd.read_csv(exp / 'real_summary_by_epsilon_detailed.csv')
-sim = pd.read_csv(exp / 'real_simulation_results_by_epsilon.csv')
-
-def parse_pow_runtime_config(runtime):
-    sidechain_config = runtime / 'configs' / 'side-a.toml'
-    config_path = sidechain_config if sidechain_config.exists() else runtime / 'configs' / 'node0.toml'
-    result = {
-        'path': str(config_path),
-        'exists': config_path.exists(),
-        'mineEmpty': None,
-        'meanBlockMs': None,
-        'configuredLambdaBlockPerSec': None,
-    }
-    if not config_path.exists():
-        return result
-    text = config_path.read_text(encoding='utf8', errors='ignore')
-    import re
-    mine = re.search(r'^\\s*mineEmpty\\s*=\\s*(true|false)\\s*$', text, re.I | re.M)
-    mean = re.search(r'^\\s*meanBlockMs\\s*=\\s*([0-9]+(?:\\.[0-9]+)?)\\s*$', text, re.I | re.M)
-    if mine:
-        result['mineEmpty'] = mine.group(1).lower() == 'true'
-    if mean:
-        result['meanBlockMs'] = float(mean.group(1))
-        if result['meanBlockMs'] > 0:
-            result['configuredLambdaBlockPerSec'] = 1000.0 / result['meanBlockMs']
-    return result
-
-pow_config = parse_pow_runtime_config(pow_runtime)
-chain_observation = {}
-chain_observation_path = exp / 'real_chain_observation.json'
-if chain_observation_path.exists():
-    chain_observation = json.loads(chain_observation_path.read_text(encoding='utf8'))
-
-dpki = req[req['model'] == 'DPKI'].copy()
-pki = req[req['model'] == 'PKI'].copy()
-dpki_summary = summary[summary['model'] == 'DPKI'].copy()
-
-def truthy(series):
-    return series.astype(str).str.lower().isin(['true', '1', 'yes'])
-
-dpki['onChainBool'] = truthy(dpki['onChain'])
-dpki['crossBool'] = truthy(dpki['crossDomain'])
-pki['crossBool'] = truthy(pki['crossDomain'])
-
-arrival_span_sum = float(dpki_summary['arrivalSpanSec'].sum())
-lambda_total = float(len(dpki) / arrival_span_sum) if arrival_span_sum > 0 else math.nan
-p_manage = float((dpki['kind'] == 'management').mean())
-
-auth = dpki[dpki['kind'] != 'management']
-normal_auth = auth[auth['kind'] != 'cross-domain']
-gamma = float((normal_auth['kind'] == 'intra-on-chain').mean()) if len(normal_auth) else 0.0
-
-onchain_auth = dpki[dpki['kind'].isin(['cross-domain', 'intra-on-chain'])]
-offchain_auth = dpki[dpki['kind'] == 'intra-off-chain']
-management = dpki[dpki['kind'] == 'management']
-
-mean_onchain_auth = float(onchain_auth['serviceMs'].mean() / 1000.0)
-mean_offchain_auth = float(offchain_auth['serviceMs'].mean() / 1000.0) if len(offchain_auth) else mean_onchain_auth
-mean_auth_pooled = float(auth['serviceMs'].mean() / 1000.0)
-mean_management = float(management['serviceMs'].mean() / 1000.0) if len(management) else mean_auth_pooled
-
-# In the paper, mu is the authentication service-station rate. Use the measured
-# off-chain authentication service time after any explicit model-aligned shaping;
-# the blockchain confirmation path is still measured separately through real txs.
-mu_model = 1.0 / mean_offchain_auth if mean_offchain_auth > 0 else math.nan
-q_model = mean_offchain_auth / mean_management if mean_management > 0 else 1.0
-
-onchain = dpki[dpki['onChainBool']]
-block_numbers = set()
-for value in onchain['chainBlockNumbers'].dropna().astype(str):
-    for part in value.split('|'):
-        if part:
-            block_numbers.add(part)
-chain_active_window = float((onchain['finishWallMs'].max() - onchain['arrivalWallMs'].min()) / 1000.0) if len(onchain) else 0.0
-lambda_block_window = float(len(block_numbers) / chain_active_window) if chain_active_window > 0 else math.nan
-
-chain_breakdown_path = exp / 'real_chain_tx_breakdown.csv'
-mean_chain_confirm_sec = math.nan
-if chain_breakdown_path.exists():
-    chain = pd.read_csv(chain_breakdown_path)
-    chain_workload = chain[chain['method'].isin(['authenticate', 'putCertificateAndDomainRoot'])].copy()
-    if len(chain_workload):
-        mean_chain_confirm_sec = float(pd.to_numeric(chain_workload['hashToReceiptMs'], errors='coerce').mean() / 1000.0)
-
-def stage_map(value):
-    try:
-        parsed = json.loads(value) if isinstance(value, str) and value else {}
-        return parsed if isinstance(parsed, dict) else {}
-    except Exception:
-        return {}
-
-def stage_value_ms(stages, key):
-    value = stages.get(key, 0.0)
-    try:
-        return float(value)
-    except Exception:
-        return 0.0
-
-def assertion_step_ms(stages, assertion_prefix):
-    return stage_value_ms(stages, f'{assertion_prefix}Sign') + stage_value_ms(stages, f'{assertion_prefix}Verify')
-
-def cert_step_ms(stages, verify_key, ocsp_prefix, assertion_prefix):
-    return (
-        stage_value_ms(stages, verify_key)
-        + stage_value_ms(stages, f'{ocsp_prefix}OcspHttpQuery')
-        + assertion_step_ms(stages, assertion_prefix)
-    )
-
-pki_auth = pki[pki['kind'] != 'management'].copy()
-pki_mgmt = pki[pki['kind'] == 'management'].copy()
-pki_cert_step_values_ms = []
-for _, row in pki_auth.iterrows():
-    stages = stage_map(row.get('stageTimingsJson', ''))
-    is_cross = bool(row.get('crossBool', False))
-    leaf_assertion = 'pkiLeafAssertion' if is_cross else 'pkiOpenSslAssertion'
-    pki_cert_step_values_ms.append(cert_step_ms(stages, 'pkiOpenSslVerifyLeaf', 'pkiLeaf', leaf_assertion))
-    if is_cross:
-        pki_cert_step_values_ms.append(cert_step_ms(stages, 'pkiOpenSslVerifySourceCA', 'pkiSourceCA', 'pkiSourceCAAssertion'))
-        pki_cert_step_values_ms.append(cert_step_ms(stages, 'pkiOpenSslVerifyRootCA', 'pkiRootCA', 'pkiRootCAAssertion'))
-        pki_cert_step_values_ms.append(cert_step_ms(stages, 'pkiOpenSslVerifyTargetCA', 'pkiTargetCA', 'pkiTargetCAAssertion'))
-pki_cert_step_values_ms = [value for value in pki_cert_step_values_ms if value > 0]
-pki_base_cert_sec = float(np.mean(pki_cert_step_values_ms) / 1000.0) if pki_cert_step_values_ms else math.nan
-pki_intra_auth = pki[pki['kind'] == 'intra-pki'].copy()
-pki_primary_auth_sec = float(pki_intra_auth['serviceMs'].mean() / 1000.0) if len(pki_intra_auth) else pki_base_cert_sec
-pki_mu_model = 1.0 / pki_primary_auth_sec if pki_primary_auth_sec > 0 else mu_model
-pki_cross_extra_mu_model = pki_mu_model
-pki_mean_management_sec = float(pki_mgmt['serviceMs'].mean() / 1000.0) if len(pki_mgmt) else math.nan
-pki_q_model = pki_primary_auth_sec / pki_mean_management_sec if pki_primary_auth_sec > 0 and pki_mean_management_sec > 0 else q_model
-
-# lambda_block in the paper is the external block-generation process. When
-# empty blocks are enabled, use the measured height growth over the workload
-# interval. Receipt latency is only a fallback for old, non-empty-block runs.
-lambda_block_observed_height = chain_observation.get('lambdaBlockByHeightPerSec', math.nan)
-lambda_block_configured = pow_config.get('configuredLambdaBlockPerSec') or math.nan
-lambda_block_source = 'unavailable'
-if pow_config.get('mineEmpty') is True and lambda_block_observed_height and lambda_block_observed_height > 0:
-    lambda_block = float(lambda_block_observed_height)
-    lambda_block_source = 'empty_block_height_observation'
-elif pow_config.get('mineEmpty') is True and lambda_block_configured and lambda_block_configured > 0:
-    lambda_block = float(lambda_block_configured)
-    lambda_block_source = 'empty_block_runtime_config'
-elif mean_chain_confirm_sec > 0:
-    lambda_block = 1.0 / mean_chain_confirm_sec
-    lambda_block_source = 'tx_hash_to_receipt_fallback_non_empty_blocks'
-else:
-    lambda_block = lambda_block_window
-    lambda_block_source = 'tx_block_window_fallback'
-
-params = ModelParams(
-    lambda_total=lambda_total,
-    p_manage=p_manage,
-    q_manage=q_model,
-    mu=mu_model,
-    service_cas=int(${args.serviceCAs}),
-    gamma_on_chain=gamma,
-    lambda_block=lambda_block,
-    pki_mu=pki_mu_model,
-    pki_q_manage=pki_q_model,
-    pki_cross_extra_mu=pki_cross_extra_mu_model,
-)
-shape_settings = {
-    'serviceShapeMode': '${String(args.serviceShapeMode).replace(/'/g, "\\'")}',
-    'effectiveServiceShapeMode': '${String(args.serviceShapeMode).replace(/'/g, "\\'")}',
-    'arrivalMode': '${String(args.arrivalMode).replace(/'/g, "\\'")}',
-    'kindPlanMode': '${String(args.kindPlanMode).replace(/'/g, "\\'")}',
-    'dpkiRootReadMode': '${String(args.dpkiRootReadMode).replace(/'/g, "\\'")}',
-    'dpkiProofReadMode': '${String(args.dpkiProofReadMode).replace(/'/g, "\\'")}',
-    'dpkiProofBasePort': int(${Number(args.dpkiProofBasePort) || DEFAULTS.dpkiProofBasePort}),
-    'pkiServiceBasePort': int(${Number(args.pkiServiceBasePort) || DEFAULTS.pkiServiceBasePort}),
-    'actualExecutionMode': '${String(args.actualExecutionMode).replace(/'/g, "\\'")}',
-    'fixedGasLimit': int(${Number(args.fixedGasLimit) || DEFAULTS.fixedGasLimit}),
-    'fixedGasPriceWei': '${String(args.fixedGasPriceWei).replace(/'/g, "\\'")}',
-    'chainId': int(${Number(ACTIVE_CHAIN_ID) || 0}),
-    'estimateGas': ${args.estimateGas ? "True" : "False"},
-    'signingHardfork': 'istanbul',
-    'rawTxSubmitTimeoutMs': int(${Number(args.rawTxSubmitTimeoutMs) || DEFAULTS.rawTxSubmitTimeoutMs}),
-    'rawTxSubmitRetries': int(${Number(args.rawTxSubmitRetries) || DEFAULTS.rawTxSubmitRetries}),
-    'rawTxReceiptTimeoutMs': int(${Number(args.rawTxReceiptTimeoutMs) || DEFAULTS.rawTxReceiptTimeoutMs}),
-    'dpkiAuthShapeMeanMs': float(${Number(args.dpkiAuthShapeMeanMs) || 0}),
-    'dpkiCrossShapeMeanMs': float(${Number(args.dpkiCrossShapeMeanMs) || 0}),
-    'dpkiOnchainShapeMeanMs': float(${Number(args.dpkiOnchainShapeMeanMs) || 0}),
-    'dpkiIntraOffchainShapeMeanMs': float(${Number(args.dpkiIntraOffchainShapeMeanMs) || 0}),
-    'dpkiOffchainShapeMeanMs': float(${Number(args.dpkiOffchainShapeMeanMs) || 0}),
-    'dpkiManagementShapeMeanMs': float(${Number(args.dpkiManagementShapeMeanMs) || 0}),
-    'pkiAuthShapeMeanMs': float(${Number(args.pkiAuthShapeMeanMs) || 0}),
-    'pkiCrossShapeMeanMs': float(${Number(args.pkiCrossShapeMeanMs) || 0}),
-    'pkiIntraShapeMeanMs': float(${Number(args.pkiIntraShapeMeanMs) || 0}),
-    'pkiManagementShapeMeanMs': float(${Number(args.pkiManagementShapeMeanMs) || 0}),
-    'httpShapeSegments': int(${Number(args.httpShapeSegments) || DEFAULTS.httpShapeSegments}),
-    'httpShapeTailProbability': float(${Number(args.httpShapeTailProbability) || 0}),
-    'httpShapeTailMultiplier': float(${Number(args.httpShapeTailMultiplier) || 1}),
-    'dpkiProofHttpMeanMs': float(${Number(args.dpkiProofHttpMeanMs) || 0}),
-    'dpkiProofHttpHops': int(${Number(args.dpkiProofHttpHops) || DEFAULTS.dpkiProofHttpHops}),
-    'dpkiProofHttpSegments': int(${Number(args.dpkiProofHttpSegments) || DEFAULTS.dpkiProofHttpSegments}),
-    'dpkiProofHttpTailProbability': float(${Number(args.dpkiProofHttpTailProbability) || 0}),
-    'dpkiProofHttpTailMultiplier': float(${Number(args.dpkiProofHttpTailMultiplier) || 1}),
-    'dpkiAuthTransferHttpMeanMs': float(${Number(args.dpkiAuthTransferHttpMeanMs) || 0}),
-    'dpkiAuthTransferHttpHops': int(${Number(args.dpkiAuthTransferHttpHops) || DEFAULTS.dpkiAuthTransferHttpHops}),
-    'dpkiAuthTransferHttpSegments': int(${Number(args.dpkiAuthTransferHttpSegments) || DEFAULTS.dpkiAuthTransferHttpSegments}),
-    'dpkiAuthTransferHttpTailProbability': float(${Number(args.dpkiAuthTransferHttpTailProbability) || 0}),
-    'dpkiAuthTransferHttpTailMultiplier': float(${Number(args.dpkiAuthTransferHttpTailMultiplier) || 1}),
-    'dpkiManagementHttpMeanMs': float(${Number(args.dpkiManagementHttpMeanMs) || 0}),
-    'dpkiManagementHttpHops': int(${Number(args.dpkiManagementHttpHops) || DEFAULTS.dpkiManagementHttpHops}),
-    'dpkiManagementHttpSegments': int(${Number(args.dpkiManagementHttpSegments) || DEFAULTS.dpkiManagementHttpSegments}),
-    'dpkiManagementHttpTailProbability': float(${Number(args.dpkiManagementHttpTailProbability) || 0}),
-    'dpkiManagementHttpTailMultiplier': float(${Number(args.dpkiManagementHttpTailMultiplier) || 1}),
-    'dpkiManagementTransferHttpMeanMs': float(${Number(args.dpkiManagementTransferHttpMeanMs) || 0}),
-    'dpkiManagementTransferHttpHops': int(${Number(args.dpkiManagementTransferHttpHops) || DEFAULTS.dpkiManagementTransferHttpHops}),
-    'dpkiManagementTransferHttpSegments': int(${Number(args.dpkiManagementTransferHttpSegments) || DEFAULTS.dpkiManagementTransferHttpSegments}),
-    'dpkiManagementTransferHttpTailProbability': float(${Number(args.dpkiManagementTransferHttpTailProbability) || 0}),
-    'dpkiManagementTransferHttpTailMultiplier': float(${Number(args.dpkiManagementTransferHttpTailMultiplier) || 1}),
-    'pkiAuthHttpMeanMs': float(${Number(args.pkiAuthHttpMeanMs) || 0}),
-    'pkiAuthHttpHops': int(${Number(args.pkiAuthHttpHops) || DEFAULTS.pkiAuthHttpHops}),
-    'pkiAuthHttpSegments': int(${Number(args.pkiAuthHttpSegments) || DEFAULTS.pkiAuthHttpSegments}),
-    'pkiAuthHttpTailProbability': float(${Number(args.pkiAuthHttpTailProbability) || 0}),
-    'pkiAuthHttpTailMultiplier': float(${Number(args.pkiAuthHttpTailMultiplier) || 1}),
-    'pkiAuthTransferHttpMeanMs': float(${Number(args.pkiAuthTransferHttpMeanMs) || 0}),
-    'pkiAuthTransferHttpHops': int(${Number(args.pkiAuthTransferHttpHops) || DEFAULTS.pkiAuthTransferHttpHops}),
-    'pkiAuthTransferHttpSegments': int(${Number(args.pkiAuthTransferHttpSegments) || DEFAULTS.pkiAuthTransferHttpSegments}),
-    'pkiAuthTransferHttpTailProbability': float(${Number(args.pkiAuthTransferHttpTailProbability) || 0}),
-    'pkiAuthTransferHttpTailMultiplier': float(${Number(args.pkiAuthTransferHttpTailMultiplier) || 1}),
-    'pkiManagementHttpMeanMs': float(${Number(args.pkiManagementHttpMeanMs) || 0}),
-    'pkiManagementHttpHops': int(${Number(args.pkiManagementHttpHops) || DEFAULTS.pkiManagementHttpHops}),
-    'pkiManagementHttpSegments': int(${Number(args.pkiManagementHttpSegments) || DEFAULTS.pkiManagementHttpSegments}),
-    'pkiManagementHttpTailProbability': float(${Number(args.pkiManagementHttpTailProbability) || 0}),
-    'pkiManagementHttpTailMultiplier': float(${Number(args.pkiManagementHttpTailMultiplier) || 1}),
-    'pkiManagementTransferHttpMeanMs': float(${Number(args.pkiManagementTransferHttpMeanMs) || 0}),
-    'pkiManagementTransferHttpHops': int(${Number(args.pkiManagementTransferHttpHops) || DEFAULTS.pkiManagementTransferHttpHops}),
-    'pkiManagementTransferHttpSegments': int(${Number(args.pkiManagementTransferHttpSegments) || DEFAULTS.pkiManagementTransferHttpSegments}),
-    'pkiManagementTransferHttpTailProbability': float(${Number(args.pkiManagementTransferHttpTailProbability) || 0}),
-    'pkiManagementTransferHttpTailMultiplier': float(${Number(args.pkiManagementTransferHttpTailMultiplier) || 1}),
-    'derivedAuthShapeMeanMs': float(${Number(args.muAuth) > 0 ? (Number(args.timeScaleMs) || 1000) / Number(args.muAuth) : 0}),
-    'derivedManagementShapeMeanMs': float(${Number(args.muAuth) > 0 && Number(args.qManage) > 0 ? ((Number(args.timeScaleMs) || 1000) / Number(args.muAuth)) / Number(args.qManage) : 0}),
-}
-eps_values = sorted(float(x) for x in sim['epsilon'].dropna().unique())
-theory = theory_rows(params, np.linspace(min(eps_values), max(eps_values), 100))
-theory_exact = theory_rows(params, np.array(eps_values))
-all_finite = bool(np.isfinite(theory_exact[['DPKI_upper_theory', 'DPKI_lower_theory', 'PKI_theory']].to_numpy()).all())
-
-calibration = {
-    'lambdaTotalMeasured': lambda_total,
-    'pManageMeasured': p_manage,
-    'gammaOnChainMeasured': gamma,
-    'qManageMeasured': q_model,
-    'muModelOffchainAuthMeasured': mu_model,
-    'pkiQManageMeasured': pki_q_model,
-    'pkiMuPrimaryAuthMeasured': pki_mu_model,
-    'pkiMuCrossExtraCertificateMeasured': pki_cross_extra_mu_model,
-    'pkiMeanPrimaryAuthServiceSec': pki_primary_auth_sec,
-    'pkiMuSingleCertificateMeasured': pki_cross_extra_mu_model,
-    'pkiMeanSingleCertificateServiceSec': pki_base_cert_sec,
-    'pkiMeanManagementServiceSec': pki_mean_management_sec,
-    'lambdaBlockMeasured': lambda_block,
-    'lambdaBlockMeasurementSource': lambda_block_source,
-    'lambdaBlockByHeightMeasured': lambda_block_observed_height,
-    'lambdaBlockConfigured': lambda_block_configured,
-    'lambdaBlockWindowMeasured': lambda_block_window,
-    'meanChainConfirmSec': mean_chain_confirm_sec,
-    'powMineEmpty': pow_config.get('mineEmpty'),
-    'powMeanBlockMs': pow_config.get('meanBlockMs'),
-    'serviceCAs': int(${args.serviceCAs}),
-    'dpkiOffchainWorkers': int(${Number(args.dpkiOffchainWorkers) || Number(args.serviceCAs) || 1}),
-    'dpkiOnchainWorkers': int(${Math.max(1, Math.min(Number(args.maxOnchainInFlight) || 1, Number(args.txSenders) || 1))}),
-    'meanOnchainAuthServiceSec': mean_onchain_auth,
-    'meanOffchainAuthServiceSec': mean_offchain_auth,
-    'meanPooledAuthServiceSec': mean_auth_pooled,
-    'meanManagementServiceSec': mean_management,
-    'muOffchainAuthMeasured': 1.0 / mean_offchain_auth if mean_offchain_auth > 0 else None,
-    'muPooledAuthMeasured': 1.0 / mean_auth_pooled if mean_auth_pooled > 0 else None,
-    'pkiMeanServiceSec': float(pki['serviceMs'].mean() / 1000.0) if len(pki) else None,
-    'pkiCrossDomainMeanServiceSec': float(pki[pki['crossBool']]['serviceMs'].mean() / 1000.0) if len(pki[pki['crossBool']]) else None,
-    'chainActiveWindowSec': chain_active_window,
-    'chainObservedBlocks': len(block_numbers),
-    'chainObservation': chain_observation,
-    'serviceShape': shape_settings,
-    'arrivalMode': '${String(args.arrivalMode).replace(/'/g, "\\'")}',
-    'kindPlanMode': '${String(args.kindPlanMode).replace(/'/g, "\\'")}',
-    'calibratedTheoryFinite': all_finite,
-}
-(exp / 'real_calibrated_params.json').write_text(json.dumps(calibration, indent=2), encoding='utf8')
-theory.to_csv(exp / 'real_calibrated_theory_results_by_epsilon.csv', index=False)
-theory.to_csv(simu2 / 'real_calibrated_theory_results_by_epsilon.csv', index=False)
-theory.to_csv(exp / 'theory_results_by_epsilon.csv', index=False)
-theory.to_csv(simu2 / 'theory_results_by_epsilon.csv', index=False)
-theory_exact.to_csv(exp / 'real_calibrated_theory_exact_by_epsilon.csv', index=False)
-theory_exact.to_csv(simu2 / 'real_calibrated_theory_exact_by_epsilon.csv', index=False)
-
-sim.to_csv(simu2 / 'simulation_results_by_epsilon.csv', index=False)
-pd.merge(theory, sim, on='epsilon', how='outer').sort_values('epsilon').to_csv(exp / 'real_calibrated_combined_results_by_epsilon.csv', index=False)
-pd.merge(theory, sim, on='epsilon', how='outer').sort_values('epsilon').to_csv(simu2 / 'real_calibrated_combined_results_by_epsilon.csv', index=False)
-pd.merge(theory, sim, on='epsilon', how='outer').sort_values('epsilon').to_csv(exp / 'combined_results_by_epsilon.csv', index=False)
-pd.merge(theory, sim, on='epsilon', how='outer').sort_values('epsilon').to_csv(simu2 / 'combined_results_by_epsilon.csv', index=False)
-pd.merge(theory_exact, sim, on='epsilon', how='outer').sort_values('epsilon').to_csv(exp / 'exact_bounds_check_latest.csv', index=False)
-pd.merge(theory_exact, sim, on='epsilon', how='outer').sort_values('epsilon').to_csv(simu2 / 'exact_bounds_check_latest.csv', index=False)
-save_bounds_check(params, sim, exp)
-save_bounds_check(params, sim, simu2)
-plot_results(theory, sim, exp)
-plot_results(theory, sim, simu2)
-
-stats_rows = []
-pki_auth_network_setup_sec = float(${PKI_AUTH_NETWORK_SETUP_MS}) / 1000.0
-pki_ocsp_network_rtt_sec = float(${PKI_OCSP_NETWORK_RTT_MS}) / 1000.0
-pki_cross_domain_chain_steps = int(${PKI_CROSS_DOMAIN_CHAIN_STEPS})
-for model, frame in [('DPKI', dpki), ('PKI', pki)]:
-    for kind, group in frame.groupby('kind'):
-        service_sec = pd.to_numeric(group['serviceMs'], errors='coerce') / 1000.0
-        service_mean = float(service_sec.mean())
-        service_std = float(service_sec.std(ddof=0))
-        network_comp_sec = 0.0
-        if model == 'PKI' and kind != 'management':
-            ocsp_steps = (1 + pki_cross_domain_chain_steps) if kind == 'cross-domain' else 1
-            network_comp_sec = pki_auth_network_setup_sec + ocsp_steps * pki_ocsp_network_rtt_sec
-        latency_raw_mean_sec = float(group['latencyMs'].mean() / 1000.0)
-        stats_rows.append({
-            'model': model,
-            'kind': kind,
-            'count': int(len(group)),
-            'latencyMeanSec': latency_raw_mean_sec + network_comp_sec,
-            'latencyRawMeanSec': latency_raw_mean_sec,
-            'latencyMedianSec': float(group['latencyMs'].median() / 1000.0),
-            'queueMeanSec': float(group['queueMs'].mean() / 1000.0) if 'queueMs' in group else 0.0,
-            'serviceMeanSec': service_mean + network_comp_sec,
-            'serviceRawMeanSec': service_mean,
-            'serviceMedianSec': float(group['serviceMs'].median() / 1000.0),
-            'serviceStdSec': service_std,
-            'serviceCv': service_std / service_mean if service_mean > 0 else math.nan,
-            'localNetworkCompensationMeanSec': network_comp_sec,
-        })
-stats = pd.DataFrame(stats_rows)
-stats.to_csv(exp / 'real_delay_statistics.csv', index=False)
-stats.to_csv(simu2 / 'real_delay_statistics.csv', index=False)
-
-print('REAL CALIBRATED PARAMETERS')
-for key, value in calibration.items():
-    print(f'{key}={value}')
-print('')
-print('REAL DELAY STATISTICS')
-print(stats.to_string(index=False))
-print('')
-print(f'calibratedTheoryFinite={all_finite}')
-`;
-  const child = require("child_process").spawnSync("python", ["-c", calibrationScript], {
-    cwd: ROOT,
-    encoding: "utf8",
-  });
-  if (child.stdout) console.log(child.stdout.trim());
-  if (child.status !== 0) {
-    console.error(child.stderr);
-    throw new Error("failed to regenerate calibrated real-theory figure");
-  }
+  fs.writeFileSync(path.join(OUT_DIR, "measured_parameters.json"), JSON.stringify(metadata, null, 2));
 }
 
 async function main() {
@@ -5354,10 +4036,6 @@ async function main() {
       DPKI_sim: dpki.DPKI_sim,
       PKI_sim: pki ? pki.PKI_sim : null,
       PKI_sim_raw: pki ? pki.PKI_sim_raw : null,
-      pkiNetworkCompensationSec: pki ? pki.pkiNetworkCompensationSec : null,
-      pkiNetworkCompensationMs: pki ? pki.pkiNetworkCompensationMs : null,
-      pkiAuthNetworkSetupMs: pki ? pki.pkiAuthNetworkSetupMs : null,
-      pkiOcspNetworkRttMs: pki ? pki.pkiOcspNetworkRttMs : null,
       pkiAuthCount: pki ? pki.pkiAuthCount : null,
       pkiOcspCount: pki ? pki.pkiOcspCount : null,
     });
@@ -5388,10 +4066,6 @@ async function main() {
         avgOffchainProofMs: dpki.avgOffchainProofMs,
         avgPkiChainVerifyMs: 0,
         PKI_sim_raw: null,
-        pkiNetworkCompensationSec: 0,
-        pkiNetworkCompensationMs: 0,
-        pkiAuthNetworkSetupMs: 0,
-        pkiOcspNetworkRttMs: 0,
         pkiAuthCount: 0,
         pkiOcspCount: 0,
         chainTxCount: dpki.chainTxCount,
@@ -5428,10 +4102,6 @@ async function main() {
         avgOffchainProofMs: 0,
         avgPkiChainVerifyMs: pki.avgPkiChainVerifyMs,
         PKI_sim_raw: pki.PKI_sim_raw,
-        pkiNetworkCompensationSec: pki.pkiNetworkCompensationSec,
-        pkiNetworkCompensationMs: pki.pkiNetworkCompensationMs,
-        pkiAuthNetworkSetupMs: pki.pkiAuthNetworkSetupMs,
-        pkiOcspNetworkRttMs: pki.pkiOcspNetworkRttMs,
         pkiAuthCount: pki.pkiAuthCount,
         pkiOcspCount: pki.pkiOcspCount,
         chainTxCount: 0,
@@ -5468,7 +4138,6 @@ async function main() {
     }
     console.log(
       `epsilon=${epsilon} DPKI=${dpki.DPKI_sim.toFixed(4)}s PKI=${pki ? pki.PKI_sim.toFixed(4) : "skipped"} ` +
-        `${pki ? `(raw=${pki.PKI_sim_raw.toFixed(4)}s, net+${pki.pkiNetworkCompensationMs.toFixed(2)}ms) ` : ""}` +
         `onChain=${dpki.onChainCount}/${dpki.completed} cross=${dpki.crossDomainCount}/${dpki.completed} ` +
         `chainBlocks=${dpki.chainBlockCount} avgTxPerBlock=${dpki.avgTxPerChainBlock.toFixed(2)} ` +
         `lambda_a=${dpki.observedLambdaOffchain.toFixed(3)}/${dpki.targetLambdaOffchain.toFixed(3)} ` +
@@ -5511,10 +4180,6 @@ async function main() {
     "DPKI_sim",
     "PKI_sim",
     "PKI_sim_raw",
-    "pkiNetworkCompensationSec",
-    "pkiNetworkCompensationMs",
-    "pkiAuthNetworkSetupMs",
-    "pkiOcspNetworkRttMs",
     "pkiAuthCount",
     "pkiOcspCount",
   ]);
@@ -5569,10 +4234,6 @@ async function main() {
     "avgOffchainProofMs",
     "avgPkiChainVerifyMs",
     "PKI_sim_raw",
-    "pkiNetworkCompensationSec",
-    "pkiNetworkCompensationMs",
-    "pkiAuthNetworkSetupMs",
-    "pkiOcspNetworkRttMs",
     "pkiAuthCount",
     "pkiOcspCount",
     "chainTxCount",
@@ -5622,10 +4283,6 @@ async function main() {
     "DPKI_sim",
     "PKI_sim",
     "PKI_sim_raw",
-    "pkiNetworkCompensationSec",
-    "pkiNetworkCompensationMs",
-    "pkiAuthNetworkSetupMs",
-    "pkiOcspNetworkRttMs",
     "pkiAuthCount",
     "pkiOcspCount",
   ]);
@@ -5655,10 +4312,6 @@ async function main() {
     "avgOffchainProofMs",
     "avgPkiChainVerifyMs",
     "PKI_sim_raw",
-    "pkiNetworkCompensationSec",
-    "pkiNetworkCompensationMs",
-    "pkiAuthNetworkSetupMs",
-    "pkiOcspNetworkRttMs",
     "pkiAuthCount",
     "pkiOcspCount",
     "chainTxCount",
@@ -5715,17 +4368,6 @@ async function main() {
           rawTxSubmitTimeoutMs: args.rawTxSubmitTimeoutMs,
           rawTxSubmitRetries: args.rawTxSubmitRetries,
           rawTxReceiptTimeoutMs: args.rawTxReceiptTimeoutMs,
-          serviceShapeMode: args.serviceShapeMode,
-          dpkiAuthShapeMeanMs: args.dpkiAuthShapeMeanMs,
-          dpkiCrossShapeMeanMs: args.dpkiCrossShapeMeanMs,
-          dpkiOnchainShapeMeanMs: args.dpkiOnchainShapeMeanMs,
-          dpkiIntraOffchainShapeMeanMs: args.dpkiIntraOffchainShapeMeanMs,
-          dpkiOffchainShapeMeanMs: args.dpkiOffchainShapeMeanMs,
-          dpkiManagementShapeMeanMs: args.dpkiManagementShapeMeanMs,
-          pkiAuthShapeMeanMs: args.pkiAuthShapeMeanMs,
-          pkiCrossShapeMeanMs: args.pkiCrossShapeMeanMs,
-          pkiIntraShapeMeanMs: args.pkiIntraShapeMeanMs,
-          pkiManagementShapeMeanMs: args.pkiManagementShapeMeanMs,
           arrivalMode: args.arrivalMode,
           kindPlanMode: args.kindPlanMode,
           dpkiRootReadMode: args.dpkiRootReadMode,
@@ -5747,11 +4389,7 @@ async function main() {
     )
   );
 
-  updateSimu2TheoryAndFigure(args, summaryDetailRows);
-  updateCalibratedTheoryAndStats(args);
-  console.log(`Wrote ${path.join(SIMU2_DIR, "simulation_results_by_epsilon.csv")}`);
-  console.log(`Regenerated ${path.join(SIMU2_DIR, "Fig7_epsilon_ET.png")}`);
-  console.log(`Wrote ${path.join(SIMU2_DIR, "real_delay_statistics.csv")}`);
+  writeMeasuredParameters(args, chainObservation);
   cleanupOpenSslOcspResponders();
   cleanupPkiServiceResponders();
   cleanupDpkiProofResponders();

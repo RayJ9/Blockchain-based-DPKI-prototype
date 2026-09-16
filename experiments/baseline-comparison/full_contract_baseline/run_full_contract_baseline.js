@@ -10,7 +10,7 @@ const EXPERIMENT_NODE_MODULES = path.join(ROOT, "blockchain", "dpki-experiment",
 
 const solc = require(path.join(EXPERIMENT_NODE_MODULES, "solc"));
 const Web3 = require(path.join(EXPERIMENT_NODE_MODULES, "web3"));
-const rlp = require(path.join(PROTOTYPE_NODE_MODULES, "rlp"));
+const rlp = require(path.join(EXPERIMENT_NODE_MODULES, "rlp"));
 
 const DEFAULTS = {
   rpc: "http://127.0.0.1:8545",
@@ -316,24 +316,22 @@ function stateWriteBytes(requestClass) {
   return 544;
 }
 
-function summarize(requestClass, rows, issueUpdateMs = 0) {
+function summarize(requestClass, rows) {
   const latencies = rows.map((row) => row.latencyMs);
   const sorted = [...latencies].sort((a, b) => a - b);
   const contractMean = mean(latencies);
-  const normalized = latencies.map((value) => value + issueUpdateMs);
-  const sortedNorm = [...normalized].sort((a, b) => a - b);
   return {
     mechanism: "full-contract-onchain",
     requestClass,
     count: rows.length,
-    meanLatencyMs: mean(normalized),
-    medianLatencyMs: percentile(sortedNorm, 0.5),
-    p95LatencyMs: percentile(sortedNorm, 0.95),
-    stdLatencyMs: std(normalized),
-    meanNormalizedLatencyMs: mean(normalized),
-    medianNormalizedLatencyMs: percentile(sortedNorm, 0.5),
-    p95NormalizedLatencyMs: percentile(sortedNorm, 0.95),
-    stdNormalizedLatencyMs: std(normalized),
+    meanLatencyMs: mean(latencies),
+    medianLatencyMs: percentile(sorted, 0.5),
+    p95LatencyMs: percentile(sorted, 0.95),
+    stdLatencyMs: std(latencies),
+    meanNormalizedLatencyMs: mean(latencies),
+    medianNormalizedLatencyMs: percentile(sorted, 0.5),
+    p95NormalizedLatencyMs: percentile(sorted, 0.95),
+    stdNormalizedLatencyMs: std(latencies),
     meanGasUsed: mean(rows.map((row) => row.gasUsed)),
     meanTxInputBytes: mean(rows.map((row) => row.inputBytes)),
     meanRawTxBytes: mean(rows.map((row) => row.rawTxBytes)),
@@ -342,7 +340,7 @@ function summarize(requestClass, rows, issueUpdateMs = 0) {
     meanStatusValidationMs: 0,
     meanCertVerificationMs: 0,
     meanCertChecks: requestClass === "cross-on-chain" ? 2 : requestClass === "intra-on-chain" ? 1 : 0,
-    meanIssueUpdateMs: issueUpdateMs,
+    meanIssueUpdateMs: 0,
     meanQueueDelayMs: 0,
     meanWaitMs: 0,
     meanInterarrivalMs: 0,
@@ -466,7 +464,7 @@ async function main() {
     }
   }
 
-  const summaryRows = classes.map((requestClass) => summarize(requestClass, byClass.get(requestClass), requestClass === "management" ? 98.3603983527422 : 0));
+  const summaryRows = classes.map((requestClass) => summarize(requestClass, byClass.get(requestClass)));
   const metricColumns = [
     "mechanism",
     "requestClass",

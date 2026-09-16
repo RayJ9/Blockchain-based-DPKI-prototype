@@ -54,3 +54,16 @@ simu4_lambdp/
 simu5/
 simu6/
 simu78/
+
+# Generated experimental measurements and derived numeric tables stay local.
+# Historical figure images are retained separately.
+/experiments/**/*.csv
+/experiments/**/*.npz
+/experiments/**/*.npy
+/experiments/**/*.mat
+/experiments/**/*.json
+/blockchain/.internal/old-ver-simulations/**/*.csv
+/blockchain/.internal/old-ver-simulations/**/*.npz
+/blockchain/.internal/old-ver-simulations/**/*.npy
+/blockchain/.internal/old-ver-simulations/**/*.mat
+/blockchain/.internal/old-ver-simulations/**/*.json

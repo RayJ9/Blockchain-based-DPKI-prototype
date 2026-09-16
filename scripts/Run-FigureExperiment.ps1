@@ -11,6 +11,13 @@ Set-StrictMode -Version Latest
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
+if ($Figure -ge 9) {
+    Write-Warning "Fig. $Figure runs a latency-only probe. Fault injection and availability-curve generation are not implemented."
+    if ($PaperScale) {
+        throw "Paper-scale availability experiments are not implemented. No retained-data substitute is available."
+    }
+}
+
 $PaperRequests = @{ 3 = 1000; 4 = 1000; 5 = 10000; 6 = 2000; 7 = 2000; 8 = 10000; 9 = 10000; 10 = 10000 }
 $ExperimentNames = @{
     3 = "pow-interval-validation"
@@ -77,7 +84,7 @@ function Invoke-Checked {
 
 Start-Transcript -LiteralPath $TranscriptPath -Force | Out-Null
 try {
-    Write-Host "$ExperimentName real experiment session (paper Fig. $Figure)"
+    Write-Host "$ExperimentName prototype session (repository Fig. $Figure)"
     Write-Host "Requests per selected point/class: $Requests"
     Write-Host "Results are isolated under: $ResultsDir"
 

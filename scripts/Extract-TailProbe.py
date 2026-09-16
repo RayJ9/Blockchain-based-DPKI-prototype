@@ -35,10 +35,9 @@ def load_request_samples(result_dir: Path) -> pd.DataFrame:
 
 
 def choose_latency_column(frame: pd.DataFrame) -> str:
-    for candidate in ("figServiceMs", "serviceMs", "latencyMs", "totalServiceMs", "responseMs"):
-        if candidate in frame.columns and pd.to_numeric(frame[candidate], errors="coerce").notna().any():
-            return candidate
-    raise KeyError("No supported latency column was found in the detailed request samples.")
+    if "latencyMs" not in frame.columns:
+        raise KeyError("Missing measured end-to-end latencyMs in request samples")
+    return "latencyMs"
 
 
 def main() -> None:
@@ -47,10 +46,11 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     samples = load_request_samples(args.result_dir.resolve())
     latency_col = choose_latency_column(samples)
-    samples["tailLatencyMs"] = pd.to_numeric(samples[latency_col], errors="coerce")
-    samples = samples[np.isfinite(samples["tailLatencyMs"])].copy()
-    if samples.empty:
-        raise RuntimeError("The real probe produced no finite latency samples.")
+    samples["tailLatencyMs"] = pd.to_numeric(samples[latency_col], errors="raise")
+    if samples.empty or not np.isfinite(samples["tailLatencyMs"]).all():
+        raise ValueError("Missing or non-finite request latency; no samples will be silently discarded")
+    if (samples["tailLatencyMs"] < 0).any():
+        raise ValueError("Negative request latency")
 
     group_columns = [column for column in ("model", "kind", "requestType") if column in samples.columns]
     if not group_columns:
@@ -74,18 +74,18 @@ def main() -> None:
             "maxMs": float(np.max(values)),
         }
         for timeout in timeout_values:
-            summary[f"availabilityAt{timeout:.3f}s"] = float(np.mean(values <= timeout * 1000.0))
+            summary[f"latencyWithin{timeout:.3f}s"] = float(np.mean(values <= timeout * 1000.0))
         rows.append(summary)
 
     pd.DataFrame(rows).to_csv(output_dir / "tail_summary.csv", index=False)
-    samples.sort_values("tailLatencyMs", ascending=False).head(200).to_csv(output_dir / "tail_samples.csv", index=False)
+    samples.to_csv(output_dir / "request_latency_samples.csv", index=False)
     manifest = {
         "figure": args.figure,
         "sourceResultDir": str(args.result_dir.resolve()),
         "latencyColumn": latency_col,
         "sampleCount": int(len(samples)),
         "timeoutSeconds": timeout_values,
-        "scope": "lightweight real-chain tail probe; retained availability surfaces are not overwritten",
+        "scope": "latency-only prototype probe; no fault injection or availability-curve generation",
     }
     (output_dir / "tail_probe_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf8")
     print(pd.DataFrame(rows).to_string(index=False))

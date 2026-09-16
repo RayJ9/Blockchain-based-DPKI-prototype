@@ -27,7 +27,7 @@ def main() -> None:
         )
 
     df = pd.read_csv(POW_CSV)
-    intervals_ms = df["calibratedPoissonDelayMs"].to_numpy(dtype=float)
+    intervals_ms = df["rawPoissonDelayMs"].to_numpy(dtype=float)
     sample_count = len(intervals_ms)
     mean_ms = float(np.mean(intervals_ms))
     std_ms = float(np.std(intervals_ms, ddof=1))

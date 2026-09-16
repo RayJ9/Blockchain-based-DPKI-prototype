@@ -1,2 +1,0 @@
-epsilon,targetLambdaOffchain,observedLambdaOffchain,targetLambdaOnchain,observedLambdaOnchain,actualOnChainRatio,actualCrossDomainRatio,arrivalSpanSec,completed,onChainCount,offChainCount,crossDomainCount,chainBlockCount,avgTxPerChainBlock
-0.1,12.15,12.343934603762978,7.8500000000000005,7.892023763061577,0.39,0.09,9.883396495215472,200,78,122,18,78,1

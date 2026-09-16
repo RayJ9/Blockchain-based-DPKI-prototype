@@ -12,9 +12,6 @@ for module_dir in (SIMU_DIR, ROOT):
         sys.path.insert(0, str(module_dir))
 
 from real_sweep_figures import (  # noqa: E402
-    PKI_AUTH_NETWORK_SETUP_MS,
-    PKI_CROSS_DOMAIN_CHAIN_STEPS,
-    PKI_OCSP_NETWORK_RTT_MS,
     POW_RUNTIME,
     SWEEP_ROOT,
     RunSpec,
@@ -31,9 +28,6 @@ from simu3_compare_cross import (  # noqa: E402
 __all__ = [
     "ROOT",
     "SIMU_DIR",
-    "PKI_AUTH_NETWORK_SETUP_MS",
-    "PKI_CROSS_DOMAIN_CHAIN_STEPS",
-    "PKI_OCSP_NETWORK_RTT_MS",
     "POW_RUNTIME",
     "SWEEP_ROOT",
     "RunSpec",

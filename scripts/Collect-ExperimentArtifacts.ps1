@@ -37,6 +37,7 @@ if (Test-Path -LiteralPath $RunSources) {
         foreach ($Name in @(
             "run.log",
             "run_config.json",
+            "measured_parameters.json",
             "real_chain_observation.json",
             "real_chain_tx_breakdown.csv",
             "real_stage_statistics.csv",

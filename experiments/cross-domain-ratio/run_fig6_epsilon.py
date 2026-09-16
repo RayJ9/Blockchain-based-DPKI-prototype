@@ -46,7 +46,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gamma-on-chain", type=float, default=0.3)
     parser.add_argument("--q-manage", type=float, default=0.3)
     parser.add_argument("--service-cas", type=int, default=4)
-    parser.add_argument("--actual-execution-mode", default="serial", choices=["serial", "parallel"])
+    parser.add_argument("--actual-execution-mode", default="parallel", choices=["serial", "parallel"])
     parser.add_argument("--dpki-root-read-mode", default="chain", choices=["chain", "cache", "cached"])
     parser.add_argument("--dpki-proof-read-mode", default="http", choices=["http", "local", "cache", "cached"])
     parser.add_argument("--dpki-proof-base-port", type=int, default=20080)
@@ -77,15 +77,10 @@ def main() -> None:
     cleanup_legacy_outputs(output_dir)
     try:
         run_dir = run_experiment(args)
-        points, by_kind = build_points(
-            run_dir,
-            gamma_on_chain_override=args.gamma_on_chain,
-            q_manage_override=args.q_manage,
-            dpki_q_mode="config",
-        )
+        points, by_kind = build_points(run_dir)
         by_kind.to_csv(output_dir / "delay_by_request_type.csv", index=False)
-        smooth = plot(points, output_dir)
-        write_figure_data(points, smooth, output_dir)
+        plotted = plot(points, output_dir)
+        write_figure_data(points, plotted, output_dir)
         logs_dir = copy_run_logs(run_dir, output_dir)
         write_bounds_check(points, logs_dir)
         run_spec = load_run_spec(run_dir)
@@ -99,7 +94,7 @@ def main() -> None:
             "pManage": float(run_spec.get("p_manage", args.p_manage)),
             "gammaOnChain": float(points["gammaOnChainMeasured"].median()),
             "sourceRunGammaOnChain": float(run_spec.get("gamma_on_chain", args.gamma_on_chain)),
-            "gammaReplayMode": "reweighted from measured DPKI intra-domain samples",
+            "measurementMode": "unchanged observed request durations",
             "serviceCAs": int(run_spec.get("service_cas", args.service_cas)),
             "fixedGasLimit": int(run_spec.get("fixed_gas_limit", args.fixed_gas_limit)),
             "fixedGasPriceWei": str(run_spec.get("fixed_gas_price_wei", args.fixed_gas_price_wei)),
@@ -111,7 +106,7 @@ def main() -> None:
             "dpkiProofReadMode": str(run_spec.get("dpki_proof_read_mode", args.dpki_proof_read_mode)),
             "dpkiProofBasePort": int(run_spec.get("dpki_proof_base_port", args.dpki_proof_base_port)),
             "dpkiAssertionIncluded": True,
-            "pkiServiceMetric": "explicit OpenSSL/OCSP/assertion stages; management excludes CA-side OCSP refresh and self OCSP queries",
+            "pkiServiceMetric": "observed end-to-end serviceMs",
         }
         (output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf8")
         if output_dir == SCRIPT_DIR / "result":

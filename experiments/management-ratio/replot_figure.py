@@ -10,7 +10,7 @@ XCOL = "p"
 SERIES = [
     ("DPKI_upper_bound", "DPKI Upper Bound", "-", "#008000", None),
     ("DPKI_lower_bound", "DPKI Lower Bound", "-", "#0072bd", None),
-    ("DPKI_experimental", "DPKI Experimental Trend", "--", "#ff6a00", "o"),
+    ("DPKI_experimental", "DPKI Experimental", "--", "#ff6a00", "o"),
     ("PKI_theory", "PKI Theory", "-", "#d90404", None),
     ("PKI_experimental", "PKI Experimental", "", "#d90404", "D"),
 ]
@@ -18,7 +18,7 @@ SERIES = [
 
 def main() -> None:
     df = pd.read_csv(DATA)
-    curve = df[df["dataKind"] == "plot_curve"].sort_values(XCOL)
+    curve = df[df["dataKind"] == "measured_point"].sort_values(XCOL)
     points = df[df["dataKind"] == "measured_point"].sort_values(XCOL)
 
     fig, ax = plt.subplots(figsize=(6.6, 4.2))

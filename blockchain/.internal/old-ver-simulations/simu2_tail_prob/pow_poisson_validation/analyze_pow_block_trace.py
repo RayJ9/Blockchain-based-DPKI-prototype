@@ -111,35 +111,24 @@ def analyze(args: argparse.Namespace) -> None:
     manifest_path = input_dir / "collection_manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
 
-    intervals_all: list[float] = []
-    intervals_unambiguous: list[float] = []
-    interval_rows: list[dict[str, Any]] = []
+    if any(event["interpolated"] for event in events):
+        raise ValueError("Interpolated timestamps are not measured block events; collect a new trace")
+    interval_rows = []
+    intervals = []
     for prev, curr in zip(events[:-1], events[1:]):
+        if curr["blockNumber"] != prev["blockNumber"] + 1:
+            raise ValueError("Missing block timestamps prevent distribution validation; collect a complete trace")
         delta = curr["elapsedSec"] - prev["elapsedSec"]
-        if delta <= 0:
-            continue
-        ambiguous = prev["interpolated"] or curr["interpolated"]
-        intervals_all.append(delta)
-        if not ambiguous:
-            intervals_unambiguous.append(delta)
-        interval_rows.append(
-            {
-                "fromBlock": prev["blockNumber"],
-                "toBlock": curr["blockNumber"],
-                "intervalSec": f"{delta:.9f}",
-                "ambiguousByInterpolation": str(ambiguous).lower(),
-            }
-        )
-
-    selected_intervals = (
-        np.asarray(intervals_unambiguous, dtype=float)
-        if args.interval_source == "unambiguous"
-        else np.asarray(intervals_all, dtype=float)
-    )
+        if not math.isfinite(delta) or delta <= 0:
+            raise ValueError("Block observations must have finite, strictly increasing timestamps")
+        intervals.append(delta)
+        interval_rows.append({
+            "fromBlock": prev["blockNumber"], "toBlock": curr["blockNumber"],
+            "intervalSec": delta,
+        })
+    selected_intervals = np.asarray(intervals, dtype=float)
     if len(selected_intervals) < 3:
-        raise RuntimeError(
-            f"Not enough {args.interval_source} intervals; rerun with slower block rate or use --interval-source all."
-        )
+        raise RuntimeError("Need at least three observed block intervals; collect a longer trace")
 
     mean_interval = float(np.mean(selected_intervals))
     std_interval = float(np.std(selected_intervals, ddof=1))
@@ -166,11 +155,11 @@ def analyze(args: argparse.Namespace) -> None:
     write_dict_csv(
         output_dir / "block_intervals.csv",
         interval_rows,
-        ["fromBlock", "toBlock", "intervalSec", "ambiguousByInterpolation"],
+        ["fromBlock", "toBlock", "intervalSec"],
     )
 
     stat_row = {
-        "intervalSource": args.interval_source,
+        "intervalSource": "observed",
         "intervalCount": len(selected_intervals),
         "meanIntervalSec": mean_interval,
         "stdIntervalSec": std_interval,
@@ -301,12 +290,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--input-dir", default=str(DEFAULT_INPUT))
     parser.add_argument("--output-dir", default="")
     parser.add_argument("--window-sec", type=float, default=0.0, help="Use <=0 for an automatic window with about 10 expected blocks.")
-    parser.add_argument(
-        "--interval-source",
-        choices=["all", "unambiguous"],
-        default="all",
-        help="Use all reconstructed intervals or only intervals without height-jump interpolation.",
-    )
     return parser
 
 

@@ -103,7 +103,7 @@ function parseArgs() {
         "Notes:",
         "  - On-chain transactions are executed and receipts are saved.",
         "  - Request classes are mixed by seeded shuffle for each index.",
-        "  - On-chain stage latency subtracts a no-op PoW confirmation probe from receipt waiting.",
+        "  - On-chain stage latency includes the measured receipt waiting time.",
         "  - receiptWaitMs is written separately for audit.",
       ].join("\n"));
       process.exit(0);
@@ -1063,13 +1063,9 @@ async function chainRecord(row, chain, stageName, method, options = {}) {
     return;
   }
   const result = await chain.signAndSend(method, chain.contract.options.address);
-  const adjustedReceiptMs = Math.max(
-    0,
-    Number(result.receiptWaitMs || 0) - Number(chain.noopReceiptWaitMeanMs || 0),
-  );
   row.stages[stageName] = (row.stages[stageName] || 0)
     + Number(result.serviceMs || 0)
-    + adjustedReceiptMs;
+    + Number(result.receiptWaitMs || 0);
   row.gasUsed += Number(result.gasUsed || 0);
   row.estimatedGas += Number(result.estimatedGas || 0);
   row.txInputBytes += Number(result.txInputBytes || 0);
@@ -1079,8 +1075,6 @@ async function chainRecord(row, chain, stageName, method, options = {}) {
   addExternalPayloadBytes(row, Number(result.rawTxBytes || 0));
   row.receiptWaitMs += Number(result.receiptWaitMs || 0);
   row.estimateGasMs += Number(result.estimateGasMs || 0);
-  row.noopAdjustedReceiptMs += adjustedReceiptMs;
-  row.noopReceiptBaselineMs += Number(chain.noopReceiptWaitMeanMs || 0);
   row.txCount += 1;
   row.onChainStorageBytes += Number(options.onChainStorageBytes || 0);
   row.onChainSigVerifyOps += Number(options.onChainSigVerifyOps || 0);
@@ -1442,7 +1436,7 @@ async function main() {
     rpc: args.rpc,
     noChain: args.noChain,
     executionOrder: "mixed seeded shuffle by request index",
-    note: "On-chain stage latency includes estimateGas/local contract execution simulation, signing, and tx submission. PoW mining/receipt waiting is preserved separately as receiptWaitMs.",
+    note: "On-chain stage latency includes estimateGas/local contract execution simulation, signing, tx submission, and measured receipt waiting. The receipt waiting component is also reported as receiptWaitMs for audit.",
   }, null, 2)}\n`);
   console.log(`Saved ${args.out}`);
 }

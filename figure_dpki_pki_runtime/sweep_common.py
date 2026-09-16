@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 from .backend import POW_RUNTIME, SWEEP_ROOT, RunSpec, run_real_experiment
-from .epsilon_metrics import restart_pow, stop_pow, whole_line_fit
+from .epsilon_metrics import restart_pow, stop_pow
 from . import epsilon_metrics as epsilon_common
 
 
@@ -38,7 +38,7 @@ LEGACY_PATTERNS = [
 PLOT_SERIES = [
     ("DPKI_upper_theory", "DPKI_upper_bound", "DPKI Upper Bound", "-", (0.0, 0.5, 0.0), True, None),
     ("DPKI_lower_theory", "DPKI_lower_bound", "DPKI Lower Bound", "-", (0.0, 0.447, 0.741), True, None),
-    ("DPKI_sim", "DPKI_experimental", "DPKI Experimental Trend", "--", (1.0, 0.4, 0.0), True, "o"),
+    ("DPKI_sim", "DPKI_experimental", "DPKI Experimental", "--", (1.0, 0.4, 0.0), True, "o"),
     ("PKI_theory", "PKI_theory", "PKI Theory", "-", (0.85, 0.0, 0.0), True, None),
     ("PKI_sim", "PKI_experimental", "PKI Experimental", "", (0.85, 0.0, 0.0), False, "D"),
 ]
@@ -61,8 +61,8 @@ def parse_float_list(text: str) -> list[float]:
 def run_or_reuse(spec: RunSpec, reuse_existing: bool) -> Path:
     dest = SWEEP_ROOT / spec.sweep / spec.label
     detailed = dest / "real_simulation_results_by_epsilon_detailed.csv"
-    calibration = dest / "real_calibrated_params.json"
-    if reuse_existing and detailed.exists() and calibration.exists():
+    parameters = dest / "measured_parameters.json"
+    if reuse_existing and detailed.exists() and parameters.exists():
         return dest
     return run_real_experiment(spec)
 
@@ -78,12 +78,7 @@ def collect_sweep(
 
     for x_value, spec in specs:
         run_dir = run_or_reuse(spec, reuse_existing)
-        points, by_kind = epsilon_common.build_points(
-            run_dir,
-            q_manage_override=spec.q_manage,
-            dpki_q_mode=spec.dpki_q_mode,
-            lambda_block_safety_factor=spec.lambda_block_safety_factor,
-        )
+        points, by_kind = epsilon_common.build_points(run_dir)
         if len(points) != 1:
             raise RuntimeError(f"{run_dir} produced {len(points)} point rows; variable sweeps expect one epsilon")
         row = points.iloc[0].to_dict()
@@ -153,20 +148,11 @@ def mirror_final_outputs(output_dir: Path, script_dir: Path) -> None:
             shutil.copy2(source, script_dir / name)
 
 
-def write_figure_data(points: pd.DataFrame, smooth: pd.DataFrame, x_name: str, output_dir: Path) -> None:
+def write_figure_data(points: pd.DataFrame, plotted: pd.DataFrame, x_name: str, output_dir: Path) -> None:
     rename_map = {source: clean for source, clean, *_ in PLOT_SERIES}
     raw = points.rename(columns=rename_map).copy()
     raw.insert(0, "dataKind", "measured_point")
-    curve = smooth.rename(columns=rename_map).copy()
-    curve.insert(0, "dataKind", "plot_curve")
-
-    series_columns = [clean for _, clean, *_ in PLOT_SERIES]
-    parameter_columns = [column for column in raw.columns if column not in {"dataKind", x_name, *series_columns}]
-    for column in parameter_columns:
-        if column not in curve.columns:
-            curve[column] = np.nan
-    columns = ["dataKind", x_name, *series_columns, *parameter_columns]
-    pd.concat([raw[columns], curve[columns]], ignore_index=True).to_csv(output_dir / "figure_data.csv", index=False)
+    raw.to_csv(output_dir / "figure_data.csv", index=False)
 
 
 def write_outputs(

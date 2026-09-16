@@ -147,12 +147,13 @@ for ii = 1:size(positions, 1)
                 Center(rowIdx(jj), :), PKI(rowIdx(jj), :), colors, markerStyle{jj});
         end
     else
-        pfTarget = pfSliceTargets(ii - 2);
+        [~, pfIndex] = min(abs(pfValues - pfSliceTargets(ii - 2)));
+        pfTarget = pfValues(pfIndex);
         xValues = mValues;
-        yUpper = interp1(pfValues(:), Upper', pfTarget, 'linear');
-        yLower = interp1(pfValues(:), Lower', pfTarget, 'linear');
-        yCenter = interp1(pfValues(:), Center', pfTarget, 'linear');
-        yPki = interp1(pfValues(:), PKI', pfTarget, 'linear');
+        yUpper = Upper(:, pfIndex).';
+        yLower = Lower(:, pfIndex).';
+        yCenter = Center(:, pfIndex).';
+        yPki = PKI(:, pfIndex).';
         xlim(ax, [min(mValues), max(mValues)]);
         xticks(ax, [min(mValues), round(mean(mValues)), max(mValues)]);
         xlabel(ax, '$m$', 'Interpreter', 'latex');

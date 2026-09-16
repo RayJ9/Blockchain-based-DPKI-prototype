@@ -16,7 +16,7 @@ COLORS = {
 
 def main() -> None:
     df = pd.read_csv(DATA)
-    curve = df[df["dataKind"] == "plot_curve"].copy()
+    curve = df[df["dataKind"] == "measured_point"].copy()
     points = df[df["dataKind"] == "measured_point"].copy()
 
     fig, ax = plt.subplots(figsize=(6.6, 4.2))

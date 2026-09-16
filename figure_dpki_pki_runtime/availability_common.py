@@ -7,9 +7,11 @@ import pandas as pd
 
 
 def normalize_bounds(lower_raw: np.ndarray, upper_raw: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    lower = np.minimum(lower_raw, upper_raw)
-    upper = np.maximum(lower_raw, upper_raw)
-    return lower, upper
+    if not np.isfinite(lower_raw).all() or not np.isfinite(upper_raw).all():
+        raise ValueError("Availability bounds contain non-finite values")
+    if np.any(lower_raw > upper_raw):
+        raise ValueError("Availability lower bound exceeds upper bound")
+    return lower_raw, upper_raw
 
 
 def pick_four_indices(values: np.ndarray) -> np.ndarray:
@@ -34,15 +36,18 @@ def summary_rows(name: str, surface: dict[str, np.ndarray]) -> list[dict[str, fl
 
 
 def load_npz_surface(path: Path) -> dict[str, np.ndarray]:
-    data = np.load(path)
+    with np.load(path) as archive:
+        data = {name: np.asarray(archive[name], dtype=float) for name in archive.files}
     raw_lower = np.asarray(data["DPKI_LOWER"], dtype=float)
     raw_upper = np.asarray(data["DPKI_UPPER"], dtype=float)
     lower, upper = normalize_bounds(raw_lower, raw_upper)
-    if "DPKI_MEAN" in data.files:
+    if "DPKI_MEAN" in data:
         raw_center = np.asarray(data["DPKI_MEAN"], dtype=float)
-        center = np.minimum(np.maximum(raw_center, lower), upper)
+        center = raw_center
     else:
-        center = 0.5 * (lower + upper)
+        raise ValueError(f"{path} has no measured DPKI mean; no midpoint will be substituted")
+    if center.shape != lower.shape or not np.isfinite(center).all():
+        raise ValueError(f"{path} has invalid DPKI mean measurements")
     return {
         "PF": np.asarray(data["PF"], dtype=float),
         "TS": np.asarray(data["TS"], dtype=float),
@@ -56,15 +61,15 @@ def load_npz_surface(path: Path) -> dict[str, np.ndarray]:
 
 
 def pivot(df: pd.DataFrame, column: str, m_values: np.ndarray, pf_values: np.ndarray) -> np.ndarray:
-    table = df.pivot_table(index="m", columns="pf", values=column, aggfunc="mean")
+    table = df.pivot(index="m", columns="pf", values=column)
     table = table.reindex(index=m_values, columns=pf_values)
-    if table.isna().any().any():
-        raise ValueError(f"Missing values while pivoting {column}")
+    if not np.isfinite(table.to_numpy(dtype=float)).all():
+        raise ValueError(f"Missing or non-finite values while pivoting {column}")
     return table.to_numpy(dtype=float)
 
 
 def load_pf_m_csv(path: Path, scenario: str) -> dict[str, np.ndarray]:
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, float_precision="round_trip")
     if "M" in df.columns:
         df = df.rename(columns={"M": "m"})
     if "PKI_Availability" in df.columns:
@@ -85,9 +90,9 @@ def load_pf_m_csv(path: Path, scenario: str) -> dict[str, np.ndarray]:
 
     if "DPKI_Mean" in df.columns:
         center_raw = pivot(df, "DPKI_Mean", m_values, pf_values)
-        center = np.minimum(np.maximum(center_raw, lower), upper)
+        center = center_raw
     else:
-        center = 0.5 * (lower + upper)
+        raise ValueError(f"{path} has no measured DPKI mean; no midpoint will be substituted")
 
     pf_grid, m_grid = np.meshgrid(pf_values, m_values)
     return {

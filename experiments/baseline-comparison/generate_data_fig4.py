@@ -35,74 +35,32 @@ def get_row(df: pd.DataFrame, mechanism: str, request_class: str) -> pd.Series:
     return rows.iloc[0]
 
 
-def common_packaging_ms(df: pd.DataFrame) -> float:
-    # Use the proposed on-chain authentication paths to anchor the common
-    # blockchain packaging regime. We keep all packaging values close to this
-    # baseline while allowing small per-workflow deviations.
-    reference_rows = [
-        get_row(df, "proposed-dpki", "intra-on-chain"),
-        get_row(df, "proposed-dpki", "cross-on-chain"),
-    ]
-    values = [float(row.get("receiptWaitMs_mean", 0.0)) for row in reference_rows]
-    values = [value for value in values if value > 0]
-    if not values:
-        return 58.0
-    return float(np.mean(values))
-
-
-def packaging_stage_ms(row: pd.Series, packaging_base_ms: float, onchain_total: float) -> float:
-    if onchain_total <= 0:
-        return 0.0
-
-    key = (str(row.get("mechanism", "")), str(row.get("requestClass", "")))
-    offset_map = {
-        ("proposed-dpki", "management"): 1.4,
-        ("proposed-dpki", "intra-on-chain"): 2.8,
-        ("proposed-dpki", "cross-on-chain"): -2.1,
-        ("threshold-validation-dpki", "management"): -2.7,
-        ("full-contract-onchain", "management"): 3.2,
-        ("full-contract-onchain", "intra-on-chain"): 0.9,
-        ("full-contract-onchain", "cross-on-chain"): -1.5,
-    }
-    packaging_value = packaging_base_ms + offset_map.get(key, 0.0)
-    packaging_value = min(62.0, max(55.0, packaging_value))
-    return min(packaging_value, onchain_total)
-
-
-def stage_vector(row: pd.Series, packaging_ms: float) -> list[float]:
-    request_class = str(row.get("requestClass", ""))
-    assertion_value = float(row.get("assertionMs_mean", 0.0))
-    issue_value = float(row.get("issueUpdateMs_mean", 0.0)) + float(row.get("thresholdIssueMs_mean", 0.0))
-    cert_value = float(row.get("certificateVerificationMs_mean", 0.0)) + float(row.get("thresholdValidationMs_mean", 0.0))
-    if request_class == "management":
-        issue_value += assertion_value
+def stage_vector(row: pd.Series) -> list[float]:
+    names = ["assertionMs_mean", "issueUpdateMs_mean", "thresholdIssueMs_mean",
+             "certificateVerificationMs_mean", "thresholdValidationMs_mean", "statusValidationMs_mean",
+             "mptValidationMs_mean", "chainRecordMs_mean", "contractExecutionMs_mean", "chainStateReadMs_mean",
+             "receiptWaitMs_mean", "totalServiceMs_mean"]
+    values = {name: float(row[name]) for name in names}
+    if any(not np.isfinite(v) or v < 0 for v in values.values()):
+        raise ValueError("Stage measurements must be finite and nonnegative")
+    issue = values["issueUpdateMs_mean"] + values["thresholdIssueMs_mean"]
+    cert = values["certificateVerificationMs_mean"] + values["thresholdValidationMs_mean"]
+    if str(row["requestClass"]) == "management":
+        issue += values["assertionMs_mean"]
     else:
-        cert_value += assertion_value
-    ocsp_value = float(row.get("statusValidationMs_mean", 0.0))
-    mpt_value = float(row.get("mptValidationMs_mean", 0.0))
-    onchain_total = (
-        float(row.get("chainRecordMs_mean", 0.0))
-        + float(row.get("contractExecutionMs_mean", 0.0))
-        + float(row.get("chainStateReadMs_mean", 0.0))
-    )
-
-    if str(row.get("mechanism", "")) == "full-contract-onchain":
-        onchain_total += (
-            float(row.get("issueUpdateMs_mean", 0.0))
-            + float(row.get("certificateVerificationMs_mean", 0.0))
-            + float(row.get("statusValidationMs_mean", 0.0))
-            + float(row.get("assertionMs_mean", 0.0))
-        )
-        packaging_value = packaging_stage_ms(row, packaging_ms, onchain_total)
-        execution_value = max(0.0, onchain_total - packaging_value)
-        return [packaging_value, execution_value, 0.0, 0.0, 0.0, 0.0]
-
-    packaging_value = packaging_stage_ms(row, packaging_ms, onchain_total)
-    execution_value = max(0.0, onchain_total - packaging_value)
-    return [packaging_value, execution_value, issue_value, cert_value, ocsp_value, mpt_value]
+        cert += values["assertionMs_mean"]
+    onchain = values["chainRecordMs_mean"] + values["contractExecutionMs_mean"] + values["chainStateReadMs_mean"]
+    packaging = values["receiptWaitMs_mean"]
+    execution = onchain - packaging
+    if execution < 0:
+        raise ValueError("Measured receipt wait exceeds the recorded on-chain duration")
+    stages = [packaging, execution, issue, cert, values["statusValidationMs_mean"], values["mptValidationMs_mean"]]
+    if not np.isclose(sum(stages), values["totalServiceMs_mean"], rtol=1e-9, atol=1e-9):
+        raise ValueError("Stage totals do not match measured totalServiceMs_mean")
+    return stages
 
 
-def table_for(df: pd.DataFrame, specs: list[tuple[str, str, str]], packaging_ms: float):
+def table_for(df: pd.DataFrame, specs: list[tuple[str, str, str]]):
     labels = []
     stages = []
     totals = []
@@ -110,9 +68,9 @@ def table_for(df: pd.DataFrame, specs: list[tuple[str, str, str]], packaging_ms:
     for label, mechanism, request_class in specs:
         row = get_row(df, mechanism, request_class)
         labels.append(label)
-        stage_values = stage_vector(row, packaging_ms)
+        stage_values = stage_vector(row)
         stages.append(stage_values)
-        totals.append(float(sum(stage_values)))
+        totals.append(float(row["totalServiceMs_mean"]))
         ci95 = 1.96 * float(row["totalServiceMs_std"]) / np.sqrt(float(row["count"]))
         stds.append(ci95)
     return labels, np.array(stages, dtype=float), np.array(totals, dtype=float), np.array(stds, dtype=float)
@@ -120,7 +78,6 @@ def table_for(df: pd.DataFrame, specs: list[tuple[str, str, str]], packaging_ms:
 
 def main():
     df = pd.read_csv(SUMMARY_CSV)
-    packaging_ms = common_packaging_ms(df)
 
     intra_specs = [
         ("Our proposed DPKI alg. 1", "proposed-dpki", "intra-off-chain"),
@@ -142,16 +99,15 @@ def main():
         ("Full contract DPKI", "full-contract-onchain", "management"),
     ]
 
-    intra_labels, intra_stages, intra_totals, intra_stds = table_for(df, intra_specs, packaging_ms)
-    cross_labels, cross_stages, cross_totals, cross_stds = table_for(df, cross_specs, packaging_ms)
-    mgmt_labels, mgmt_stages, mgmt_totals, mgmt_stds = table_for(df, mgmt_specs, packaging_ms)
+    intra_labels, intra_stages, intra_totals, intra_stds = table_for(df, intra_specs)
+    cross_labels, cross_stages, cross_totals, cross_stds = table_for(df, cross_specs)
+    mgmt_labels, mgmt_stages, mgmt_totals, mgmt_stds = table_for(df, mgmt_specs)
 
     savemat(
         DATA_FILE,
         {
             "stageNames": np.array(STAGE_NAMES, dtype=object),
             "stageColors": STAGE_COLORS,
-            "packagingMs": np.array([[packaging_ms]], dtype=float),
             "intraLabels": np.array(intra_labels, dtype=object),
             "intraStages": intra_stages,
             "intraTotals": intra_totals,
@@ -170,13 +126,13 @@ def main():
     export_rows = []
     for label, mechanism, request_class in intra_specs + cross_specs + mgmt_specs:
         row = get_row(df, mechanism, request_class)
-        stage_values = stage_vector(row, packaging_ms)
+        stage_values = stage_vector(row)
         export_rows.append(
             {
                 "label": label,
                 "mechanism": mechanism,
                 "requestClass": request_class,
-                "meanMs": float(sum(stage_values)),
+                "meanMs": float(row["totalServiceMs_mean"]),
                 "stdMs": row["totalServiceMs_std"],
                 "p50Ms": row["totalServiceMs_p50"],
                 "p95Ms": row["totalServiceMs_p95"],
